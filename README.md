@@ -8,6 +8,9 @@ This canvas library is, for the moment, provide for 2D canvas.
 <script src='https://cdn.jsdelivr.net/gh/NoxFly/canvas/canvas.min.js'></script>
 ```
 
+## NPM
+[https://www.npmjs.com/package/@noxfly/canvas](https://www.npmjs.com/package/@noxfly/canvas)
+
 ## About
 
 You can use it to create canvas games / canvas simulations easier.
