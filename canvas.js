@@ -97,6 +97,9 @@ const random = 			max 	=> 	Math.floor(Math.random() * max);
 const dist = 			(a,b) 	=> 	Math.hypot(a.x-b.x, a.y-b.y);
 const map =				(val, start1, end1, start2, end2) => ((val-start1)/(end1-start1))*(end2-start2)+start2;
 
+// get last swipe direction
+const getSwipe = () => lastSwipe;
+
 // key event
 const isKeyDown = keyCode => keys[keyCode];
 const isKeyUp = keyCode => !keys[keyCode];
@@ -227,8 +230,6 @@ function handleTouchMove(e) {
 	swipeyDown = null;
 }
 
-const getSwipe = () => lastSwipe;
-
 window.onload = e => {
 	MIN_DOC_SIZE = Math.min(document.documentElement.clientHeight, document.documentElement.clientWidth);
 	
@@ -308,7 +309,7 @@ class Vector {
 	}
 
 	get mag() {
-		return Math.sqrt(this.x * this.x + this.y * this.y);
+		return Math.hypot(this.x, this.y);
 	}
 
 	setMag(newMag) {
