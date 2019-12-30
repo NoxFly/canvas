@@ -49,18 +49,18 @@ public variables:
 * `isDevice`: object that has 3 boolean keys
     * `mobile`: either the device is a mobile or not.
     * `ios`: either the device is on iOS or not.
-    * `androit`: either the device is on Android or not.
+    * `android`: either the device is on Android or not.
 * `canvas`: you can access to it, but do not modify it. if you didn't create the canvas yet, its value is `null`.
 * `ctx`: you can access to it, but do not modify it. if you didn't create the canvas yet, its value is `null`.
 * `width`: the width of the created canvas. Please do not modify it.
 * `height`: the height canvas. Please do not modify it.
 
 
-You can use / acces to all other variables, but I do not recommend it. Let the canvas.js file do all about them, and acces to it by the functions provided for this purpose.
+You can use / access to all other variables, but I do not recommend it. Let the canvas.js file do all about them, and acces to it by the functions provided for this purpose.
 
 ## Vector class
 
-The file contain a class named Vector.
+The file contains a class named Vector.
 
 It has 2 stored data: x and y.
 
