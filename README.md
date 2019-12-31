@@ -29,14 +29,21 @@ The function takes 2 minimal arguments, for a maximum of 4.
 1. its width
 1. its height
 1. its background (optional, by default dark)
-1. if it take care about pointerLock (optional, by default false). If this argument if set to true, then you must click on the canvas to enter the pointerLock mode, and Esc to come out.
+1. if it take care about pointerLock (optional, by default false). If this argument is set to true, then you must click on the canvas to enter the pointerLock mode, and Esc to come out.
 
 The function return the canvas, but you can access to it with the global variable `canvas`.
 
 Once the canvas is created, you cannot resize it.
 
 ```js
-let canvas = createCanvas(width, height, background='#000', requestPointerLock=false);
+// canvas, ctx = null, null
+// width, height = 0, 0
+let my_canvas = createCanvas(canvas_width, canvas_height, background='#000', requestPointerLock=false);
+/* the variable canvas is now the new created canvas
+   the variable ctx is now the new context 2d of this canvas (canvas.getContext('2d'))
+   the variable width is now set to canvas.width
+   the variable height is now set to canvas.height
+*/
 ```
 
 ## The 2 basics functions
@@ -152,13 +159,9 @@ linecap(style); // must be butt, round or square. Default is butt
 
 ```js
 push(); // save the canvas
-
 translate(x, y); // translate the canvas
-
 rotate(degree); // rotate the canvas
-
 pop(); // restore the canvas before the translation & rotation
-
 clear(); // clear the canvas draw. Normally you don't have to use it, because the draw() function do
 ```
 
