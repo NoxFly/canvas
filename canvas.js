@@ -3,14 +3,17 @@
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  */
 
+ // public vars
 let ctx = null, canvas = null, width = 0, height = 0;
 let mouseX = 0, mouseY = 0;
+let MIN_DOC_SIZE;
+
+// private vars
 let bFill = true, bStroke = true;
 let keys = {};
 let oldMouseX = 0, oldMouseY = 0;
 let isPointerLocked = false;
 let mouseDirection = {x: 0, y: 0};
-let MIN_DOC_SIZE;
 let swipexDown = null;
 var swipeyDown = null;
 let swipePCEnable = true;
@@ -235,14 +238,23 @@ window.onload = e => {
 	
 	if(typeof setup != "undefined") setup();
 
+	function offset(elt) {
+		let rect = elt.getBoundingClientRect();
+		return {
+			top: rect.top + document.body.scrollTop,
+			left: rect.left + document.body.scrollLeft
+		};
+	}
+
 	if(canvas) {
-		canvas.onmousemove = e => {
+		canvas.addEventListener('mousemove', e => {
 			oldMouseX = mouseX;
 			oldMouseY = mouseY;
-			mouseX = e.clientX;
-			mouseY = e.clientY;
+			mouseX = e.clientX - offset(canvas).left;
+			mouseY = e.clientY - offset(canvas).top;
 			mouseDirection = {x: e.movementX, y: e.movementY};
-		};
+			if(typeof mouseMove != "undefined") mouseMove(e);
+		});
 
 		canvas.addEventListener('touchstart', handleTouchStart, false);
 		canvas.addEventListener('touchmove',  handleTouchMove, false);
@@ -259,9 +271,8 @@ window.onload = e => {
 			canvas.addEventListener('swipedown',  onSwipe, false);
 		}
 
-		canvas.onmousemove  = e => {if(typeof mouseMove  != "undefined") mouseMove(e);};
-		canvas.onmouseenter = e => {if(typeof mouseEnter != "undefined") mouseEnter(e);};
-		canvas.onmouseleave = e => {if(typeof mouseLeave != "undefined") mouseLeave(e);};
+		canvas.addEventListener('mouseenter', e => {if(typeof mouseEnter != "undefined") mouseEnter(e);});
+		canvas.addEventListener('mouseleave', e => {if(typeof mouseLeave != "undefined") mouseLeave(e);});
 		canvas.addEventListener('wheel', e => {if(typeof mouseWheel != "undefined") mouseWheel(e);});
 	}
 	

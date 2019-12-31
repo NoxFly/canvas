@@ -36,8 +36,8 @@ The function return the canvas, but you can access to it with the global variabl
 Once the canvas is created, you cannot resize it.
 
 ```js
-// canvas, ctx = null, null
-// width, height = 0, 0
+// canvas = null, ctx = null
+// width = 0, height = 0
 let my_canvas = createCanvas(canvas_width, canvas_height, background='#000', requestPointerLock=false);
 /* the variable canvas is now the new created canvas
    the variable ctx is now the new context 2d of this canvas (canvas.getContext('2d'))
@@ -64,7 +64,8 @@ public variables:
 * `ctx`: you can access to it, but do not modify it. if you didn't create the canvas yet, its value is `null`.
 * `width`: the width of the created canvas. Please do not modify it.
 * `height`: the height canvas. Please do not modify it.
-
+* `mouseX`: it's the mouse's X position relative to the canvas
+* `mouseY`: it's the mouse's Y position relative to the canvas
 
 You can use / access to all other variables, but I do not recommend it. Let the canvas.js file do all about them, and access to it by the functions provided for this purpose.
 
