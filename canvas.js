@@ -262,7 +262,7 @@ window.onload = e => {
 		canvas.onmousemove  = e => {if(typeof mouseMove  != "undefined") mouseMove(e);};
 		canvas.onmouseenter = e => {if(typeof mouseEnter != "undefined") mouseEnter(e);};
 		canvas.onmouseleave = e => {if(typeof mouseLeave != "undefined") mouseLeave(e);};
-		canvas.onmousewheel = e => {if(typeof mouseWheel != "undefined") mouseWheel(e);};
+		canvas.addEventListener('wheel', e => {if(typeof mouseWheel != "undefined") mouseWheel(e);});
 	}
 	
 	// EVENTS
