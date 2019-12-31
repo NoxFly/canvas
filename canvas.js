@@ -3,7 +3,7 @@
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  */
 
-let ctx = null, canvas = null, width, height;
+let ctx = null, canvas = null, width = 0, height = 0;
 let mouseX = 0, mouseY = 0;
 let bFill = true, bStroke = true;
 let keys = {};
@@ -14,7 +14,7 @@ let MIN_DOC_SIZE;
 let swipexDown = null;
 var swipeyDown = null;
 let swipePCEnable = true;
-let lastSwipe;
+let lastSwipe = null;
 
 let isDevice = {
 	mobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
@@ -223,7 +223,7 @@ function handleTouchMove(e) {
 		else 			(swipeDir = 'down')  && (event = new CustomEvent('swipedown',  {detail: {swipe: 'down'}}));
 	}
 
-	document.dispatchEvent(event);
+	canvas.dispatchEvent(event);
 	lastSwipe = swipeDir;
 	
 	swipexDown = null;
@@ -235,29 +235,36 @@ window.onload = e => {
 	
 	if(typeof setup != "undefined") setup();
 
-	document.body.onmousemove = e => {
-		oldMouseX = mouseX;
-		oldMouseY = mouseY;
-		mouseX = e.clientX;
-		mouseY = e.clientY;
-		mouseDirection = {x: e.movementX, y: e.movementY};
-	};
+	if(canvas) {
+		canvas.onmousemove = e => {
+			oldMouseX = mouseX;
+			oldMouseY = mouseY;
+			mouseX = e.clientX;
+			mouseY = e.clientY;
+			mouseDirection = {x: e.movementX, y: e.movementY};
+		};
 
-	document.addEventListener('touchstart', handleTouchStart, false);
-	document.addEventListener('touchmove',  handleTouchMove, false);
+		canvas.addEventListener('touchstart', handleTouchStart, false);
+		canvas.addEventListener('touchmove',  handleTouchMove, false);
 
-	if(swipePCEnable) {
-		document.addEventListener('mousedown', handleTouchStart, false);
-		document.addEventListener('mousemove', handleTouchMove, false);
+		if(swipePCEnable) {
+			canvas.addEventListener('mousedown', handleTouchStart, false);
+			canvas.addEventListener('mousemove', handleTouchMove, false);
+		}
+
+		if(typeof onSwipe != "undefined") {
+			canvas.addEventListener('swipeleft',  onSwipe, false);
+			canvas.addEventListener('swiperight', onSwipe, false);
+			canvas.addEventListener('swipeup',    onSwipe, false);
+			canvas.addEventListener('swipedown',  onSwipe, false);
+		}
+
+		canvas.onmousemove  = e => {if(typeof mouseMove  != "undefined") mouseMove(e);};
+		canvas.onmouseenter = e => {if(typeof mouseEnter != "undefined") mouseEnter(e);};
+		canvas.onmouseleave = e => {if(typeof mouseLeave != "undefined") mouseLeave(e);};
+		canvas.onmousewheel = e => {if(typeof mouseWheel != "undefined") mouseWheel(e);};
 	}
-
-	if(typeof onSwipe != "undefined") {
-		document.addEventListener('swipeleft',  onSwipe, false);
-		document.addEventListener('swiperight', onSwipe, false);
-		document.addEventListener('swipeup',    onSwipe, false);
-		document.addEventListener('swipedown',  onSwipe, false);
-	}
-
+	
 	// EVENTS
 	window.onkeypress = e => {
 		keys[e.code] = true;
@@ -273,11 +280,6 @@ window.onload = e => {
 		keys[e.code] = false;
 		if(typeof keyUp != "undefined") keyUp(e);
 	};
-
-	canvas.onmousemove  = e => {if(typeof mouseMove  != "undefined") mouseMove(e);};
-	canvas.onmouseenter = e => {if(typeof mouseEnter != "undefined") mouseEnter(e);};
-	canvas.onmouseleave = e => {if(typeof mouseLeave != "undefined") mouseLeave(e);};
-	canvas.onmousewheel = e => {if(typeof mouseWheel != "undefined") mouseWheel(e);};
 
 	drawLoop();
 };
