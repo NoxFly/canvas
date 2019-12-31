@@ -19,11 +19,11 @@ You must include this file before all other scripts that will use something abou
 
 You will get some predefined variables, you can use some of them, but some others are considered as private and you should not change them, in any case not without a function which has been provided for.
 
-## create a canvas
+## Create a canvas
 
-To create a new canvas, you must use the fonction `createCanvas`.
+To create a new canvas, you must use the function `createCanvas`.
 
-If a canvas has already been created, it will be overwrite.
+If a canvas has already been created, it will be overwritten.
 
 The function takes 2 minimal arguments, for a maximum of 4.
 1. its width
@@ -41,10 +41,10 @@ let canvas = createCanvas(width, height, background='#000', requestPointerLock=f
 
 ## The 2 basics functions
 
-You can animate your canvas easily thanks 2 functions, that will be executed automatically once your declare them:
+You can animate your canvas easily. Thanks for these 2 functions which will be executed automatically once your declare them:
 
 * `function setup(void) {}`: this function is executed __before__ the `draw` function, but __after__ the window's loading. So you have access to the `document` variable in.
-* `function draw(void) {}`: this function is executed __after__ the `setup` function and the window's loading. `requestAnimationFrame(draw)` is called, so the draw function is looping. Otherwise, you can set a condition to stop the requestAnimationFrame. While this condition return false, the draw loop will not be executed, thanks the function `setDrawCondition(condition)`.
+* `function draw(void) {}`: this function is executed __after__ the `setup` function and the window's loading. `requestAnimationFrame(draw)` is called, so the draw function is looping. Otherwise, you can set a condition to stop the requestAnimationFrame. While this condition return false, the draw loop will not be executed. Thanks for the function `setDrawCondition(condition)`.
 
 ## Public variables
 public variables:
@@ -59,7 +59,7 @@ public variables:
 * `height`: the height canvas. Please do not modify it.
 
 
-You can use / access to all other variables, but I do not recommend it. Let the canvas.js file do all about them, and acces to it by the functions provided for this purpose.
+You can use / access to all other variables, but I do not recommend it. Let the canvas.js file do all about them, and access to it by the functions provided for this purpose.
 
 ## Vector class
 
@@ -76,13 +76,13 @@ let object = new Vector(0,0); // position of the object: x=0; y=0
 
 object.set(10,50); // finally we want to move the object to 10;50
 
-object.add(10,50) // 10;50 + 10;50 = 20;100 -> now object has position x=20 and y=100
+object.add(10,50) // 10,50 + 10,50 = 20,100 -> now object has position x=20 and y=100
 
 let mag = object.mag; // return the magnitude of the vector
 
 object.setMag(10); // change the object's magnitude
 
-object.normalize(); // adapte values of the object between 0 and 1
+object.normalize(); // adapt values of the object between 0 and 1
 ```
 
 ## Basic Functions to draw shapes
@@ -99,7 +99,7 @@ line(x1, y1, x2, y2);
 polyline(x1,y1, x2,y2, ...); // must take an even number of arguments
 ```
 
-### circle
+### Circle
 
 ```js
 circle(x, y, radius);
@@ -111,7 +111,7 @@ circle(x, y, radius);
 rect(x, y, width, height);
 ```
 
-### Filled rectangle
+### Filled Rectangle
 
 ```js
 fillRect(x, y, width, height);
@@ -125,7 +125,7 @@ text(txt, x, y);
 
 ## Personalization
 
-### format the text
+### Format the text
 
 ```js
 setFont(fontSize, font);
@@ -205,7 +205,7 @@ enablePCswipe(bool); // true or false
 
 
 function mouseMouse(e) {
-    // called when the mouse move  on the canvas
+    // called when the mouse move on the canvas
 }
 
 function mouveEnter(e) {
