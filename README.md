@@ -33,14 +33,21 @@ The function takes 2 minimal arguments, for a maximum of 4.
 1. its width
 1. its height
 1. its background (optional, by default dark)
-1. if it take care about pointerLock (optional, by default false). If this argument if set to true, then you must click on the canvas to enter the pointerLock mode, and Esc to come out.
+1. if it take care about pointerLock (optional, by default false). If this argument is set to true, then you must click on the canvas to enter the pointerLock mode, and Esc to come out.
 
 The function return the canvas, but you can access to it with the global variable `canvas`.
 
 Once the canvas is created, you cannot resize it.
 
 ```js
-let canvas = createCanvas(width, height, background='#000', requestPointerLock=false);
+// canvas = null, ctx = null
+// width = 0, height = 0
+let my_canvas = createCanvas(canvas_width, canvas_height, background='#000', requestPointerLock=false);
+/* the variable canvas is now the new created canvas
+   the variable ctx is now the new context 2d of this canvas (canvas.getContext('2d'))
+   the variable width is now set to canvas.width
+   the variable height is now set to canvas.height
+*/
 ```
 
 ## The 2 basics functions
@@ -58,9 +65,10 @@ You can animate your canvas easily. Thanks for these 2 functions which will be e
     * `android`: either the device is on Android or not.
 * `canvas`: you can access to it, but do not modify it. if you didn't create the canvas yet, its value is `null`.
 * `ctx`: you can access to it, but do not modify it. if you didn't create the canvas yet, its value is `null`.
-* `width`: The width of the created canvas. Please do not modify it.
-* `height`: The height canvas. Please do not modify it.
-
+* `width`: the width of the created canvas. Please do not modify it.
+* `height`: the height canvas. Please do not modify it.
+* `mouseX`: it's the mouse's X position relative to the canvas
+* `mouseY`: it's the mouse's Y position relative to the canvas
 
 You can use / access to all other variables, but I do not recommend it. Let the canvas.js file do all about them, and access to it by the functions provided for this purpose.
 
@@ -155,13 +163,9 @@ linecap(style); // must be butt, round or square. Default is butt
 
 ```js
 push(); // saves the canvas
-
 translate(x, y); // translates the canvas
-
 rotate(degree); // rotates the canvas
-
 pop(); // restores the canvas before the translation & rotation
-
 clear(); // clears the canvas draw. Normally you don't have to use it, because the draw() function do
 ```
 
