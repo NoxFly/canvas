@@ -1,4 +1,4 @@
-# Canvas
+# Canvas library
 
 This canvas library is, for the moment, provide for 2D canvas.
 
@@ -211,7 +211,7 @@ let swipeDir = getSwipe(); // returns the last stored swipe direction
 enablePCswipe(bool); // true or false
 
 
-function mouseMouse(e) {
+function mouseMove(e) {
     // called when the mouse move on the canvas
 }
 
