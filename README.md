@@ -2,10 +2,14 @@
 
 This canvas library is, for the moment, provide for 2D canvas.
 
-## include link
-
+## Include link
+### Minified Version
 ```js
 <script src='https://cdn.jsdelivr.net/gh/NoxFly/canvas/canvas.min.js'></script>
+```
+### Normal Version
+```js
+<script src='https://cdn.jsdelivr.net/gh/NoxFly/canvas/canvas.js'></script>
 ```
 
 ## NPM
@@ -50,12 +54,11 @@ let my_canvas = createCanvas(canvas_width, canvas_height, background='#000', req
 
 You can animate your canvas easily. Thanks for these 2 functions which will be executed automatically once your declare them:
 
-* `function setup(void) {}`: this function is executed __before__ the `draw` function, but __after__ the window's loading. So you have access to the `document` variable in.
-* `function draw(void) {}`: this function is executed __after__ the `setup` function and the window's loading. `requestAnimationFrame(draw)` is called, so the draw function is looping. Otherwise, you can set a condition to stop the requestAnimationFrame. While this condition return false, the draw loop will not be executed. Thanks for the function `setDrawCondition(condition)`.
+* `function setup(void) {}`: This function is executed __before__ the `draw` function, but __after__ the window's loading. So you have access to the `document` variable in.
+* `function draw(void) {}`: This function is executed __after__ the `setup` function and the window's loading. `requestAnimationFrame(draw)` is called, so the draw function is looping. Otherwise, you can set a condition to stop the requestAnimationFrame. While this condition return false, the draw loop will not be executed. Thanks for the function `setDrawCondition(condition)`.
 
 ## Public variables
-public variables:
-* `MIN_DOC_SIZE`: the value of the minimum between the document's width / height
+* `MIN_DOC_SIZE`: The value of the minimum between the document's width / height
 * `isDevice`: object that has 3 boolean keys
     * `mobile`: either the device is a mobile or not.
     * `ios`: either the device is on iOS or not.
@@ -86,9 +89,9 @@ object.set(10,50); // finally we want to move the object to 10;50
 
 object.add(10,50) // 10,50 + 10,50 = 20,100 -> now object has position x=20 and y=100
 
-let mag = object.mag; // return the magnitude of the vector
+let mag = object.mag; // returns the magnitude of the vector
 
-object.setMag(10); // change the object's magnitude
+object.setMag(10); // changes the object's magnitude
 
 object.normalize(); // adapt values of the object between 0 and 1
 ```
@@ -159,28 +162,28 @@ linecap(style); // must be butt, round or square. Default is butt
 ## Canvas functions
 
 ```js
-push(); // save the canvas
-translate(x, y); // translate the canvas
-rotate(degree); // rotate the canvas
-pop(); // restore the canvas before the translation & rotation
-clear(); // clear the canvas draw. Normally you don't have to use it, because the draw() function do
+push(); // saves the canvas
+translate(x, y); // translates the canvas
+rotate(degree); // rotates the canvas
+pop(); // restores the canvas before the translation & rotation
+clear(); // clears the canvas draw. Normally you don't have to use it, because the draw() function do
 ```
 
 ## Mathematical functions
 
 ```js
-radians(degree); // return the radian's value of a degree one
-angleToVector(angle); // return the vector of a degree
-dist(a, b); // return the distance between two vectors
+radians(degree); // returns the radian's value of a degree one
+angleToVector(angle); // returns the vector of a degree
+dist(a, b); // returns the distance between two vectors
 map(val, start1, end1, start2, end2); // range mapping a value
-random(max); // return a random int from 0 to max-1
+random(max); // returns a random int from 0 to max-1
 ```
 
 ## Mouse Properties
 
 ```js
 // mouse movement direction
-let dir = mouseDir(); // return the direction the mouse is moving on
+let dir = mouseDir(); // returns the direction the mouse is moving on
 /* Returned values:
     BOTTOM_RIGHT
     TOP_RIGHT
@@ -202,7 +205,7 @@ function onSwipe(e) {
     // e.detail.swipe is the swipe direction
 }
 
-let swipeDir = getSwipe(); // return the last stored swipe direction
+let swipeDir = getSwipe(); // returns the last stored swipe direction
 
 // disable the PC swipe (can be the cause if some issues)
 enablePCswipe(bool); // true or false
@@ -229,7 +232,7 @@ function mouseWheel(e) {
 
 ```js
 // key down
-isKeyDown(keyCode); // return a boolean (true / false) if a given key is pressed
+isKeyDown(keyCode); // returns a boolean (true / false) if a given key is pressed
 // example:
 // if(isKeyDown('Space')) console.log('space key is down');
 
