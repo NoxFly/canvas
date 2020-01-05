@@ -193,6 +193,10 @@ fillRect(x, y, width, height);
 
 ```js
 text(txt, x, y);
+
+// for multilines using one text() function, use "<br>".
+// however it keep the same font size :
+text("Hello world !<br>Do you like canvas ?", 10, 20);
 ```
 
 ## Personalization
