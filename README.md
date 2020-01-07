@@ -2,6 +2,8 @@
 
 This canvas library is, for the moment, provide for 2D canvas.
 
+![Hits](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https://github.com/NoxFly/canvas)
+
 ## Include link
 ### Minified Version
 ```js
