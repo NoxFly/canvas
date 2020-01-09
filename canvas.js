@@ -60,10 +60,9 @@ function polyline() {
 			ctx.lineTo(x,y);
 		}
 
+		if(bStroke) ctx.stroke();
+		if(bFill) ctx.fill();
 	ctx.closePath();
-
-	if(bStroke) ctx.stroke();
-	if(bFill) ctx.fill();
 }
 
 const circle = (x, y, r) => {
