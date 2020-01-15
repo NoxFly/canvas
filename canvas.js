@@ -19,26 +19,49 @@ let originArr = [
 ];
 let fontSize = "12px";
 let fontFamily = "Monospace";
+let fps = 60;
 
 // private vars
-let bFill = true, bStroke = true;
-let keys = {};
-let isMouseDown = false;
-let oldMouseX = 0, oldMouseY = 0;
-let isPointerLocked = false;
-let mouseDirection = {x: 0, y: 0};
-let swipexDown = null;
-let swipeyDown = null;
-let swipePCEnable = true;
-let lastSwipe = null;
-let bGuideLines = false;
-
+let NOX_CVS_PVT_VAR = {
+	bFill: true, bStroke: true,
+	keys: {},
+	isMouseDown: false,
+	oldMouseX: 0, oldMouseY: 0,
+	isPointerLocked: false,
+	mouseDirection: {x: 0, y: 0},
+	swipexDown: null,
+	swipeyDown: null,
+	swipePCEnable: true,
+	lastSwipe: null,
+	bGuideLines: false,
+	now: 0, then: Date.now(), interval: 1000/fps, delta: 0, counter: 0, time_el: 0,
+	tc: (oColor) => {
+		let color = [], newCol = "#000";
+		for(arg in oColor) color.push(oColor[arg]);
+		if([0,2].indexOf(color.length) !== -1 || color.length > 4) newCol = "#000";
+		else if(color.length == 1) {
+			if(typeof color[0] == "number") {
+				newCol = `rgb(${color[0]}, ${color[0]}, ${color[0]})`;
+			} else if(typeof color[0] == "string") {
+				newCol = color[0];
+			}
+		} else {
+			if(color.every(col => typeof col == "number")) {
+				if(color.length == 3)
+					newCol = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+				else
+					newCol = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]})`;
+			}
+		}
+		return newCol;
+	}
+}
 
 const line = (x1,y1,x2,y2) => {
 	ctx.beginPath();
 		ctx.moveTo(x1,y1);
 		ctx.lineTo(x2,y2);
-		if(bStroke) ctx.stroke();
+		if(NOX_CVS_PVT_VAR.bStroke) ctx.stroke();
 	ctx.closePath();
 };
 
@@ -60,16 +83,16 @@ function polyline() {
 			ctx.lineTo(x,y);
 		}
 
-		if(bStroke) ctx.stroke();
-		if(bFill) ctx.fill();
+		if(NOX_CVS_PVT_VAR.bStroke) ctx.stroke();
+		if(NOX_CVS_PVT_VAR.bFill) ctx.fill();
 	ctx.closePath();
 }
 
 const circle = (x, y, r) => {
 	ctx.beginPath();
 		ctx.arc(x, y, r, 0, 2*Math.PI);
-		if(bStroke) ctx.stroke();
-		if(bFill) ctx.fill();
+		if(NOX_CVS_PVT_VAR.bStroke) ctx.stroke();
+		if(NOX_CVS_PVT_VAR.bFill) ctx.fill();
 	ctx.closePath();
 };
 
@@ -77,8 +100,8 @@ const fillRect = (x,y,w,h) => {ctx.fillRect(x,y,w,h);};
 
 const rect = (x, y, w, h) => {
 	ctx.rect(x,y,w,h);
-	if(bFill) ctx.fill();
-	if(bStroke) ctx.stroke();
+	if(NOX_CVS_PVT_VAR.bFill) ctx.fill();
+	if(NOX_CVS_PVT_VAR.bStroke) ctx.stroke();
 };
 
 const text = (txt, x, y) => {
@@ -90,8 +113,9 @@ const text = (txt, x, y) => {
 		ctx.fillText(txt, x, y);
 	}
 };
-const setFont = (size, font) => {ctx.font = `${size} ${font}`; fontSize=size; fontFamily=font};
-const setFontSize = size => {ctx.font = `${size} ${fontFamily}`; fontSize=size};
+
+const setFont = (size, font) => {ctx.font = `${size}px ${font}`; fontSize=size+"px"; fontFamily=font};
+const setFontSize = size => {ctx.font = `${size}px ${fontFamily}`; fontSize=size+"px"};
 const setFontFamily = font => {ctx.font = `${fontSize} ${font}`; fontFamily=font};
 const alignText = alignment => {ctx.textAlign = ['left', 'right', 'center', 'start', 'end'].indexOf(alignment) > -1? alignment : 'left';};
 
@@ -102,16 +126,16 @@ const translate =	(x,y) 	=> {ctx.translate(x,y);};
 const rotate =		degree	=> {ctx.rotate(radians(degree))};
 
 // noFill & noStroke
-const noFill = 		() => {bFill = false;};
-const noStroke = 	() => {bStroke = false;};
+const noFill = 		() => {NOX_CVS_PVT_VAR.bFill = false;};
+const noStroke = 	() => {NOX_CVS_PVT_VAR.bStroke = false;};
 
-const background = color => {canvas.style.backgroundColor = color;};
+function background     (color)    {canvas.style.backgroundColor = NOX_CVS_PVT_VAR.tc(arguments);};
 
 // calculs & parameters
-const stroke = 			color 	=> {ctx.strokeStyle = color; bStroke = true;};
+function stroke  		(color)    {ctx.strokeStyle = NOX_CVS_PVT_VAR.tc(arguments); NOX_CVS_PVT_VAR.bStroke = true;};
 const strokeWeight =	weight	=> {ctx.lineWidth = weight;};
 const linecap =			style	=> {ctx.lineCap = ['butt','round','square'].indexOf(style) > -1? style : 'butt';};
-const fill = 			color 	=> {ctx.fillStyle = color; bFill = true;};
+function fill  			(color)    {ctx.fillStyle = NOX_CVS_PVT_VAR.tc(arguments); NOX_CVS_PVT_VAR.bFill = true;};
 const clear = 			() 		=> {ctx.clearRect(0,0,canvas.width,canvas.height);}
 const radians = 		deg 	=> deg * (Math.PI/180);
 const degree = 			rad 	=> rad * (180/Math.PI);
@@ -124,6 +148,11 @@ const abs =				n		=> (n >= 0)? n : -n;
 const sqrt =			n		=> Math.sqrt(n);
 function min			() 		{return Math.max(...arguments);}
 function max			() 		{return Math.min(...arguments);}
+const round =			n		=> Math.round(n);
+const floor =			n		=> Math.floor(n);
+const ceil =			n		=> Math.ceil(n);
+const frameRate =		f		=> {if(f<0) return; NOX_CVS_PVT_VAR.interval = 1000/f};
+
 
 const hex = (r,g,b) => {   
 	r = Number(r).toString(16); if(r.length < 2) r = "0"+r;
@@ -133,9 +162,14 @@ const hex = (r,g,b) => {
 };
 
 const hexs = (rgb)=> {
-	let r = parseInt(rgb.replace(/rgba?\((\d+),\d+,\d+(\,\d+)?\)/,'$1'));
-	let g = parseInt(rgb.replace(/rgba?\(\d+,(\d+),\d+(\,\d+)?\)/,'$1'));
-	let b = parseInt(rgb.replace(/rgba?\(\d+,\d+,(\d+)(\,\d+)?\)/,'$1'));
+	let r, g, b;
+	if(typeof rgb == "number") {
+		[r, g, b] = [rgb, rgb, rgb];
+	} else {
+		r = parseInt(rgb.replace(/rgba?\((\d+),\d+,\d+(\,\d+)?\)/,'$1'));
+		g = parseInt(rgb.replace(/rgba?\(\d+,(\d+),\d+(\,\d+)?\)/,'$1'));
+		b = parseInt(rgb.replace(/rgba?\(\d+,\d+,(\d+)(\,\d+)?\)/,'$1'));
+	}
 	return hex(r,g,b);
 };
 
@@ -146,11 +180,11 @@ const rgb =	hexa => {
 };
 
 // get last swipe direction
-const getSwipe = () => lastSwipe;
+const getSwipe = () => NOX_CVS_PVT_VAR.lastSwipe;
 
 // key event
-const isKeyDown = keyCode => keys[keyCode];
-const isKeyUp 	= keyCode => !keys[keyCode];
+const isKeyDown = keyCode => NOX_CVS_PVT_VAR.keys[keyCode];
+const isKeyUp 	= keyCode => !NOX_CVS_PVT_VAR.keys[keyCode];
 
 // scale for rendering
 const rendering  = (x, y=null) 	=> new Vector(((x instanceof Vector && !y)? x.x:x) * width/realWidth, ((x instanceof Vector && !y)?x.y:y) * height/realHeight);
@@ -158,24 +192,24 @@ const renderingX = x 			=> x*width/realWidth;
 const renderingY = y 			=> y*height/realHeight;
 
 const mouseDir = () =>
-	isPointerLocked?
-		mouseDirection
+	NOX_CVS_PVT_VAR.isPointerLocked?
+		NOX_CVS_PVT_VAR.mouseDirection
 	:
-		(mouseX >  oldMouseX && mouseY >  oldMouseY)? "BOTTOM_RIGHT" :
-		(mouseX >  oldMouseX && mouseY <  oldMouseY)? "TOP_RIGHT" :
-		(mouseX <  oldMouseX && mouseY <  oldMouseY)? "TOP_LEFT" :
-		(mouseX <  oldMouseX && mouseY >  oldMouseY)? "BOTTOM_LEFT" :
-		(mouseX >  oldMouseX && mouseY == oldMouseY)? "RIGHT" :
-		(mouseX == oldMouseX && mouseY >  oldMouseY)? "DOWN" :
-		(mouseX == oldMouseX && mouseY <  oldMouseY)? "UP" :
-		(mouseX <  oldMouseX && mouseY == oldMouseY)? "LEFT":
+		(mouseX >  NOX_CVS_PVT_VAR.oldMouseX && mouseY >  NOX_CVS_PVT_VAR.oldMouseY)? "BOTTOM_RIGHT" :
+		(mouseX >  NOX_CVS_PVT_VAR.oldMouseX && mouseY <  NOX_CVS_PVT_VAR.oldMouseY)? "TOP_RIGHT" :
+		(mouseX <  NOX_CVS_PVT_VAR.oldMouseX && mouseY <  NOX_CVS_PVT_VAR.oldMouseY)? "TOP_LEFT" :
+		(mouseX <  NOX_CVS_PVT_VAR.oldMouseX && mouseY >  NOX_CVS_PVT_VAR.oldMouseY)? "BOTTOM_LEFT" :
+		(mouseX >  NOX_CVS_PVT_VAR.oldMouseX && mouseY == NOX_CVS_PVT_VAR.oldMouseY)? "RIGHT" :
+		(mouseX == NOX_CVS_PVT_VAR.oldMouseX && mouseY >  NOX_CVS_PVT_VAR.oldMouseY)? "DOWN" :
+		(mouseX == NOX_CVS_PVT_VAR.oldMouseX && mouseY <  NOX_CVS_PVT_VAR.oldMouseY)? "UP" :
+		(mouseX <  NOX_CVS_PVT_VAR.oldMouseX && mouseY == NOX_CVS_PVT_VAR.oldMouseY)? "LEFT":
 	null;
 
 
 const enablePCswipe = bool => {
-	swipePCEnable = typeof bool == "boolean"? bool : true;
+	NOX_CVS_PVT_VAR.swipePCEnable = typeof bool == "boolean"? bool : true;
 
-	if(swipePCEnable) {
+	if(NOX_CVS_PVT_VAR.swipePCEnable) {
 		document.removeEventListener('mousedown', handleTouchStart, false);
 		document.removeEventListener('mousemove', handleTouchMove, false);
 	} else {
@@ -226,13 +260,13 @@ function createCanvas(w, h, bg="#000", requestPointerLock=false) {
 		document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
 
 		document.addEventListener('pointerlockchange', () => {
-			if(document.pointerLockElement !== canvas || document.mozPointerLockElement !== canvas) isPointerLocked = false;
+			if(document.pointerLockElement !== canvas || document.mozPointerLockElement !== canvas) NOX_CVS_PVT_VAR.isPointerLocked = false;
 		}, false);
 
 		canvas.onclick = () => {
-			if(!isPointerLocked) {
+			if(!NOX_CVS_PVT_VAR.isPointerLocked) {
 				canvas.requestPointerLock();
-				isPointerLocked = true;
+				NOX_CVS_PVT_VAR.isPointerLocked = true;
 			}
 		};
 	}
@@ -243,7 +277,7 @@ function createCanvas(w, h, bg="#000", requestPointerLock=false) {
 }
 
 function showGuideLines(bool) {
-	bGuideLines = typeof bool == 'boolean'? bool : false;
+	NOX_CVS_PVT_VAR.bGuideLines = typeof bool == 'boolean'? bool : false;
 }
 
 let drawCond = () => true;
@@ -253,35 +287,37 @@ function setDrawCondition(condition = null) {
 }
 
 function drawLoop() {
-    if(ctx && typeof draw != "undefined" && drawCond()) {
-        clear();
-		draw();
-		if(bGuideLines) {
-			fill('#46eaea');
-			stroke('#46eaea');
-			strokeWeight(1);
-			line(0,mouseY,width,mouseY);
-			line(mouseX,0,mouseX,height);
-			text(`${Math.floor(mouseX)},${Math.floor(mouseY)}`,mouseX+5,mouseY-5);
+	requestAnimationFrame(drawLoop);
+	NOX_CVS_PVT_VAR.now = Date.now();
+	NOX_CVS_PVT_VAR.delta = NOX_CVS_PVT_VAR.now - NOX_CVS_PVT_VAR.then;
+	if(NOX_CVS_PVT_VAR.delta > NOX_CVS_PVT_VAR.interval) {
+		NOX_CVS_PVT_VAR.then = NOX_CVS_PVT_VAR.now - (NOX_CVS_PVT_VAR.delta % NOX_CVS_PVT_VAR.interval);
+		fps = parseInt(NOX_CVS_PVT_VAR.counter/NOX_CVS_PVT_VAR.time_el);
+		if(ctx && typeof draw != "undefined" && drawCond()) {
+			clear();
+			draw();
+			if(NOX_CVS_PVT_VAR.bGuideLines) {
+				fill('#46eaea'); stroke('#46eaea'); strokeWeight(1);
+				line(0,mouseY,width,mouseY); line(mouseX,0,mouseX,height);
+				text(`${Math.floor(mouseX)},${Math.floor(mouseY)}`,mouseX+5,mouseY-5);
+			}
 		}
-    }
-
-    requestAnimationFrame(drawLoop);
+	}
 }
 
 function handleTouchStart(e) {
-	isMouseDown = true;
+	NOX_CVS_PVT_VAR.isMouseDown = true;
 	if(typeof mouseDown != "undefined") mouseDown(e);
 	let getTouches = e2 => e2.touches || [{clientX: e.clientX, clientY: e.clientY}, null];
 
 	const firstTouch = getTouches(e)[0];
-	swipexDown = firstTouch.clientX;
-	swipeyDown = firstTouch.clientY;
+	NOX_CVS_PVT_VAR.swipexDown = firstTouch.clientX;
+	NOX_CVS_PVT_VAR.swipeyDown = firstTouch.clientY;
 }
 
 function handleTouchMove(e) {
-	if(typeof mouseDown != "undefined" && isMouseDown) mouseDown(e);
-	if(!swipexDown || !swipeyDown) {
+	if(typeof mouseDown != "undefined" && NOX_CVS_PVT_VAR.isMouseDown) mouseDown(e);
+	if(!NOX_CVS_PVT_VAR.swipexDown || !NOX_CVS_PVT_VAR.swipeyDown) {
 		return;
 	}
 
@@ -295,8 +331,8 @@ function handleTouchMove(e) {
 		yUp = e.clientY;
 	}
 
-	let xDiff = swipexDown - xUp;
-	let yDiff = swipeyDown - yUp;
+	let xDiff = NOX_CVS_PVT_VAR.swipexDown - xUp;
+	let yDiff = NOX_CVS_PVT_VAR.swipeyDown - yUp;
 
 	let event, swipeDir;
 
@@ -309,10 +345,10 @@ function handleTouchMove(e) {
 	}
 
 	canvas.dispatchEvent(event);
-	lastSwipe = swipeDir;
+	NOX_CVS_PVT_VAR.lastSwipe = swipeDir;
 	
-	swipexDown = null;
-	swipeyDown = null;
+	NOX_CVS_PVT_VAR.swipexDown = null;
+	NOX_CVS_PVT_VAR.swipeyDown = null;
 }
 
 function getOffsetVector(shape) {
@@ -362,19 +398,19 @@ window.onload = e => {
 
 	if(canvas) {
 		canvas.addEventListener('mousemove', e => {
-			oldMouseX = mouseX;
-			oldMouseY = mouseY;
+			NOX_CVS_PVT_VAR.oldMouseX = mouseX;
+			NOX_CVS_PVT_VAR.oldMouseY = mouseY;
 			mouseX = e.clientX - offset(canvas).left;
 			mouseY = e.clientY - offset(canvas).top;
-			mouseDirection = {x: e.movementX, y: e.movementY};
+			NOX_CVS_PVT_VAR.mouseDirection = {x: e.movementX, y: e.movementY};
 			if(typeof mouseMove != "undefined") mouseMove(e);
 		});
 
 		canvas.addEventListener('touchstart', handleTouchStart, false);
 		canvas.addEventListener('touchmove',  handleTouchMove, false);
-		canvas.addEventListener('mouseup', e => {isMouseDown = false; if(typeof mouseUp != "undefined") mouseUp(e);});
+		canvas.addEventListener('mouseup', e => {NOX_CVS_PVT_VAR.isMouseDown = false; if(typeof mouseUp != "undefined") mouseUp(e);});
 
-		if(swipePCEnable) {
+		if(NOX_CVS_PVT_VAR.swipePCEnable) {
 			canvas.addEventListener('mousedown', handleTouchStart, false);
 			canvas.addEventListener('mousemove', handleTouchMove, false);
 		}
@@ -393,17 +429,17 @@ window.onload = e => {
 	
 	// EVENTS
 	window.onkeypress = e => {
-		keys[e.code] = true;
+		NOX_CVS_PVT_VAR.keys[e.code] = true;
 		if(typeof keyPress != "undefined") keyPress(e);
 	};
 
 	window.onkeydown = e => {
-		keys[e.code] = true;
+		NOX_CVS_PVT_VAR.keys[e.code] = true;
 		if(typeof keyDown != "undefined") keyDown(e);
 	};
 
 	window.onkeyup = e => {
-		keys[e.code] = false;
+		NOX_CVS_PVT_VAR.keys[e.code] = false;
 		if(typeof keyUp != "undefined") keyUp(e);
 	};
 

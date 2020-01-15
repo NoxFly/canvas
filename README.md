@@ -131,6 +131,7 @@ function setup() {
 * `realHeight`: the real height of your canvas if you used `setHTMLview`
 * `mouseX`: it's the mouse's X position relative to the canvas
 * `mouseY`: it's the mouse's Y position relative to the canvas
+* `fps`: the calculated fps of the canvas requestAnimationFrame (by default 20).
 
 You can use / access to all other variables, but I do not recommend it. Let the canvas.js file do all about them, and access to it by the functions provided for this purpose.
 
@@ -206,8 +207,8 @@ text("Hello world !<br>Do you like canvas ?", 10, 20);
 ### Format the text
 
 ```js
-// must specify the font size unity, example:
-// setFont('24px', 'Monospace');
+// since 1.2.0: don't specify the font size unity, it's in px, example:
+// setFont(24, 'Monospace');
 setFont(fontSize, font);
 
 // to change only the size
@@ -229,6 +230,16 @@ stroke(color); // can be hex, rgb[a], hsl, or color name
 fill(color); // same
 strokeWeight(weight); // the line's stroke weight
 linecap(style); // must be butt, round or square. Default is butt
+
+/** Colors accepted format:
+ *      - fill(255) // rgb with the 3 values set to 255
+ *      - fill(255, 255, 255) // rgb
+ *      - fill(255, 255, 255, 0.5) // rgba
+ *      - fill('white') // color name
+ *      - fill('rgb(255,255,255)') // rgb string format
+ *      - fill('rgba(255,255,255,0.5)') // rgba string format
+ *      - fill('#fff') // hexadecimal format - string
+ */
 ```
 
 
@@ -242,6 +253,7 @@ pop(); // restores the canvas before the translation & rotation
 clear(); // clears the canvas draw. Normally you don't have to use it, because the draw() function do
 
 background(color); // change the canvas's background
+frameRate(f); // set the frame rate value of the requestAnimationFrame of the draw() function
 ```
 
 ## Mathematical functions
@@ -256,8 +268,11 @@ random(max); // returns a random int from 0 to max-1
 pow(n); // returns n²
 sqrt(n); // return the sqrt of n
 abs(n); // return the absolute of n
+floor(n); // return the Math.floor(n)
+round(n); // return the Math.round(n)
+ceil(n); // return the Math.ceil(n)
 hex(r, g, b); // return the hexadecimal value of the rgb one for 3 given integers
-hexs(rgb); // same but for a string : "rgb(255,255,255)"
+hexs(rgb); // same but for a string : "rgb(255,255,255)" or a single int value between 0 and 255
 rgb(hexa); // return the rgb value as a string for a given hexadecimal value
 ```
 
