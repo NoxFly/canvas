@@ -140,7 +140,6 @@ const clear = 			() 		=> {ctx.clearRect(0,0,canvas.width,canvas.height);}
 const radians = 		deg 	=> deg * (Math.PI/180);
 const degree = 			rad 	=> rad * (180/Math.PI);
 const angleToVector = 	angle 	=> new Vector(Math.cos(angle), Math.sin(angle));
-const random = 			max 	=> Math.floor(Math.random() * max);
 const dist = 			(a,b) 	=> Math.hypot(a.x-b.x, a.y-b.y);
 const map =				(val, start1, end1, start2, end2) => ((val-start1)/(end1-start1))*(end2-start2)+start2;
 const pow =				n		=> n*n;
@@ -152,6 +151,7 @@ const round =			n		=> Math.round(n);
 const floor =			n		=> Math.floor(n);
 const ceil =			n		=> Math.ceil(n);
 const frameRate =		f		=> {if(f<0) return; NOX_CVS_PVT_VAR.interval = 1000/f};
+const random = 			(min, max) 	=> floor(Math.random() * (max - min +1)) + min;
 
 
 const hex = (r,g,b) => {   

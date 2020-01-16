@@ -264,7 +264,7 @@ degree(radian); // returns the degree's value of a radian one
 angleToVector(angle); // returns the vector of a degree
 dist(a, b); // returns the distance between two vectors
 map(val, start1, end1, start2, end2); // range mapping a value
-random(max); // returns a random int from 0 to max-1
+random(min, max); // returns a random int in interval [min;max]
 pow(n); // returns n²
 sqrt(n); // return the sqrt of n
 abs(n); // return the absolute of n
