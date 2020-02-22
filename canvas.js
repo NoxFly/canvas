@@ -450,8 +450,13 @@ window.onload = e => {
 
 class Vector {
 	constructor(x,y) {
-		this.x = x;
-		this.y = y;
+		if(x instanceof Vector) {
+			this.x = x.x;
+			this.y = x.y;
+		} else {
+			this.x = x;
+			this.y = y;
+		}
 	}
 
 	normalize() {
@@ -465,11 +470,59 @@ class Vector {
 	set(x,y) {
 		this.x = x;
 		this.y = y;
+		return this;
 	}
 
 	add(vec) {
-		this.x += vec.x;
-		this.y += vec.y;
+		if(vec instanceof Vector) {
+			this.x += vec.x;
+			this.y += vec.y;
+		} else {
+			if(arguments.length == 1) {
+				this.x += vec;
+				this.y += vec;
+			} else {
+				this.x += vec;
+				this.y += arguments[1];
+			}
+		}
+		return this;
+	}
+
+	mult(vec) {
+		if(vec instanceof Vector) {
+			this.x *= vec.x;
+			this.y *= vec.y;
+		} else {
+			if(arguments.length == 1) {
+				this.x *= vec;
+				this.y *= vec;
+			} else {
+				this.x *= vec;
+				this.y *= arguments[1];
+			}
+		}
+		return this;
+	}
+
+	div(vec) {
+		if(vec instanceof Vector) {
+			this.x /= vec.x;
+			this.y /= vec.y;
+		} else {
+			if(arguments.length == 1) {
+				this.x /= vec;
+				this.y /= vec;
+			} else {
+				this.x /= vec;
+				this.y /= arguments[1];
+			}
+		}
+		return this;
+	}
+
+	invert(inverse=false) {
+		[this.x, this.y] = [inverse?1-this.y:this.y, inverse?1-this.x:this.x];
 	}
 
 	get mag() {

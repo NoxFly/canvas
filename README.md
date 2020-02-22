@@ -147,6 +147,7 @@ It can be a vector for acceleration, speed, position,...
 
 ```js
 let object = new Vector(0,0); // position of the object: x=0; y=0
+let objet2 = new Vector(object); // create a new vector from another one
 object.set(10,50); // finally we want to move the object to 10;50
 object.add(10,50) // 10,50 + 10,50 = 20,100 -> now object has position x=20 and y=100
 let mag = object.mag; // returns the magnitude of the vector
