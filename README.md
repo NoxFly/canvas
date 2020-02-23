@@ -27,7 +27,7 @@ You will get some predefined variables, you can use some of them, but some other
 
 If you have created some examples with this library, send me them so I'll surely add these examples on the github repo (+ credit).
 
-version 1.1.0
+version 1.2.2
 
 ## Create a canvas
 
