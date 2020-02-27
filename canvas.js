@@ -429,17 +429,17 @@ window.onload = e => {
 	
 	// EVENTS
 	window.onkeypress = e => {
-		NOX_CVS_PVT_VAR.keys[e.code] = true;
+		NOX_CVS_PVT_VAR.keys[e.keyCode] = true;
 		if(typeof keyPress != "undefined") keyPress(e);
 	};
 
 	window.onkeydown = e => {
-		NOX_CVS_PVT_VAR.keys[e.code] = true;
+		NOX_CVS_PVT_VAR.keys[e.keyCode] = true;
 		if(typeof keyDown != "undefined") keyDown(e);
 	};
 
 	window.onkeyup = e => {
-		NOX_CVS_PVT_VAR.keys[e.code] = false;
+		NOX_CVS_PVT_VAR.keys[e.keyCode] = false;
 		if(typeof keyUp != "undefined") keyUp(e);
 	};
 
