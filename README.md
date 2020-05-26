@@ -7,12 +7,9 @@ This canvas library is, for the moment, provide for 2D canvas.
 ## Include link
 ### Minified Version
 ```js
-<script src='https://cdn.jsdelivr.net/gh/NoxFly/canvas/canvas.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/@noxfly/canvas'></script>
 ```
-### Normal Version
-```js
-<script src='https://cdn.jsdelivr.net/gh/NoxFly/canvas/canvas.js'></script>
-```
+
 
 ## NPM
 [https://www.npmjs.com/package/@noxfly/canvas](https://www.npmjs.com/package/@noxfly/canvas)
@@ -27,7 +24,7 @@ You will get some predefined variables, you can use some of them, but some other
 
 If you have created some examples with this library, send me them so I'll surely add these examples on the github repo (+ credit).
 
-version 1.2.3
+version 1.2.5
 
 ## Create a canvas
 
