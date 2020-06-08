@@ -168,15 +168,22 @@ function setup() {
 Here are the variables declared in the canvas file, that you can use:
 
 **MIN_DOC_SIZE**: the value of the minimum between document width and height (change on document resizing)
+
 **isDevice**:  object that has 3 booleans:
     * `mobile`: either it's a mobile/tablet or PC
     * `ios`: either it's an IOS or not
     * `android`: either it's an Android or not
+
 **canvas**: the canvas DOM element
+
 **ctx**: the 2d context of the canvas variable
+
 **width** and **height**: the size of the canvas
+
 **realWidth** and **realHeight**: the size of the resolution of the canvas
+
 **mouseX** and **mouseY**: the mouse current position
+
 **fps**: the frame per seconds of the draw function (by default 60)
 
 
