@@ -170,8 +170,11 @@ Here are the variables declared in the canvas file, that you can use:
 **MIN_DOC_SIZE**: the value of the minimum between document width and height (change on document resizing)
 
 **isDevice**:  object that has 3 booleans:
+
     * `mobile`: either it's a mobile/tablet or PC
+
     * `ios`: either it's an IOS or not
+    
     * `android`: either it's an Android or not
 
 **canvas**: the canvas DOM element
