@@ -119,7 +119,7 @@ let NOX_PV = {
 				rgb: /^rgba?\((\d{1,3},){2}\d{1,3}(,\d(\.\d+)?)?\)$/,
 				hsl: /^hsl\(\d{1,3},\d{1,3}%,\d{1,3}%\)$/,
 				name: /^\w{3,30}$/
-			}
+			};
 
 			for(let regex in reg) {
 				if(reg[regex].test(color)) {
