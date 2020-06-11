@@ -1,4 +1,6 @@
-const { RGB } = require('../canvas');
+const Canvas = require('../canvas');
+
+const RGB = Canvas.__get__('RGB');
 
 let Color = new RGB(100, 120, 200);
 

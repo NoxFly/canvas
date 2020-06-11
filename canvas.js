@@ -2339,5 +2339,3 @@ class Triangle extends TriangleShape {
 		super(A.x, A.y, base, baseTilt, tHeight, heightPosition, fill, stroke, strokeWeight);
 	}
 }
-
-module.exports = {RGB};
