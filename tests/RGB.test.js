@@ -29,3 +29,12 @@ test('Get hexadecimal from RGB', () => {
     rgb.set(0, 0, 0);
     expect(rgb.toHEX().color.str).toBe('#000000');
 });
+
+test('Test RGB to string', () => {
+    let rgb = new RGB(255, 255, 255);
+    expect(rgb.toString()).toBe('rgb(255, 255, 255)');
+    rgb.set(0, 0, 0);
+    expect(rgb.toString()).toBe('rgb(0, 0, 0)');
+    rgb.set(1, 10, 20);
+    expect(rgb.toString()).toBe('rgb(1, 10, 20)');
+});
