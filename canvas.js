@@ -24,7 +24,6 @@ const documentHeight = () => document.documentElement.clientHeight;
 // the minimum between document width & document height
 let MIN_DOC_SIZE;
 
-// PI
 const PI = Math.PI;
 
 // object of boolean
@@ -2340,3 +2339,5 @@ class Triangle extends TriangleShape {
 		super(A.x, A.y, base, baseTilt, tHeight, heightPosition, fill, stroke, strokeWeight);
 	}
 }
+
+module.exports = {RGB};
