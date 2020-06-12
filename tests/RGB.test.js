@@ -16,13 +16,22 @@ test('Get the blue value', () => {
     expect(Color.b).toBe(200);
 });
 
-test('Set red value', () => {
-    Color.r = 220;
-    expect(Color.r).toBe(220);
-    Color.r = -10;
-    expect(Color.r).toBe(0);
-    Color.r = 300;
-    expect(Color.r).toBe(255);
+describe('Set red value', () => {
+
+    it('should be the same', () => {
+        Color.r = 220;
+        expect(Color.r).toBe(220);
+    });
+
+    it('should be set to 0', () => {
+        Color.r = -10;
+        expect(Color.r).toBe(0);
+    });
+
+    it('should be set to 255', () => {
+        Color.r = 300;
+        expect(Color.r).toBe(255);
+    });
 });
 
 test('Get hexadecimal from RGB', () => {
