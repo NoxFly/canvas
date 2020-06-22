@@ -47,6 +47,10 @@ let sFontSize = "12px";
 let sFontFamily = "Monospace";
 
 
+// mouse direction - can't be a vector class instance, just a basic object {x, y}
+let mouseDirection = {x: 0, y: 0};
+
+
 // private vars
 let NOX_PV = {
 	// either the fill | stroke is enable
@@ -63,9 +67,6 @@ let NOX_PV = {
 
 	// boolean - pointer lock
 	isPointerLocked: false,
-
-	// mouse direction - can't be a vector class instance, just a basic object {x, y}
-	mouseDirection: {x: 0, y: 0},
 
 	// swipe direction
 	swipexDown: null,
@@ -1069,7 +1070,7 @@ const renderingY = y 			=> y * height / realHeight;
 
 const mouseDir = () =>
 	NOX_PV.isPointerLocked?
-		NOX_PV.mouseDirection
+		mouseDirection
 	:
 		(mouseX >  NOX_PV.oldMouseX && mouseY >  NOX_PV.oldMouseY)? "BOTTOM_RIGHT" :
 		(mouseX >  NOX_PV.oldMouseX && mouseY <  NOX_PV.oldMouseY)? "TOP_RIGHT" :
@@ -1470,7 +1471,7 @@ const initializeCanvasWorld = () => {
                     mouseY = e.clientY - offset(canvas).top;
 
                     if(NOX_PV.isPointerLocked) {
-                        NOX_PV.mouseDirection = {x: e.movementX, y: e.movementY};
+                        mouseDirection = {x: e.movementX, y: e.movementY};
                     }
 
                     if(typeof mouseMove != "undefined") mouseMove(e);
