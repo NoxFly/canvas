@@ -1470,9 +1470,9 @@ const initializeCanvasWorld = () => {
                     mouseX = e.clientX - offset(canvas).left;
                     mouseY = e.clientY - offset(canvas).top;
 
-                    if(NOX_PV.isPointerLocked) {
+                    //if(NOX_PV.isPointerLocked) {
                         mouseDirection = {x: e.movementX, y: e.movementY};
-                    }
+                    //}
 
                     if(typeof mouseMove != "undefined") mouseMove(e);
                 });
