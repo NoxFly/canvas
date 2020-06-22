@@ -497,13 +497,22 @@ const dist = (a, b) =>  Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z);
 
 /**
  * range mapping of a value
- * @param {Array} val value
+ * @param {Array|number} val value - can be either an array or a number
  * @param {number} start1 start of the current interval
  * @param {number} end1 end of the current interval
  * @param {number} start2 start of the new interval
  * @param {number} end2 end of the new interval
  */
-const map =	(array, start1, end1, start2, end2) => array.map(val => (val - start1) * (end2 - start2) / (end1 - start1) + start2);
+const map =	(arrayOrValue, start1, end1, start2, end2) => {
+
+	const m = val => (val - start1) * (end2 - start2) / (end1 - start1) + start2;
+
+	if(typeof arrayOrValue === 'number') {
+		return m(arrayOrValue);
+	}
+
+	return arrayOrValue.map(val => m(val));
+};
 
 /**
  * Returns the power of the value (default power: 2)
