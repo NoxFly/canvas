@@ -12,21 +12,29 @@
 
 This canvas framework is only creating 2D context, but provides 3D vectors. 
 
-You can help me to maintain this framework with small donation on my Paypal.
+You can help me to maintain this framework with small donation on my Paypal, or with pull requests.
 
-You also can star it, open issues if needed, and join the official server for asking help:
+You also can star it, open issues if needed, and join the official Discord server for asking help or making some suggestions:
 
 https://discord.gg/j5SarbC
 
 
 ## JSDELIVR include links
+
+**/!\\** these links refers to the latest version.
+
+// You can have some issues if a new version is released in the future.
+
 ### by the github way
+
 ```html
 <script src='https://cdn.jsdelivr.net/gh/NoxFly/canvas/canvas.js'></script>
 // minified version
 <script src='https://cdn.jsdelivr.net/gh/NoxFly/canvas/canvas.min.js'></script>
 ```
+
 ### by the npm way
+
 ```html
 // minified version
 <script src='https://cdn.jsdelivr.net/npm/@noxfly/canvas'></script>
@@ -188,6 +196,8 @@ Here are the variables declared in the canvas file, that you can use:
 **mouseX** and **mouseY**: the mouse current position
 
 **fps**: the frame per seconds of the draw function (by default 60)
+
+**mouseDirection**: object containing the x and y mouse's direction movement. The faster the mouse goes, the larger will the number be
 
 
 
@@ -423,6 +433,73 @@ strokeRect(x, y, recWidth, recHeight);
 text(txt, x, y);
 // for multilines using one text() function, use "\n".
 text("Hello world !\nDo you like canvas ?", 10, 20);
+
+
+// for the paths:
+moveTo(x, y);
+lineTo(x, y);
+
+path(d);
+```
+
+### Custom Path
+You can create custom paths faster than doing
+```js
+ctx.beginPath();
+    ctx.moveTo(10, 10);
+    ctx.lineTo(20, 20);
+    ctx.arc(20, 20, 50, 0, radian(90), false);
+ctx.closePath();
+```
+Doing this:
+```js
+path('M 10 10 L 20 20 A 50 0 90 0');
+```
+
+It's exactly the same way as doing a SVG `<path>` tag.
+
+#### Path properties
+Path contains instructions and arguments.
+
+Instructions are letters, arguments are numbers (integers, decimals, positive or negative).
+
+Path always have to start by the `M` instruction.
+
+Possible instructions:
+
+* `M`: like `moveTo`. Must be followed by 2 arguments (x, y)
+* `L`: like `lineTo`. Must be followed by 2 arguments (x, y)
+* `H`: like `Horizontal`. Must be followed by 1 argument (x)
+* `V`: like `Vertical`. Must be followed by 1 argument (y)
+* `A`: like `Arc`. Must take 6 arguments (x, y, radius, startAngle, endAngle, antiClockwise)
+    * `antiClockwise` has to be 1 or 0 (like true or false)
+    * `start` and `end` have to be in degree. They will be converted to radians
+    * `x` and `y` are where the startAngle is, it's not the arc's center position
+* `Z`: close the path (visible if you stroke it). Must be the last thing on the path
+
+`M`, `L`, `H`, `V`, `A` can be written to lower case, then it will take arguments relatively to the last point of the path.
+
+`Z` cannot be written in lower case.
+
+### Path Class
+
+You can create dynamic paths:
+```js
+let p = new Path(); // without x and y argument, p.x and p.y are null, then it cannot be drawn
+
+p.clear(); // clear the path
+
+p.MoveTo(x, y); // moveTo for relative way
+p.LineTo(x, y); // lineTO for relative way
+p.Horizontal(x); // p.horizontal(x) is the relative way
+p.Vertical(y); // p.vertical(y) is the relative way
+p.Arc(x, y, r, start, end, antiClockwise=false); // p.arc() for relative way
+p.close(); // add a Z property at the end of the path
+// if you add something after this, it will move the Z at the end
+p.open(); // remove the Z at the end
+
+p.move(vec); // moves the path with a given vector
+p.move(x, y); // same but with 2 given numbers
 ```
 
 ## Personalization

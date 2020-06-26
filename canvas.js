@@ -146,6 +146,22 @@ let NOX_PV = {
 
 
 
+/**
+ * Move pen cursor to a point
+ * @param {number} x x of the point to move
+ * @param {number} y y of the point to move
+ */
+const moveTo = (x, y) => {
+	ctx.moveTo(x, y);
+}
+
+
+const lineTo = (x, y) => {
+	ctx.lineTo(x, y);
+};
+
+
+
 
 /**
  * Draw a line
@@ -269,6 +285,230 @@ const rect = (x, y, w, h) => {
 	if(NOX_PV.bFill) ctx.fill();
 	if(NOX_PV.bStroke) ctx.stroke();
 };
+
+
+
+/**
+ * Create a custom path with assembly of shapes
+ * @param {string} p path string that will be converted to d path code
+ */
+const path = p => {
+	// instruction: letter (MLHVAZ)
+	// argument: numbers
+
+	// remove spaces at the start and the end of the string
+	p = p.trim();
+  
+	// a path must start with a moveTo instruction
+	if(!p.startsWith('M')) {
+		return;
+	}
+	
+	// split each instructions / arguments
+	p = p.split(' ');
+
+	// default starting mode is moveTo to positionate the cursor
+	// remove a loop in the for loop
+	let mode = 'M';
+
+	// availible modes with number of arguments that is needed
+	const modes = {
+		M: {
+			n: 2,
+			f: (x, y) => moveTo(x, y)
+		},
+
+		L: {
+			n: 2,
+			f: (x, y) => lineTo(x, y)
+		},
+
+		H: {
+			n: 1,
+			f: (x, y) => lineTo(x, y)
+		},
+
+		V: {
+			n: 1,
+			f: (y, x) => lineTo(x, y)
+		},
+
+		A: {
+			n: 6,
+			f: (x, y, r, start, end, antiClockwise) => ctx.arc(x, y, r, radian(start), radian(end), antiClockwise===1)
+		},
+
+		Z: {
+			n: 0,
+			f: () => lineTo(parseFloat(p[1]), parseFloat(p[2]))
+		}
+	};
+
+
+	// regex to verify if each point is okay
+	const reg = new RegExp(`^[${Object.keys(modes).join('')}]|(\-?\d+(\.\d+)?)$`, 'i');
+	
+	// if a point isn't well written, then stop
+	if(p.filter(point => reg.test(point)).length == 0) {
+		return;
+	}
+
+	// doesn't need to try to draw something: need at least an instruction M first and 2 parameters x,y
+	if(p.length < 3) {
+		return;
+	}
+
+	// code translated path
+	let d = [];
+	// number of points - 1: last index of the array of points
+	const lastIdx = p.length - 1;
+
+
+	// read arguments - normally starts with x,y of the M instruction
+	for(let i=0; i < p.length; i++) {
+		let point = p[i];
+
+		// is a letter - new instruction
+		if(/[a-z]/i.test(point)) {
+			// lowercase - relative
+			// uppercase - absolute
+			// push pile of instructions (only 2 saved)
+			mode = point;
+
+			// if the instruction is Z
+			if(mode == 'Z') {
+				// and if it's the last mode
+				if(i == lastIdx) {
+					// then close the path
+					d.push("Z");
+				} else {
+					// cannot use the Z somewhere else than the last point
+					return;
+				}
+			}
+			
+			// lowercase Z isn't recognized
+			if(['z'].includes(mode)) {
+				return;
+			}
+
+			const nArg = modes[mode.toUpperCase()].n;
+
+			// depending on the current instruction, there need to have to right number of argument following this instruction
+			if(lastIdx-nArg < i) {
+				return;
+			}
+
+			//
+			let lastPos = {x: 0, y: 0};
+
+			// get the last cursor position
+			if(d.length > 0) {
+				let prev = d[d.length-1];
+
+				let hv = ['H', 'V'].indexOf(prev[0]);
+
+				if(hv !== -1) {
+					lastPos.x = prev[1 + hv]; // x of the last point
+					lastPos.y = prev[2 - hv]; // y of the last point
+				}
+				
+				else {
+					let k = 1;
+
+					lastPos.x = prev[k]; // x of the last point
+					lastPos.y = prev[k+1]; // y of the last point
+				}
+			}
+
+
+			// array that is refresh every instruction + argument given
+			let arr = [mode.toUpperCase()];
+
+			// if it's H or V instruction, keep the last X or Y
+			let hv = ['H', 'V'].indexOf(arr[0]);
+
+
+			// add each argument that are following the instruction
+			for(let j=0; j < nArg; j++) {
+				i++;
+
+				let n = parseFloat(p[i]);
+
+				// it must be a number
+				if(isNaN(n)) {
+					return;
+				}
+				
+				// push the treated argument
+				arr.push(n);
+			}
+
+
+			// onnly for H or V
+			if(hv !== -1) {
+				arr.push(lastPos[Object.keys(lastPos)[1-hv]]);
+			}
+
+			if(arr[0] == 'A') {
+				arr[1] -= arr[3];
+			}
+
+			// lowercase: relative to last point - only for MLHVA
+			if(/[mlhva]/.test(mode)) {
+				if(mode === 'v') {
+					arr[1] += lastPos.y;
+				}
+
+				else if(mode === 'h') {
+					arr[1] += lastPos.x;
+				}
+
+				else {
+					arr[1] += lastPos.x;
+					arr[2] += lastPos.y;
+				}
+			}
+
+			
+			// add the instruction and its arguments to the translated path
+			d.push(arr);
+
+
+			// draw the arc isn't enough, we have to move the cursor to the end of the arc too
+			if(arr[0] == 'A') {
+				// arr = ['A', x, y, r, start, end, acw]
+				const angle = radian(arr[5]);
+
+				let x = arr[1] + cos(angle) * arr[3]
+					y = arr[2] + sin(angle) * arr[3];
+
+				d.push(['M', x, y]);
+			}
+		}
+
+	}
+
+
+	// start draw depending on what's written
+	ctx.beginPath();
+		d.forEach(step => {
+			// surely Z()
+			if(typeof step === 'string') {
+				modes[step].f();
+			}
+
+			// else it's MLHVA with position arguments
+			else {
+				modes[step[0]].f(...step.slice(1));
+			}
+		});
+
+		if(NOX_PV.bFill) ctx.fill();
+		if(NOX_PV.bStroke) ctx.stroke();
+	ctx.closePath();
+	
+}
 
 
 
@@ -2087,6 +2327,14 @@ class Vector {
 
 
 class Shape {
+	/**
+	 * Create a shape instance with properties
+	 * @param {number} x shape's position X
+	 * @param {number} y shape's position Y
+	 * @param {any} fill shape's background
+	 * @param {any} stroke shape's outline
+	 * @param {number} strokeWeight shape outline's size
+	 */
 	constructor(x, y, fill='transparent', stroke='transparent', strokeWeight=1) {
 		this.pos = new Vector(x, y);
 
@@ -2163,6 +2411,14 @@ class Shape {
 
 
 class RectangleShape extends Shape {
+	/**
+	 * Create a Rectangle shape instance with properties, heeriting from Shape class
+	 * @param {number} x rectangle's position X
+	 * @param {number} y rectangle's position Y
+	 * @param {any} fill rectangle's background
+	 * @param {any} stroke rectangle's outline
+	 * @param {number} strokeWeight rectangle outline's size
+	 */
 	constructor(x, y, w, h, fill='black', stroke='transparent', strokeWeight=1) {
 		super(x, y, fill, stroke, strokeWeight);
 		this.dim = new Vector(w, h);
@@ -2221,6 +2477,15 @@ class RectangleShape extends Shape {
 
 
 class CircleShape extends Shape {
+	/**
+	 * Create Circle shape instance with properties, heriting from Shape class
+	 * @param {number} x circle's position X
+	 * @param {number} y circle's position Y
+	 * @param {number} r circle's radius
+	 * @param {any} fill circle's background
+	 * @param {any} stroke circle's outline
+	 * @param {number} strokeWeight circle outline's size
+	 */
 	constructor(x, y, r, fill='black', stroke='transparent', strokeWeight=1) {
 		super(x, y, fill, stroke, strokeWeight);
 		this.radius = r - strokeWeight;
@@ -2262,6 +2527,18 @@ class CircleShape extends Shape {
 
 
 class TriangleShape extends Shape {
+	/**
+	 * Create Triangle shape instance with properties, heriting from Shape class
+	 * @param {number} x triangle's position X
+	 * @param {number} y triangle's position Y
+	 * @param {number} baseLength triangle's base length
+	 * @param {number} baseTiltinDegree triangle's rotation (in degree)
+	 * @param {number} triangleHeight triangle's height
+	 * @param {number} heightPosition triangle's height position from its base. 0 is the center
+	 * @param {any} fill triangle's background
+	 * @param {any} stroke triangle's outline
+	 * @param {number} strokeWeight triangle outline's size
+	 */
 	constructor(x, y, baseLength, baseTiltinDegree, triangleHeight, heightPosition, fill='black', stroke='transparent', strokeWeight=1) {
 		super(x, y, fill, stroke, strokeWeight);
 		this.baseLength = baseLength;
@@ -2333,6 +2610,18 @@ class TriangleShape extends Shape {
 
 
 class Triangle extends TriangleShape {
+	/**
+	 * Create Triangle shape instance with properties, heriting from Shape class
+	 * @param {number} x1 first point position X
+	 * @param {number} y1 first point position Y
+	 * @param {number} x2 second point position X
+	 * @param {number} y2 second point position Y
+	 * @param {number} x3 third point position X
+	 * @param {number} y3 third point position Y
+	 * @param {any} fill triangle's background
+	 * @param {any} stroke triangle's outline
+	 * @param {number} strokeWeight triangle outline's size
+	 */
 	constructor(x1, y1, x2, y2, x3, y3, fill='black', stroke='black', strokeWeight=1) {
 		let A = new Vector(x1, y1),
 			B = new Vector(x2, y2),
@@ -2348,5 +2637,137 @@ class Triangle extends TriangleShape {
 		let tHeight = dist(k,C), heightPosition = C.x-A.x;
 
 		super(A.x, A.y, base, baseTilt, tHeight, heightPosition, fill, stroke, strokeWeight);
+	}
+}
+
+
+
+
+class Path {
+	/**
+	 * Create Path instance
+	 * @param {number} x where must start the path X
+	 * @param {number} y where must start the path Y
+	 */
+	constructor(x=null, y=null) {
+		this.d = null;
+		this.isClosed = false;
+
+		if(x && y) {
+			this.MoveTo(x, y);
+		}
+	}
+
+	clear() {
+		this.d = null;
+	}
+
+	draw() {
+		if(this.d !== null) {
+			path(this.d + (this.isClosed? ' Z' : ''));
+		}
+
+		else {
+			console.error("Cannot draw it because you didn't make a path");
+		}
+	}
+
+	// M
+	MoveTo(x, y) {
+		if(this.d === null) {
+			this.d = `M ${x} ${y}`;
+		}
+	
+		else {
+			this.d += ` M ${x} ${y}`;
+		}
+	}
+	
+	// m
+	moveTo(x, y) {
+		if(this.d === null) return console.error("You have to initialize the fist path's position");
+		this.d += ` m ${x} ${y}`;
+	}
+
+
+	// L
+	LineTo(x, y) {
+		if(this.d === null) return console.error("You have to initialize the first path's position");
+		this.d += ` L ${x} ${y}`;
+	}
+
+	// l
+	lineTo(x, y) {
+		if(this.d === null) return console.error("You have to initialize the first path's position");
+		this.d += ` l ${x} ${y}`;
+
+	}
+
+
+	// H
+	Horizontal(x) {
+		if(this.d === null) return console.error("You have to initialize the first path's position");
+		this.d += ` H ${x}`;
+	}
+
+	// h
+	horizontal(x) {
+		if(this.d === null) return console.error("You have to initialize the first path's position");
+		this.d += ` h ${x}`;
+	}
+
+
+	// V
+	Vertical(y) {
+		if(this.d === null) return console.error("You have to initialize the first path's position");
+		this.d += ` V ${y}`;
+	}
+
+	// v
+	vertical(y) {
+		if(this.d === null) return console.error("You have to initialize the first path's position");
+		this.d += ` v ${y}`;
+	}
+
+	
+	// A
+	Arc(x, y, r, start, end, antiClockwise=false) {
+		if(this.d === null) return console.error("You have to initialize the first path's position");
+		this.d += ` A ${x} ${y} ${r} ${start} ${end} ${(antiClockwise==true)?1:0}`;
+	}
+
+	// a
+	arc(x, y, r, start, end, antiClockwise=false) {
+		if(this.d === null) return console.error("You have to initialize the first path's position");
+		this.d += ` a ${x} ${y} ${r} ${start} ${end} ${(antiClockwise==true)?1:0}`;
+	}
+
+
+	// Z
+	close() {
+		if(this.d === null) return console.error("You have to initialize the first path's position");
+		this.isClosed = true;
+	}
+
+	open() {
+		if(this.d === null) return console.error("You have to initialize the first path's position");
+		this.isClosed = false;
+	}
+
+	move(x, y=null) {
+		// 1 argument and it's a vector
+		if(y === null && x instanceof Vector) {
+			[x, y] = [x.x, x.y];
+		}
+
+		if(this.d === null) return;
+
+		this.d = this.d.replace(/([MLHVA])\s([\d\.]+)(\s([\d\.]+))?/g, (c, p1, p2, p3) => {
+			if(p1 == 'H') return `${p1} ${parseFloat(p2) + x}`;
+			
+			if(p1 == 'V') return `${p1} ${parseFloat(p2) + y}`;
+			
+			return `${p1} ${parseFloat(p2) + x} ${parseFloat(p3) + y}`;
+		});
 	}
 }
