@@ -69,10 +69,16 @@ console.log(canvas._);
 
 
 
-## append node canvas to html
+## Append node canvas to html
 
 ```html
 <img src="<%= canvas.toDataURL() %>">
+```
+
+## Append node canvas as buffer
+
+```js
+const buffer = canvas.toBuffer();
 ```
 
 
@@ -161,6 +167,35 @@ Read the usage of this class [here](https://github.com/NoxFly/canvas#path-class)
 const { Path } = require('@noxfly/canvas');
 ```
 
+
+## Load images
+
+```js
+const { loadImage } = require('@noxfly/canvas');
+
+loadImage('images/myImage.png').then(img => {
+    canvas.drawImage(img);
+})
+```
+
+## Create image cache system
+
+If you load an image for the first time, it will load it, then store it, else it will just returns you the saved image of the first call.
+
+```js
+const { createCanvas, createImageManager } = require('@noxfly/canvas');
+
+const canvas = createCanvas(640, 480);
+
+const imageManager = createImageManager();
+
+const img = await imageManager.load('myImageName', 'my/path/to/image.png');
+
+canvas.drawImage(img);
+
+// you can call again the imageManager.load('myImageName', 'my/path/to/image.png')
+// and it will returns you the stored image
+```
 
 
 ## License

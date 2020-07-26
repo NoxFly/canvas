@@ -94,25 +94,68 @@ class Canvas {
      * @param {number} width canvas's width
      * @param {number} height canvas's height
      * @param {background} background canvas's background
+ 	 * @param {string} support canvas support. It can be nothing, SVG or PDF
      */
-    constructor(width, height, background=null) {
-        this._ = new NodeCanvas.createCanvas(width, height);
+    constructor(width, height, background=null, support=null) {
+		if(support === null  || ['svg', 'pdf'].includes(support.toUpperCase())) {
+			this._ = new NodeCanvas.createCanvas(width, height);
+		} else {
+			this._ = new NodeCanvas.createCanvas(width, height, support.toUpperCase());
+		}
 
-		(() => {
-			this.background = background;
+		this.background = background;
 
-			// default text size & font-family
-			this.sFontSize = "12px";
-			this.sFontFamily = "Monospace";
+		// default text size & font-family
+		this.sFontSize = "12px";
+		this.sFontFamily = "Monospace";
 
-			this.bFill = true;
-			this.bStroke = true;
-		})();
-		
-		this.toDataURL = () => {
-			return this._.toDataURL();
-		};
-    }
+		this.bFill = true;
+		this.bStroke = true;
+	}
+	
+	/**
+	 * Returns the canvas as URL data
+	 */
+	toDataURL() {
+		return this._.toDataURL();
+	}
+
+	/**
+	 * Returns the canvas as buffer
+	 */
+	toBuffer() {
+		return this._.toBuffer();
+	}
+
+	/**
+	 * 
+	 * @param {CanvasImageSource} image 
+	 * @param  {...number} args
+	 * @param {number} sx
+	 * @param {number} sy
+	 * @param {number} dx
+	 * @param {number} dy
+	 * @param {number} dw
+	 * @param {number} dh
+	 */
+	drawImage(image, ...args) {
+		try {
+			switch(args.length) {
+				case 0:
+					this.ctx.drawImage(image); break;
+				case 2:
+					this.ctx.drawImage(image, dx, dy); break;
+				case 4:
+					this.ctx.drawImage(image, dx, dy, dw, dh); break;
+				case 6:
+					this.ctx.drawImage(image, sx, sy, dx, dy, dw, dh); break;
+				default:
+					console.error('Wrong number of argument given');
+			}
+		} catch(error) {
+			console.error('An error occured while attempting to draw an image:\n' + error);
+		}
+	}
 
     /**
      * Canvas's width
@@ -122,7 +165,10 @@ class Canvas {
     /**
      * Canvas's height
      */
-    get height() {return this._.height;}
+	get height() {return this._.height;}
+	
+
+
 
     /**
      * Create a new context to the canvas
@@ -131,7 +177,7 @@ class Canvas {
     getContext(context) {
         if(typeof this.ctx === 'undefined') {
             this.ctx = this._.getContext(context);
-
+			
             if(this.background !== null) {
                 this.fill(this.background);
                 this.fillRect(0, 0, this.width, this.height);
@@ -648,13 +694,81 @@ class Canvas {
 
 
 
-    // push & pop & translate
-    push() {this.ctx.save();}
-    pop() {this.ctx.restore();}
-    translate(x,y) {this.ctx.translate(x,y);}
-    rotate(degree) {this.ctx.rotate(radian(degree));}
-    clip() {this.ctx.clipPath();}
+    /**
+	 * create a save of the canvas at this given point
+	 */
+    push() {
+		this.ctx.save();
+	}
+
+	/**
+	 * Returns from the last save of the canvas
+	 */
+    pop() {
+		this.ctx.restore();
+	}
+
+	/**
+	 * Translate the canvas at the given point
+	 * @param {number} x translation's X
+	 * @param {number} y translation's Y
+	 */
+    translate(x,y) {
+		this.ctx.translate(x,y);
+	}
+
+	/**
+	 * rotate the canvas with given angle (in degree)
+	 * @param {number} degree rotation's angle in degree
+	 */
+	rotate(degree) {
+		this.ctx.rotate(radian(degree));
+	}
+
+	/**
+	 * Clip the canvas with the drawn shape
+	 */
+	clip() {
+		this.ctx.clipPath();
+	}
 }
+
+
+
+
+
+
+
+
+
+class CanvasImageManager {
+	constructor() {
+		this.images = {};
+	}
+
+	/**
+	 * Load an image if never used before then store it, and return it
+	 * @param {string} name name of the image to be stored in the object
+	 * @param {string} url image path
+	 */
+	async load(name, url=null) {
+		if(typeof url === 'string') {
+			if(!(name in this.images)) {
+				this.images[name] = await NodeCanvas.loadImage(url);
+			}
+		}
+
+		return this.images[name];
+	}
+}
+
+
+
+
+
+
+
+
 
 
 
@@ -664,8 +778,9 @@ class Canvas {
  * @param {number} height height of the canvas
  * @param {string} context the canvas context
  * @param {any} background the background of the canvas (fillRect on the creation)
+ * @param {string} support canvas support. It can be nothing, SVG or PDF
  */
-module.exports.createCanvas = (width, height, context='2d', background=null) => {
+module.exports.createCanvas = (width, height, context='2d', background=null, support=null) => {
 	if(width <= 0 || height <= 0) {
 		console.warn('Canvas size must be higher than 0');
 		return null;
@@ -675,7 +790,7 @@ module.exports.createCanvas = (width, height, context='2d', background=null) => 
         background = NOX_PV.colorTreatment(background);
     }
 
-	const canvas = new Canvas(width, height, background);
+	const canvas = new Canvas(width, height, background, support);
 
     const ctx = canvas.getContext(context);
     
@@ -685,8 +800,21 @@ module.exports.createCanvas = (width, height, context='2d', background=null) => 
 
 
 
+/**
+ * Create a cache system for images
+ * @param {Canvas} canvas 
+ */
+module.exports.createImageManager = () => {
+	return new CanvasImageManager();
+};
 
 
+/**
+ * Load an image
+ * @param {string} src image path
+ * @param {object} options image's options
+ */
+module.export.loadImage = (src, options={}) => NodeCanvas.loadImage(src, options);
 
 
 
