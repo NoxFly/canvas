@@ -1,11 +1,12 @@
-# Canvas framework
+# Canvas Framework
+### A canvas framework which simplify all uses 
 
 [![GitHub contributors](https://img.shields.io/github/contributors/NoxFly/canvas.svg)](https://GitHub.com/NoxFly/canvas/graphs/contributors/)
-![Hits](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https://github.com/NoxFly/canvas)
+[![Hits](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https://github.com/NoxFly/canvas)](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https://github.com/NoxFly/canvas)
 [![GitHub issues](https://img.shields.io/github/issues/NoxFly/canvas.svg)](https://GitHub.com/NoxFly/canvas/issues/)
 [![npm version](https://badge.fury.io/js/%40noxfly%2Fcanvas.svg)](https://badge.fury.io/js/%40noxfly%2Fcanvas)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Paypal](https://img.shields.io/badge/paypal-donate-yellow.svg)](https://paypal.me/noxfly)
+[![Paypal Donate](https://img.shields.io/badge/paypal-donate-red.svg)](https://paypal.me/noxfly)
 [![GitHub stars](https://img.shields.io/github/stars/NoxFly/canvas.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/NoxFly/canvas/stargazers/)
 [![Npm Downloads](https://img.shields.io/npm/dt/@noxfly/canvas.svg?maxAge=3600)](https://img.shields.io/npm/dt/@noxfly/canvas.svg?maxAge=3600)
 
@@ -17,27 +18,27 @@ You can help me to maintain this framework with small donation on my Paypal, or 
 
 You also can star it, open issues if needed, and join the official Discord server for asking help or making some suggestions:
 
-https://discord.gg/j5SarbC
+**Official Discord Server**: https://discord.gg/j5SarbC
 
 
 ## CDN include links
 
 **/!\\** these links refers to the latest version.
 
-// You can have some issues if a new version is released in the future.
+// You may have some issues if a new version is released in the future.
 
-### by the github way
+### By the github way
 
 ```html
 <script src='https://cdn.jsdelivr.net/gh/NoxFly/canvas/canvas.js'></script>
-// minified version
+<!-- minified version -->
 <script src='https://cdn.jsdelivr.net/gh/NoxFly/canvas/canvas.min.js'></script>
 ```
 
-### by the npm way
+### By the npm way
 
 ```html
-// minified version
+<!-- minified version -->
 <script src='https://cdn.jsdelivr.net/npm/@noxfly/canvas'></script>
 ```
 
@@ -46,6 +47,8 @@ https://discord.gg/j5SarbC
 
 ## NPM
 [https://www.npmjs.com/package/@noxfly/canvas](https://www.npmjs.com/package/@noxfly/canvas)
+
+[![npm](https://nodei.co/npm/@noxfly/canvas.png?mini=true)](https://www.npmjs.com/package/@noxfly/canvas)
 
 ```js
 const Canvas = require('@noxfly/canvas/web');
@@ -116,7 +119,7 @@ You also can access to the canvas size with the both variables `width` and `heig
 
 
 
-## resize the canvas and canvas resolution
+## Resize the canvas and canvas resolution
 
 You can change the canvas size by doing the following function:
 ```js
@@ -144,7 +147,7 @@ renderingY(y);
 
 ## Guidelines
 
-You can enable guidelines while you are developping, in the setup function:
+You can enable guidelines while you are developing, in the setup function:
 
 ```js
 function setup() {
@@ -164,7 +167,7 @@ documentWidth();
 documentHeight();
 ```
 
-Therefore, you can create full-size canvas:
+Therefore, you can create full-screen canvas:
 ```js
 function setup() {
     createCanvas(documentWidth(), documentHeight());
@@ -264,7 +267,7 @@ function onOffline(e) {}
 
 
 
-## colors
+## Colors
 
 ### RGB
 ```js
@@ -371,7 +374,7 @@ v2.set(1, 2); // change the vector
 v4 = new Vector(10, 20);
 v2.set(v4); // you can pass vector as parameter
 
-v2.add(1); // x += 1, y += 2
+v2.add(1); // x += 1, y += 1
 v2.add(1, 3); // x += 1, y += 3
 v2.add(v4); // v2 += v4
 
@@ -401,8 +404,8 @@ ceil(x); // the ceiled value of x
 exp(x); // exponential of x
 log(x); // logarithm of x
 log10(x); // decimal logarithm of x
-cos(x); // cosinus of x
-sin(x); // sinus of x
+cos(x); // cosine of x
+sin(x); // sine of x
 tan(x); // tangent of x
 acos(x), asin(x), atan(x);
 cosh(x), sinh(x), atan2(x, y);
@@ -552,15 +555,15 @@ so I recommend to not use this class. Use which will follow this one.
 ### what contains a shape
 
 * a fill color. You can :
-    * acces to it doing `shape.background`
+    * access to it by doing `shape.background`
     * modify it doing `shape.fill = 'red'`
 * a stroke color. You can :
-    * acces to / modify it doing `shape.stroke`
+    * access to / modify it by doing `shape.stroke`
     * change its weight / get its weight using `shape.strokeWeight`
 * a position (x,y).
     * You can access to them thanks `shape.x` and `shape.y`.
     * You can modify the position thanks `shape.setPosition(x, y)` or `shape.setPosition(vector)`
-* a speed (by default 0, it's a static shape). You can acces to / modify it using `shape.speed`
+* a speed (by default 0, it's a static shape). You can access to / modify it using `shape.speed`
 * an acceleration (by default 0).
     * You can access to / modify it using `shape.acceleration`
     * In the case of the shape is running, it will move with `this.speed + this.acceleration`, else only `this.speed`
@@ -575,7 +578,7 @@ shape.move(1,0); // will move to 5 pixels to the right per frame. Write it on dr
 // you can also put a vector as parameter
 ```
 
-### the shape origin
+### The shape origin
 
 The origin of the shape is the (x,y) of this one.
 
@@ -590,15 +593,15 @@ shape.showOrigin(bool);
 // set a new origin
 setOrigin(newOrigin);
 /* Possible origins :
-    topLeft, top, topRight
-    left, center, right
-    bottomLeft, bottom, bottomRight
+    topLeft    ,  top   , topRight
+      left     , center ,   right
+    bottomLeft , bottom , bottomRight
 */
 ```
 
 To draw a shape, use `shape.draw()`
 
-You an also listen if you are hover the shape:
+You can also listen if you are hovering the shape:
 
 ```js
 if(shape.hover()) {
