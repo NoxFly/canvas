@@ -28,5 +28,7 @@
   "bugs": {
     "url": "https://github.com/NoxFly/canvas/issues"
   },
-  "homepage": "https://github.com/NoxFly/canvas#readme"
+  "homepage": "https://github.com/NoxFly/canvas#readme",
+
+  "readme": "https://github.com/NoxFly/canvas/tree/master/node_canvas#readme"
 }
