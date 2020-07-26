@@ -21,6 +21,12 @@ You also can star it, open issues if needed, and join the official Discord serve
 **Official Discord Server**: https://discord.gg/j5SarbC
 
 
+**For module scripts :** [module README](https://github.com/NoxFly/canvas/tree/master/module#readme).
+
+**For Nodejs backend canvas :** [nodejs README](https://github.com/NoxFly/canvas/tree/master/node_canvas#readme).
+
+
+
 ## CDN include links
 
 **/!\\** these links refers to the latest version.
