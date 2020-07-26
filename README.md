@@ -56,11 +56,6 @@ You also can star it, open issues if needed, and join the official Discord serve
 
 [![npm](https://nodei.co/npm/@noxfly/canvas.png?mini=true)](https://www.npmjs.com/package/@noxfly/canvas)
 
-```js
-const Canvas = require('@noxfly/canvas/web');
-```
-
-
 
 ## About
 In some versions will be availible bezier and quadratic curves, but you will also can create canvas on projects that include files as modules.

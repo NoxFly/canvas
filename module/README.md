@@ -23,12 +23,10 @@ As the default use, you can create animated and interactive canvas putting all t
 <script src='https://cdn.jsdelivr.net/gh/NoxFly/canvas/tree/master/module/canvas.min.js'></script>
 ```
 
-##  NPM
-
-[https://www.npmjs.com/package/@noxfly/canvas](https://www.npmjs.com/package/@noxfly/canvas)
+# Usage
 
 ```js
-const Canvas = require('@noxfly/canvas/module');
+import * as Canvas from 'canvas/module/canvas.min.js');
 
 const canvas = Canvas.createCanvas(640, 480);
 
