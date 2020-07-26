@@ -1,6 +1,6 @@
 {
   "name": "@noxfly/canvas",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "description": "Use canvas easier, better, stronger",
   "main": "node_canvas/canvas.min.js",
   "scripts": {
@@ -29,6 +29,5 @@
     "url": "https://github.com/NoxFly/canvas/issues"
   },
   "homepage": "https://github.com/NoxFly/canvas#readme",
-
   "readme": "https://github.com/NoxFly/canvas/tree/master/node_canvas#readme"
 }
