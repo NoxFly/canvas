@@ -7,36 +7,36 @@
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
  * @version		{1.3.5}
-*/
+ */
 
 
 
 /**
  * @vars CANVAS PUBLIC VARS
  */
-let ctx = null, canvas = null, width = 0, height = 0, realWidth = 0, realHeight = 0;
-let mouseX = 0, mouseY = 0;
-let fps = 60;
+export let ctx = null, canvas = null, width = 0, height = 0, realWidth = 0, realHeight = 0;
+export let mouseX = 0, mouseY = 0;
+export let fps = 60;
 
-const documentWidth = () => document.documentElement.clientWidth;
-const documentHeight = () => document.documentElement.clientHeight;
+export const documentWidth = () => document.documentElement.clientWidth;
+export const documentHeight = () => document.documentElement.clientHeight;
 
 // the minimum between document width & document height
-let MIN_DOC_SIZE;
+export let MIN_DOC_SIZE = min(documentWidth(), documentHeight());
 
 // PI
-const PI = Math.PI;
+export const PI = Math.PI;
 
 // object of boolean
 // either it's a mobile or not, in ios or android
-const isDevice = {
+export const isDevice = {
 	mobile: 	/iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
 	ios: 		/iPad|iPhone|iPod/.test(navigator.userAgent),
 	android: 	/Android/.test(navigator.userAgent)
 };
 
 // the possible origins for a shape
-const originArr = [
+export const originArr = [
 	'topLeft',    'top',    'topRight',
 	'left',       'center', 'right',
 	'bottomLeft', 'bottom', 'bottomRight'
@@ -48,11 +48,16 @@ let sFontFamily = "Monospace";
 
 
 // mouse direction - can't be a vector class instance, just a basic object {x, y}
-let mouseDirection = {x: 0, y: 0};
+export let mouseDirection = {x: 0, y: 0};
 
 
 // private vars
 let NOX_PV = {
+    // loop function
+    draw: null,
+
+    hasInitAllEventHandlers: false,
+
 	// either the fill | stroke is enable
 	bFill: true, bStroke: true,
 
@@ -151,16 +156,12 @@ let NOX_PV = {
  * @param {number} x x of the point to move
  * @param {number} y y of the point to move
  */
-const moveTo = (x, y) => {
+export const moveTo = (x, y) => {
 	ctx.moveTo(x, y);
 }
 
-/**
- * draw a line from the last point to given x,y
- * @param {number} x line end X
- * @param {number} y line end y
- */
-const lineTo = (x, y) => {
+
+export const lineTo = (x, y) => {
 	ctx.lineTo(x, y);
 };
 
@@ -174,7 +175,7 @@ const lineTo = (x, y) => {
  * @param {number} x2 x of the second point of the line
  * @param {number} y2 y of the second point of the line
  */
-const line = (x1, y1, x2, y2) => {
+export const line = (x1, y1, x2, y2) => {
 	ctx.beginPath();
 		ctx.moveTo(x1, y1);
 		ctx.lineTo(x2, y2);
@@ -191,7 +192,7 @@ const line = (x1, y1, x2, y2) => {
  * Draw a polyline with given arguments
  * @argument {Array<number>} values Array of point's positions. Need to be even number
  */
-const polyline = (...values) => {
+export const polyline = (...values) => {
 	// got an odd number of argument
 	if(values.length % 2 != 0) {
 		console.error('The function polyline must take an even number of values');
@@ -228,7 +229,7 @@ const polyline = (...values) => {
  * @param {number} end angle end
  * @param {boolean} antiClockwise 
  */
-const arc = (x, y, r, start, end, antiClockwise=false) => {
+export const arc = (x, y, r, start, end, antiClockwise=false) => {
 	ctx.beginPath();
 		ctx.arc(x, y, r, start, end, antiClockwise);
 		if(NOX_PV.bStroke) ctx.stroke();
@@ -246,7 +247,7 @@ const arc = (x, y, r, start, end, antiClockwise=false) => {
  * @param {number} y circle's y
  * @param {number} r circle's radius
  */
-const circle = (x, y, r) => {
+export const circle = (x, y, r) => {
 	arc(x, y, r, 0, 2*PI);
 };
 
@@ -259,7 +260,7 @@ const circle = (x, y, r) => {
  * @param {number} w rectangle's width
  * @param {number} h rectangle's height
  */
-const fillRect = (x, y, w, h) => {
+export const fillRect = (x, y, w, h) => {
 	ctx.fillRect(x, y, w, h);
 	if(NOX_PV.bFill) ctx.fill();
 	if(NOX_PV.bStroke) ctx.stroke();
@@ -276,7 +277,7 @@ const fillRect = (x, y, w, h) => {
  * @param {number} w rectangle's width
  * @param {number} h rectangle's height
  */
-const strokeRect = (x, y, w, h) => {
+export const strokeRect = (x, y, w, h) => {
 	ctx.strokeRect(x, y, w, h);
 	if(NOX_PV.bFill) ctx.fill();
 	if(NOX_PV.bStroke) ctx.stroke();
@@ -292,7 +293,7 @@ const strokeRect = (x, y, w, h) => {
  * @param {number} w rectangle's Width
  * @param {number} h rectangle's height
  */
-const rect = (x, y, w, h) => {
+export const rect = (x, y, w, h) => {
 	ctx.rect(x, y, w, h);
 	if(NOX_PV.bFill) ctx.fill();
 	if(NOX_PV.bStroke) ctx.stroke();
@@ -304,7 +305,7 @@ const rect = (x, y, w, h) => {
  * Create a custom path with assembly of shapes
  * @param {string} p path string that will be converted to d path code
  */
-const path = p => {
+export const path = p => {
 	// instruction: letter (MLHVAZ)
 	// argument: numbers
 
@@ -531,7 +532,7 @@ const path = p => {
  * @param {number} x text's X position
  * @param {number} y text's Y position
  */
-const text = (txt, x=0, y=0) => {
+export const text = (txt, x=0, y=0) => {
 
 	// multiple lines
 	if(/\n/.test(txt)) {
@@ -560,7 +561,7 @@ const text = (txt, x=0, y=0) => {
  * @param {number} size font size
  * @param {String} font font name
  */
-const setFont = (size, font) => {
+export const setFont = (size, font) => {
 	ctx.font = `${size}px ${font}`;
 	sFontSize = `${size}px`;
 	sFontFamily = font;
@@ -572,7 +573,7 @@ const setFont = (size, font) => {
  * Set the font size of the text
  * @param {number} size font size
  */
-const fontSize = size => {
+export const fontSize = size => {
 	ctx.font = `${size}px ${sFontFamily}`;
 	sFontSize = `${size}px`
 };
@@ -583,7 +584,7 @@ const fontSize = size => {
  * Set the font-family of the text
  * @param {String} font font-family
  */
-const fontFamily = font => {
+export const fontFamily = font => {
 	ctx.font = `${sFontSize} ${font}`;
 	sFontFamily = font
 };
@@ -594,7 +595,7 @@ const fontFamily = font => {
  * Change the text's alignement
  * @param {String} alignment text's alignment
  */
-const alignText = alignment => {
+export const alignText = alignment => {
 	ctx.textAlign = ['left', 'right', 'center', 'start', 'end'].indexOf(alignment) > -1? alignment : 'left';
 };
 
@@ -608,26 +609,25 @@ const alignText = alignment => {
 
 
 // push & pop & translate
-const push = 		() 		=> {ctx.save();};
-const pop = 		() 		=> {ctx.restore();};
-const translate =	(x,y) 	=> {ctx.translate(x,y);};
-const rotate =		degree	=> {ctx.rotate(radian(degree));};
-const clip =         ()      => {ctx.clipPath();};
-
+export const push = 		() 		=> {ctx.save();};
+export const pop = 		    () 		=> {ctx.restore();};
+export const translate =	(x,y) 	=> {ctx.translate(x,y);};
+export const rotate =		degree	=> {ctx.rotate(radian(degree));};
+export const clip =         ()      => {ctx.clipPath();};
 
 
 
 /**
  * Says to not fill the shapes
  */
-const noFill = () => {
+export const noFill = () => {
 	NOX_PV.bFill   = false;
 };
 
 /**
  * Says to not create strokes for shapes
  */
-const noStroke = () => {
+export const noStroke = () => {
 	NOX_PV.bStroke = false;
 };
 
@@ -636,7 +636,7 @@ const noStroke = () => {
  * Change the canvas color
  * @param  {...any} color background color
  */
-const background = (...color) => {
+export const background = (...color) => {
 	canvas.style.backgroundColor = NOX_PV.colorTreatment(...color);
 };
 
@@ -644,7 +644,7 @@ const background = (...color) => {
  * Set the stroke color for shapes to draw
  * @param  {...any} color Stroke color
  */
-const stroke = (...color) => {
+export const stroke = (...color) => {
 	ctx.strokeStyle = NOX_PV.colorTreatment(...color);
 	NOX_PV.bStroke = true;
 };
@@ -653,7 +653,7 @@ const stroke = (...color) => {
  * Set the strokeweight for shapes to draw
  * @param {number} weight weight of the stroke
  */
-const strokeWeight = weight	=> {
+export const strokeWeight = weight	=> {
 	ctx.lineWidth = weight;
 };
 
@@ -661,7 +661,7 @@ const strokeWeight = weight	=> {
  * Set the linecap style
  * @param {String} style linecap style
  */
-const linecap =	style => {
+export const linecap =	style => {
 	ctx.lineCap = ['butt','round','square'].indexOf(style) > -1? style : 'butt';
 };
 
@@ -670,7 +670,7 @@ const linecap =	style => {
  * Set the fill color for shapes to draw
  * @param  {...any} color Fill color
  */
-const fill = (...color) => {
+export const fill = (...color) => {
 	ctx.fillStyle = NOX_PV.colorTreatment(...color);
 	NOX_PV.bFill = true;
 };
@@ -678,7 +678,7 @@ const fill = (...color) => {
 /**
  * Clear the canvas from x,y to x+w;y+h
  */
-const clearRect = (x, y, w, h) => {
+export const clearRect = (x, y, w, h) => {
 	ctx.clearRect(x, y, x+w, y+h);
 }
 
@@ -702,25 +702,25 @@ const clearRect = (x, y, w, h) => {
  * Convert from degrees to radians
  * @param {number} deg degree value
  */
-const radian = deg => deg * (PI/180);
+export const radian = deg => deg * (PI/180);
 
 /**
  * Convert from radians to degrees
  * @param {number} rad radian value
  */
-const degree = rad => rad * (180/PI);
+export const degree = rad => rad * (180/PI);
 
 /**
  * Convert an angle to a vector (class instance) (2d vector)
  * @param {number} angle angle in radian
  */
-const angleToVector = angle => new Vector(cos(angle), sin(angle));
+export const angleToVector = angle => new Vector(cos(angle), sin(angle));
 
 /**
  * Returns the angle in degree of a given vector from the default vector (1,0)
  * @param {Vector} vector vector to calculate its angle
  */
-const vectorToAngle = vec => {
+export const vectorToAngle = vec => {
 	// horizontal vector - we don't care about its mag, but its orientation
 	const baseVector = new Vector(1, 0);
 	return angleBetweenVectors(baseVector, vec);
@@ -731,7 +731,7 @@ const vectorToAngle = vec => {
  * @param {Vector} a first vector
  * @param {Vector} b second vector
  */
-const angleBetweenVectors = (a, b) => {
+export const angleBetweenVectors = (a, b) => {
 	const ab = a.x * b.x + a.y * b.y + a.z * b.z;
 
 	const cosO = ab / (a.mag * b.mag);
@@ -747,7 +747,7 @@ const angleBetweenVectors = (a, b) => {
  * @param {Vector} a first point
  * @param {Vector} b second point
  */
-const dist = (a, b) =>  Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z);
+export const dist = (a, b) =>  Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z);
 
 /**
  * range mapping of a value
@@ -757,7 +757,7 @@ const dist = (a, b) =>  Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z);
  * @param {number} start2 start of the new interval
  * @param {number} end2 end of the new interval
  */
-const map =	(arrayOrValue, start1, end1, start2, end2) => {
+export const map =	(arrayOrValue, start1, end1, start2, end2) => {
 
 	const m = val => (val - start1) * (end2 - start2) / (end1 - start1) + start2;
 
@@ -773,49 +773,49 @@ const map =	(arrayOrValue, start1, end1, start2, end2) => {
  * @param {number} n value
  * @param {number} p power
  */
-const pow =	(n, p=2) => Math.pow(n, p);
+export const pow =	(n, p=2) => Math.pow(n, p);
 
 /**
  * Returns the absolute value of the given one
  * @param {number} n value
  */
-const abs =	n => (n >= 0)? n : -n;
+export const abs =	n => (n >= 0)? n : -n;
 
 /**
  * Returns the sqrt of the given value
  * @param {number} n value
  */
-const sqrt = n => Math.sqrt(n);
+export const sqrt = n => Math.sqrt(n);
 
 /**
  * Returns the minimum of given values
  * @param  {...Number} values value(s)
  */
-const min = (...values) => Math.min(...values);
+export const min = (...values) => Math.min(...values);
 
 /**
  * Returns the maximum of given values
  * @param  {...Number} values value(s)
  */
-const max = (...values) => Math.max(...values);
+export const max = (...values) => Math.max(...values);
 
 /**
  * Returns the rounded value of the given one
  * @param {number} n value
  */
-const round = n => Math.round(n);
+export const round = n => Math.round(n);
 
 /**
  * Returns the floored value of the given one
  * @param {number} n value
  */
-const floor = n => Math.floor(n);
+export const floor = n => Math.floor(n);
 
 /**
  * Returns the ceiled value of the given one
  * @param {number} n value
  */
-const ceil = n => Math.ceil(n);
+export const ceil = n => Math.ceil(n);
 
 
 /**
@@ -823,49 +823,49 @@ const ceil = n => Math.ceil(n);
  * @param {number} min minimal value
  * @param {number} max maximal value
  */
-const random = (iMin, iMax=0) => floor(Math.random() * (max(iMin, iMax) - min(iMin, iMax) +1)) + min(iMin, iMax);
+export const random = (iMin, iMax=0) => floor(Math.random() * (max(iMin, iMax) - min(iMin, iMax) +1)) + min(iMin, iMax);
 
 
 /**
  * 
  * @param {number} x x value to return its sinus
  */
-const sin = x => Math.sin(x);
+export const sin = x => Math.sin(x);
 
 
 /**
  * 
  * @param {number} x x value to return its cosinus
  */
-const cos = x => Math.cos(x);
+export const cos = x => Math.cos(x);
 
 
 /**
  * 
  * @param {number} x x value to return its tan
  */
-const tan = x => Math.tan(x);
+export const tan = x => Math.tan(x);
 
 
 /**
  * 
  * @param {number} x x value to return its asin
  */
-const asin = x => Math.asin(x);
+export const asin = x => Math.asin(x);
 
 
 /**
  * 
  * @param {number} x x value to return its acos
  */
-const acos = x => Math.acos(x);
+export const acos = x => Math.acos(x);
 
 
 /**
  * 
  * @param {number} x x value to return its atan
  */
-const atan = x => Math.atan(x);
+export const atan = x => Math.atan(x);
 
 
 /**
@@ -873,59 +873,59 @@ const atan = x => Math.atan(x);
  * @param {number} x x value to return its atan2
  * @param {number} x y value to return its atan2
  */
-const atan2 = (x, y) => Math.atan2(y, x);
+export const atan2 = (x, y) => Math.atan2(y, x);
 
 
 /**
  * 
  * @param {number} x x value to return its sinh
  */
-const sinh = x => Math.sinh(x);
+export const sinh = x => Math.sinh(x);
 
 /**
  * 
  * @param {number} x x value to return its cosh
  */
-const cosh = x => Math.cosh(x);
+export const cosh = x => Math.cosh(x);
 
 
 /**
  * 
  * @param {number} x x value to return its exponential
  */
-const exp = x => Math.exp(x);
+export const exp = x => Math.exp(x);
 
 
 /**
  * 
  * @param {number} x x value to return its logarithm
  */
-const log = x => Math.log(x);
+export const log = x => Math.log(x);
 
 
 /**
  * 
  * @param {number} x x value to return its log10
  */
-const log10 = x => Math.log10(x);
+export const log10 = x => Math.log10(x);
 
 /**
  * Returns the sum of all values in a list
  * @param  {...number} values all values of a list
  */
-const sum = (...values) => values.reduce((a, b) => a + b);
+export const sum = (...values) => values.reduce((a, b) => a + b);
 
 /**
  * Returns the mean of the values in a list
  * @param  {...number} values all values of a list
  */
-const mean = (...values) => sum(...values) / values.length;
+export const mean = (...values) => sum(...values) / values.length;
 
 /**
  * Returns the median of the values in a list
  * @param  {...number} values all values of a list
  */
-const median = (...values) => {
+export const median = (...values) => {
 	if(values.length === 0) return 0;
 
 	values.sort((a, b) => a - b);
@@ -940,19 +940,19 @@ const median = (...values) => {
  * Returns the mode of the values in a list
  * @param  {...number} values all values of a list
  */
-const mode = (...values) => values.reduce((a, b, i, arr) => (arr.filter(v => v === a).length >= arr.filter(v => v === b).length? a: b), null);
+export const mode = (...values) => values.reduce((a, b, i, arr) => (arr.filter(v => v === a).length >= arr.filter(v => v === b).length? a: b), null);
 
 /**
  * Returns the variance of the values in a list
  * @param  {...number} values all values of a list
  */
-const variance = (...values) => values.reduce((a, b) => a + pow((b - mean(...values))), 0);
+export const variance = (...values) => values.reduce((a, b) => a + pow((b - mean(...values))), 0);
 
 /**
  * Returns the standard deviation of the values in a list
  * @param  {...number} values all values of a list
  */
-const std = (...values) => sqrt(variance(...values));
+export const std = (...values) => sqrt(variance(...values));
 
 
 
@@ -973,7 +973,7 @@ const std = (...values) => sqrt(variance(...values));
 	https://gist.github.com/mjackson/5311256
 */
 
-class RGB {
+export class RGB {
 	/**
 	 * Create a RGB[A] color
 	 * @param {number} r red value [0 - 255]
@@ -1108,7 +1108,7 @@ class RGB {
 
 }
 
-class HEX {
+export class HEX {
 	/**
 	 * Create Hexadecimal color
 	 * @param {string|number} HexaColor Hexadecimal number or string (3 or 6 chars accepted only)
@@ -1159,7 +1159,7 @@ class HEX {
 	}
 }
 
-class HSL {
+export class HSL {
 	/**
 	 * Create HSL color
 	 * @param {number} hue hue value [0 - 359] (360 = 0)
@@ -1292,36 +1292,36 @@ class HSL {
  * Set the frame rate of the canvas - only positive number allowed
  * @param {number} f frame rate
  */
-const frameRate = f => {if(f >= 0) NOX_PV.interval = 1000/f};
+export const frameRate = f => {if(f >= 0) NOX_PV.interval = 1000/f};
 
 
 
 
 // get last swipe direction
-const getSwipe = () => NOX_PV.lastSwipe;
+export const getSwipe = () => NOX_PV.lastSwipe;
 
 
 
 
 
 // key event
-const isKeyDown = keyCode => NOX_PV.keys[keyCode];
-const isKeyUp 	= keyCode => !NOX_PV.keys[keyCode];
+export const isKeyDown = keyCode => NOX_PV.keys[keyCode];
+export const isKeyUp 	= keyCode => !NOX_PV.keys[keyCode];
 
 
 
 
 // scale for rendering
-const rendering  = (x, y=null) 	=> new Vector(((x instanceof Vector && !y)? x.x : x) * width/realWidth, ((x instanceof Vector && !y)?x.y : y) * height/realHeight);
-const renderingX = x 			=> x * width / realWidth;
-const renderingY = y 			=> y * height / realHeight;
+export const rendering  = (x, y=null) 	=> new Vector(((x instanceof Vector && !y)? x.x : x) * width/realWidth, ((x instanceof Vector && !y)?x.y : y) * height/realHeight);
+export const renderingX = x 			=> x * width / realWidth;
+export const renderingY = y 			=> y * height / realHeight;
 
 
 
 
 
 
-const mouseDir = () =>
+export const mouseDir = () =>
 	NOX_PV.isPointerLocked?
 		mouseDirection
 	:
@@ -1346,7 +1346,7 @@ const mouseDir = () =>
  * Allow or disallow the swipe on pc
  * @param {Boolean} bool either we enable or disable the swipe on PC
  */
-const enablePCswipe = bool => {
+export const enablePCswipe = bool => {
 	NOX_PV.swipePCEnable = typeof bool == "boolean"? bool : true;
 
 	if(NOX_PV.swipePCEnable) {
@@ -1371,7 +1371,7 @@ const enablePCswipe = bool => {
  * @param {number} w width
  * @param {number} h height
  */
-const setPixelResolution = (w, h) => {
+export const setPixelResolution = (w, h) => {
 	if(w <= 0 || h <= 0) return;
 
 	if(canvas && ctx) {
@@ -1395,12 +1395,8 @@ const setPixelResolution = (w, h) => {
 
 
 
-/**
- * Resize the canvas
- * @param {number} newWidth canvas width
- * @param {number} newHeight canvas height
- */
-const setCanvasSize = (newWidth, newHeight) => {
+
+export const setCanvasSize = (newWidth, newHeight) => {
 	if(canvas && ctx) {
 		canvas.style.width = newWidth + 'px';
 		canvas.style.height = newHeight + 'px';
@@ -1435,7 +1431,7 @@ const setCanvasSize = (newWidth, newHeight) => {
  * @param {Color} bg canvas background color
  * @param {Boolean} requestPointerLock request or not the pointer lock
  */
-const createCanvas = (w, h, bg="#000", requestPointerLock=false) => {
+export const createCanvas = (w, h, bg="#000", requestPointerLock=false) => {
 	if(w <= 0 || h <= 0) {
 		console.warn('Canvas size must be higher than 0');
 		return;
@@ -1487,11 +1483,167 @@ const createCanvas = (w, h, bg="#000", requestPointerLock=false) => {
 
 	}
 
-	ctx = canvas.getContext('2d');
+    ctx = canvas.getContext('2d');
+    
+
+    if(!NOX_PV.hasInitAllEventHandlers) initializeAllEventHandlers();
+
 	
 	return canvas;
 
 };
+
+
+
+
+/**
+ * Load all events about the canvas
+ */
+const initializeAllEventHandlers = () => {
+    NOX_PV.hasInitAllEventHandlers = true;
+
+    /**
+     * Calculate the {top, left} offset of a DOM element
+     * @param {DOMElement} elt the dom Element
+     */
+    const offset = elt => {
+        let rect = elt.getBoundingClientRect();
+
+        return {
+            top: rect.top + document.body.scrollTop,
+            left: rect.left + document.body.scrollLeft
+        };
+    };
+
+
+
+    // if the user created the canvas on the setup function
+    if(canvas) {
+
+        // event mouse move
+        canvas.addEventListener('mousemove', e => {
+            NOX_PV.oldMouseX = mouseX;
+            NOX_PV.oldMouseY = mouseY;
+
+            mouseX = e.clientX - offset(canvas).left;
+            mouseY = e.clientY - offset(canvas).top;
+
+            //if(NOX_PV.isPointerLocked) {
+                mouseDirection = {x: e.movementX, y: e.movementY};
+            //}
+
+            if(typeof mouseMove != "undefined") mouseMove(e);
+        });
+
+
+
+        // event touch start
+        canvas.addEventListener('touchstart', handleTouchStart, false);
+        // event touch move
+        canvas.addEventListener('touchmove',  handleTouchMove, false);
+        // event mouse up
+        canvas.addEventListener('mouseup', e => {NOX_PV.isMouseDown = false; if(typeof mouseUp != "undefined") mouseUp(e);});
+        // event click
+        canvas.addEventListener('click', e => {if(typeof onClick != "undefined") onClick(e);});
+
+
+
+
+        // if the swipe is enable on pc, call event handler
+        if(NOX_PV.swipePCEnable) {
+            canvas.addEventListener('mousedown', handleTouchStart, false);
+            canvas.addEventListener('mousemove', handleTouchMove, false);
+        }
+
+
+
+        // if the user has created a function onSwipe() {} then call it if it's swiping
+        if(typeof onSwipe != "undefined") {
+            canvas.addEventListener('swipeleft',  () => {onSwipe('left');}, false);
+            canvas.addEventListener('swiperight', () => {onSwipe('right');}, false);
+            canvas.addEventListener('swipeup',    () => {onSwipe('up');}, false);
+            canvas.addEventListener('swipedown',  () => {onSwipe('down');}, false);
+        }
+
+
+
+        // event mouse enter
+        canvas.addEventListener('mouseenter', e => {if(typeof mouseEnter != "undefined") mouseEnter(e);});
+        // event mouse leave
+        canvas.addEventListener('mouseleave', e => {if(typeof mouseLeave != "undefined") mouseLeave(e);});
+        // event wheel
+        canvas.addEventListener('wheel', e => {if(typeof mouseWheel != "undefined") mouseWheel(e);});
+
+        // right click
+        canvas.oncontextmenu = e => {
+            if(typeof onContextmenu != "undefined") onContextmenu(e);
+        }
+    
+        // double click
+        canvas.ondblclick = e => {
+            if(typeof onDblClick != "undefined") onDblClick(e);
+        }
+
+    }
+    
+
+
+
+    // keyboard events
+
+    // key pressed
+    window.onkeypress = e => {
+        NOX_PV.keys[e.keyCode] = true;
+        if(typeof keyPress != "undefined") keyPress(e);
+    };
+
+
+    // key downed
+    window.onkeydown = e => {
+        NOX_PV.keys[e.keyCode] = true;
+        if(typeof keyDown != "undefined") keyDown(e);
+    };
+
+
+    // key upped
+    window.onkeyup = e => {
+        NOX_PV.keys[e.keyCode] = false;
+        if(typeof keyUp != "undefined") keyUp(e);
+    };
+
+    // when user resize window or document
+    window.onresize = () => {
+        let newWidth = document.documentElement.clientWidth,
+            newHeight = document.documentElement.clientHeight;
+
+        MIN_DOC_SIZE = min(newWidth, newHeight);
+
+        if(typeof onResize != "undefined") onResize(newWidth, newHeight);
+    };
+
+    // when user stop focus the document or the window
+    window.onblur = () => {
+        if(typeof onBlur != "undefined") onBlur();
+    };
+
+    // when user focus the page
+    window.onfocus = () => {
+        if(typeof onFocus != "undefined") onFocus();
+    }
+
+    // user goes online (internet)
+    window.ononline = e => {
+        if(typeof onOnline != "undefined") onOnline(e);
+    }
+
+    // user goes offline (internet)
+    window.onoffline = e => {
+        if(typeof onOffline != "undefined") onOffline(e);
+    }
+};
+
+
+
 
 
 
@@ -1501,7 +1653,7 @@ const createCanvas = (w, h, bg="#000", requestPointerLock=false) => {
  * Shows cyan guidelines that are following the mouse on the canvas, telling the pixels x,y
  * @param {Boolean} bool either it show or not
  */
-const showGuideLines = bool => {
+export const showGuideLines = bool => {
 	NOX_PV.bGuideLines = typeof bool == 'boolean'? bool : false;
 };
 
@@ -1518,10 +1670,36 @@ let drawCond = () => true;
  * Set the condition on when the draw function has to be executed (pause it if not)
  * @param {Function} condition condition in function
  */
-const setDrawCondition = (condition = null) => {
+export const setDrawCondition = (condition=null) => {
 	if(condition) drawCond = condition;
 };
 
+
+
+
+
+
+
+
+
+/**
+ * Draw function that must be called for animated canvas
+ * @param {function} drawFunction the function that will be execute in loop to draw on the canvas
+ */
+export const draw = drawFunction => {
+    if(typeof drawFunction !== 'function') {
+        console.error(`The draw function must take an argument as type 'function'.`);
+    }
+
+    else if(NOX_PV.draw !== null) {
+        console.warn('You already declared your draw function.');
+    }
+
+    else {
+        NOX_PV.draw = drawFunction;
+        drawLoop();
+    }
+};
 
 
 
@@ -1543,10 +1721,10 @@ const drawLoop = () => {
 		fps = parseInt(NOX_PV.counter / NOX_PV.time_el);
 
 		// if canvas created & drawCond returns true
-		if(ctx && typeof draw != "undefined" && drawCond()) {
+		if(ctx && drawCond()) {
 
 			clearRect(0, 0, width, height); // clear the canvas
-			draw(); // draw on the canvas
+			NOX_PV.draw(); // draw on the canvas
 
 			// if guidelines enabled
 			if(NOX_PV.bGuideLines) {
@@ -1644,7 +1822,7 @@ const handleTouchMove = e => {
  * Returns the vector from center to origin of the shape
  * @param {Shape} shape shape instance
  */
-const getOffsetVector = shape => {
+export const getOffsetVector = shape => {
 	if(!(shape instanceof Shape)) {
 		console.error('Argument must be a Shape type');
 		return new Vector(0, 0);
@@ -1686,192 +1864,12 @@ const getOffsetVector = shape => {
 
 
 
-const initializeCanvasWorld = () => {
-    if(window) {
-        window.onload = () => {
-            // the minimum between document width | height
-            MIN_DOC_SIZE = min(documentWidth(), documentHeight());
-            
-
-
-            // if user created a setup function
-            if(typeof setup != "undefined") {
-                setup();
-            }
-
-
-
-            /**
-             * Calculate the {top, left} offset of a DOM element
-             * @param {DOMElement} elt the dom Element
-             */
-            const offset = elt => {
-                let rect = elt.getBoundingClientRect();
-
-                return {
-                    top: rect.top + document.body.scrollTop,
-                    left: rect.left + document.body.scrollLeft
-                };
-            };
-
-
-
-            // if the user created the canvas on the setup function
-            if(canvas) {
-
-                // event mouse move
-                canvas.addEventListener('mousemove', e => {
-                    NOX_PV.oldMouseX = mouseX;
-                    NOX_PV.oldMouseY = mouseY;
-
-                    mouseX = e.clientX - offset(canvas).left;
-                    mouseY = e.clientY - offset(canvas).top;
-
-                    //if(NOX_PV.isPointerLocked) {
-                        mouseDirection = {x: e.movementX, y: e.movementY};
-                    //}
-
-                    if(typeof mouseMove != "undefined") mouseMove(e);
-                });
-
-
-
-                // event touch start
-                canvas.addEventListener('touchstart', handleTouchStart, false);
-                // event touch move
-                canvas.addEventListener('touchmove',  handleTouchMove, false);
-                // event mouse up
-                canvas.addEventListener('mouseup', e => {NOX_PV.isMouseDown = false; if(typeof mouseUp != "undefined") mouseUp(e);});
-                // event click
-                canvas.addEventListener('click', e => {if(typeof onClick != "undefined") onClick(e);});
-
-
-
-
-                // if the swipe is enable on pc, call event handler
-                if(NOX_PV.swipePCEnable) {
-                    canvas.addEventListener('mousedown', handleTouchStart, false);
-                    canvas.addEventListener('mousemove', handleTouchMove, false);
-                }
-
-
-
-                // if the user has created a function onSwipe() {} then call it if it's swiping
-                if(typeof onSwipe != "undefined") {
-                    canvas.addEventListener('swipeleft',  () => {onSwipe('left');}, false);
-                    canvas.addEventListener('swiperight', () => {onSwipe('right');}, false);
-                    canvas.addEventListener('swipeup',    () => {onSwipe('up');}, false);
-                    canvas.addEventListener('swipedown',  () => {onSwipe('down');}, false);
-                }
-
-
-
-                // event mouse enter
-                canvas.addEventListener('mouseenter', e => {if(typeof mouseEnter != "undefined") mouseEnter(e);});
-                // event mouse leave
-                canvas.addEventListener('mouseleave', e => {if(typeof mouseLeave != "undefined") mouseLeave(e);});
-                // event wheel
-                canvas.addEventListener('wheel', e => {if(typeof mouseWheel != "undefined") mouseWheel(e);});
-
-                // right click
-                canvas.oncontextmenu = e => {
-                    if(typeof onContextmenu != "undefined") onContextmenu(e);
-                }
-            
-                // double click
-                canvas.ondblclick = e => {
-                    if(typeof onDblClick != "undefined") onDblClick(e);
-                }
-
-            }
-            
-
-
-
-            // keyboard events
-
-            // key pressed
-            window.onkeypress = e => {
-                NOX_PV.keys[e.keyCode] = true;
-                if(typeof keyPress != "undefined") keyPress(e);
-            };
-
-
-            // key downed
-            window.onkeydown = e => {
-                NOX_PV.keys[e.keyCode] = true;
-                if(typeof keyDown != "undefined") keyDown(e);
-            };
-
-
-            // key upped
-            window.onkeyup = e => {
-                NOX_PV.keys[e.keyCode] = false;
-                if(typeof keyUp != "undefined") keyUp(e);
-            };
-
-            // when user resize window or document
-            window.onresize = () => {
-                let newWidth = document.documentElement.clientWidth,
-                    newHeight = document.documentElement.clientHeight;
-
-                MIN_DOC_SIZE = min(newWidth, newHeight);
-
-                if(typeof onResize != "undefined") onResize(newWidth, newHeight);
-            };
-
-            // when user stop focus the document or the window
-            window.onblur = () => {
-                if(typeof onBlur != "undefined") onBlur();
-            };
-
-            // when user focus the page
-            window.onfocus = () => {
-                if(typeof onFocus != "undefined") onFocus();
-            }
-
-            // user goes online (internet)
-            window.ononline = e => {
-                if(typeof onOnline != "undefined") onOnline(e);
-            }
-
-            // user goes offline (internet)
-            window.onoffline = e => {
-                if(typeof onOffline != "undefined") onOffline(e);
-            }
-
-
-            // start running the draw loop
-            drawLoop();
-        };
-    }
-};
-
-
-
-/**
- * initialize everything from here
- * When the page has loaded
- */
-initializeCanvasWorld();
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * Calculate the collision between two shapes
  * @param {Shape} shape1 first shape
  * @param {Shape} shape2 second shape
  */
-const collision = (shape1, shape2) => {
+export const collision = (shape1, shape2) => {
 	// must be 2 instances of shape
 	if(!(shape1 instanceof Shape && shape2 instanceof Shape)) {
 		console.error('Collision is only for 2 Shape types');
@@ -1883,7 +1881,7 @@ const collision = (shape1, shape2) => {
 		let x2 = x1 + a.width, y2 = y1 + a.height,
 			x4 = x3 + b.width, y4 = y3 + b.height;
 		return 	x1 < x4 && x2 > x3 && y1 < y4 && y2 > y3;
-	};
+	}
 
 	// collision: Rectangle & Circle
 	const colRaC = (r, c) => {
@@ -1897,7 +1895,7 @@ const collision = (shape1, shape2) => {
 			testY = (cy < ry)? ry : (cy > ry+r.height)? ry + r.height : cy;
 
 		return sqrt(pow(cx - testX) + pow(cy - testY)) <= c.r;
-	};
+	}
 
 	// collision: Circle & Circle
 	const colCaC = (c1, c2) => {
@@ -1905,7 +1903,7 @@ const collision = (shape1, shape2) => {
 			dy = y1 - y3;
 
 		return sqrt(dx * dx + dy * dy) < c1.r + c2.r;
-	};
+	}
 
 	
 	
@@ -1970,7 +1968,7 @@ const collision = (shape1, shape2) => {
 // CLASSES
 
 
-class Vector {
+export class Vector {
 	/**
 	 * CREATE A VECTOR 1/2/3 Dimension(s)
 	 * @param {number} x x vector's coordinate
@@ -2343,7 +2341,7 @@ class Vector {
 
 
 
-class Shape {
+export class Shape {
 	/**
 	 * Create a shape instance with properties
 	 * @param {number} x shape's position X
@@ -2427,7 +2425,7 @@ class Shape {
 
 
 
-class RectangleShape extends Shape {
+export class RectangleShape extends Shape {
 	/**
 	 * Create a Rectangle shape instance with properties, heeriting from Shape class
 	 * @param {number} x rectangle's position X
@@ -2493,7 +2491,7 @@ class RectangleShape extends Shape {
 
 
 
-class CircleShape extends Shape {
+export class CircleShape extends Shape {
 	/**
 	 * Create Circle shape instance with properties, heriting from Shape class
 	 * @param {number} x circle's position X
@@ -2543,7 +2541,7 @@ class CircleShape extends Shape {
 
 
 
-class TriangleShape extends Shape {
+export class TriangleShape extends Shape {
 	/**
 	 * Create Triangle shape instance with properties, heriting from Shape class
 	 * @param {number} x triangle's position X
@@ -2626,7 +2624,7 @@ class TriangleShape extends Shape {
 
 
 
-class Triangle extends TriangleShape {
+export class Triangle extends TriangleShape {
 	/**
 	 * Create Triangle shape instance with properties, heriting from Shape class
 	 * @param {number} x1 first point position X
@@ -2660,7 +2658,7 @@ class Triangle extends TriangleShape {
 
 
 
-class Path {
+export class Path {
 	/**
 	 * Create Path instance
 	 * @param {number} x where must start the path X

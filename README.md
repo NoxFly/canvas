@@ -7,6 +7,7 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Paypal](https://img.shields.io/badge/paypal-donate-yellow.svg)](https://paypal.me/noxfly)
 [![GitHub stars](https://img.shields.io/github/stars/NoxFly/canvas.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/NoxFly/canvas/stargazers/)
+[![Npm Downloads](https://img.shields.io/npm/dt/@noxfly/canvas.svg?maxAge=3600)](https://img.shields.io/npm/dt/@noxfly/canvas.svg?maxAge=3600)
 
 
 
@@ -19,7 +20,7 @@ You also can star it, open issues if needed, and join the official Discord serve
 https://discord.gg/j5SarbC
 
 
-## JSDELIVR include links
+## CDN include links
 
 **/!\\** these links refers to the latest version.
 
@@ -46,7 +47,9 @@ https://discord.gg/j5SarbC
 ## NPM
 [https://www.npmjs.com/package/@noxfly/canvas](https://www.npmjs.com/package/@noxfly/canvas)
 
-
+```js
+const Canvas = require('@noxfly/canvas/web');
+```
 
 
 
@@ -213,6 +216,7 @@ push(); // canvas save function
 pop(); // canvas restore function
 translate(x, y); // canvas translate function
 rotate(degree); // canvas rotate function
+clip(); // ctx.clipPath() function
 enablePCswipe(boolean); // in the setup function, default is true
 frameRate(number); // set the draw frame rate
 getSwipe(); // returns the last swipe direction done by the user
