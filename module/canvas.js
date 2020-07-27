@@ -21,9 +21,6 @@ export let fps = 60;
 export const documentWidth = () => document.documentElement.clientWidth;
 export const documentHeight = () => document.documentElement.clientHeight;
 
-// the minimum between document width & document height
-export let MIN_DOC_SIZE = min(documentWidth(), documentHeight());
-
 // PI
 export const PI = Math.PI;
 
@@ -959,6 +956,8 @@ export const std = (...values) => sqrt(variance(...values));
 
 
 
+// the minimum between document width & document height
+export let MIN_DOC_SIZE = min(documentWidth(), documentHeight());
 
 
 
