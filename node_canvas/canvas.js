@@ -9,7 +9,7 @@
  * @version		{1.3.5}
  */
 
-const NodeCanvas = require('canvas');
+const { createCanvas, loadImage } = require('canvas');
 
 
 
@@ -97,10 +97,10 @@ class Canvas {
  	 * @param {string} support canvas support. It can be nothing, SVG or PDF
      */
     constructor(width, height, background=null, support=null) {
-		if(support === null  || ['svg', 'pdf'].includes(support.toUpperCase())) {
-			this._ = new NodeCanvas.createCanvas(width, height);
+		if(support === null  || !['svg', 'pdf'].includes(support.toUpperCase())) {
+			this._ = createCanvas(width, height);
 		} else {
-			this._ = new NodeCanvas.createCanvas(width, height, support.toUpperCase());
+			this._ = createCanvas(width, height, support.toUpperCase());
 		}
 
 		this.background = background;
@@ -139,22 +139,12 @@ class Canvas {
 	 * @param {number} dh
 	 */
 	drawImage(image, ...args) {
-		try {
-			switch(args.length) {
-				case 0:
-					this.ctx.drawImage(image); break;
-				case 2:
-					this.ctx.drawImage(image, dx, dy); break;
-				case 4:
-					this.ctx.drawImage(image, dx, dy, dw, dh); break;
-				case 6:
-					this.ctx.drawImage(image, sx, sy, dx, dy, dw, dh); break;
-				default:
-					console.error('Wrong number of argument given');
-			}
-		} catch(error) {
-			console.error('An error occured while attempting to draw an image:\n' + error);
+
+		if(![2, 4, 6].includes(args.length)) {
+			console.error('wrong number of argument passed');
 		}
+
+		this.ctx.drawImage(image, ...args);
 	}
 
     /**
@@ -298,7 +288,7 @@ class Canvas {
      * @param {number} r circle's radius
      */
     circle(x, y, r) {
-        this.arc(x, y, r, 0, 2 * PI);
+        this.arc(x, y, r, 0, 2 * Math.PI);
     }
 
     /**
@@ -729,7 +719,7 @@ class Canvas {
 	 * Clip the canvas with the drawn shape
 	 */
 	clip() {
-		this.ctx.clipPath();
+		this.ctx.clip();
 	}
 }
 
@@ -754,7 +744,7 @@ class CanvasImageManager {
 	async load(name, url=null) {
 		if(typeof url === 'string') {
 			if(!(name in this.images)) {
-				this.images[name] = await NodeCanvas.loadImage(url);
+				this.images[name] = await loadImage(url);
 			}
 		}
 
@@ -802,7 +792,6 @@ module.exports.createCanvas = (width, height, context='2d', background=null, sup
 
 /**
  * Create a cache system for images
- * @param {Canvas} canvas 
  */
 module.exports.createImageManager = () => {
 	return new CanvasImageManager();
@@ -814,7 +803,7 @@ module.exports.createImageManager = () => {
  * @param {string} src image path
  * @param {object} options image's options
  */
-module.export.loadImage = (src, options={}) => NodeCanvas.loadImage(src, options);
+module.exports.loadImage = (src, options={}) => loadImage(src, options);
 
 
 
@@ -835,13 +824,13 @@ module.export.loadImage = (src, options={}) => NodeCanvas.loadImage(src, options
  * Convert from degrees to radians
  * @param {number} deg degree value
  */
-module.exports.radian = deg => deg * (PI/180);
+module.exports.radian = deg => deg * (Math.PI/180);
 
 /**
  * Convert from radians to degrees
  * @param {number} rad radian value
  */
-module.exports.degree = rad => rad * (180/PI);
+module.exports.degree = rad => rad * (180/Math.PI);
 
 /**
  * Convert an angle to a vector (class instance) (2d vector)
