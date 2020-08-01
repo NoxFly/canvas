@@ -612,7 +612,7 @@ const push = 		() 		=> {ctx.save();};
 const pop = 		() 		=> {ctx.restore();};
 const translate =	(x,y) 	=> {ctx.translate(x,y);};
 const rotate =		degree	=> {ctx.rotate(radian(degree));};
-const clip =         ()      => {ctx.clipPath();};
+const clip =        (...args) => {ctx.clip(...args);};
 
 
 

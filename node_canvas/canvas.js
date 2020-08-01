@@ -718,8 +718,8 @@ class Canvas {
 	/**
 	 * Clip the canvas with the drawn shape
 	 */
-	clip() {
-		this.ctx.clip();
+	clip(...args) {
+		this.ctx.clip(...args);
 	}
 }
 
@@ -803,7 +803,7 @@ module.exports.createImageManager = () => {
  * @param {string} src image path
  * @param {object} options image's options
  */
-module.exports.loadImage = (src, options={}) => loadImage(src, options);
+module.exports.loadImage = loadImage;
 
 
 
