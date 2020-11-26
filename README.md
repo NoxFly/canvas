@@ -58,10 +58,21 @@ You also can star it, open issues if needed, and join the official Discord serve
 
 
 ## About
-In some versions will be availible bezier and quadratic curves, but you will also can create canvas on projects that include files as modules.
+Some variables of the framework are public, but some others are private.
+Please, do not use variables and functions that aren't provided for you, or you will incur some issues.
 
-Some  variables of the framework are public, but some others are private.
-Please, do not use variables and functions that aren't provide for you, or you will incur some issues.
+
+The `setup` and `draw` structure, but also the `color managment` and the `pixel managment` (last feature) ideas come from [p5.js](https://p5js.org).
+
+Most of shortcut functions for native canvas functions have their JSDOC that come from [MDN](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D).
+
+I've start this little framework just to simplify myself in a little project.
+
+As things progress, The little code grew up, and it's why I've finally though about make it public on Github.
+
+**There's not any desire of copying the code of someone else, just to regroup things that can help me in my codes, to do it faster, and train me in the same way.**
+
+**If you're interested, you can contribute doing pull requests, and starring this repo.**
 
 
 ### Examples
@@ -69,12 +80,15 @@ you can give a look at the examples folder that is enumering everything from the
 
 Run `./examples/index.php` to test all examples.
 
+**Notes :** this repo shows some examples of an older version.
 
+Thus, some things can not work, or some examples are missing for all the last features.
 
 
 
 ## Browser compatibility
 Tested and works on `Firefox`, `Chrome`, `Edge`, `new Edge`, `Opera`.
+
 
 
 
@@ -115,7 +129,11 @@ Once the canvas is created, you can access to it by the global variable `canvas`
 
 If you set the requestPointerLock to `true`, you have to click on the canvas to be pointer locked (and Esc to unlock).
 
-You also can access to the canvas size with the both variables `width` and `height`.
+You also can access to the canvas size with both variables `width` and `height`.
+
+The `canvasBackground` parameter can be any background's type (hexa, hsl, rgb, color name, ...).
+
+If you don't set a canvas width and height, the document's size will be set.
 
 
 
@@ -172,6 +190,7 @@ Therefore, you can create full-screen canvas:
 ```js
 function setup() {
     createCanvas(documentWidth(), documentHeight());
+    createCanvas(); // same result
 }
 ```
 
@@ -213,7 +232,10 @@ Here are the variables declared in the canvas file, that you can use:
 ## Canvas utility functions
 
 ```js
+noLoop(); // draw only once, doesn't erase it, and don't loop (erase then draw in loop)
 background(color); // change the canvas background
+beginPath(); // ctx.beginPath()
+closePath(); // ctx.closePath()
 setDrawCondition(() => boolean); // tell when it must draw or not (default is "return true")
 clear(x, y, w, h); // canvas clearRect function
 push(); // canvas save function
@@ -221,12 +243,37 @@ pop(); // canvas restore function
 translate(x, y); // canvas translate function
 rotate(degree); // canvas rotate function
 clip(); // ctx.clipPath() function
+scale(p); // scale the context. if p < 1, then reduces it, else grows it
 enablePCswipe(boolean); // in the setup function, default is true
 frameRate(number); // set the draw frame rate
 getSwipe(); // returns the last swipe direction done by the user
 mouseDir(); // returns the direction of the mouse's movement
 isKeyDown(keyCode); // returns a boolean
 isKeyUp(keyCode); // returns a boolean
+createLinearGradient(x1, y1, x2, y2); // creates and returns a ctx.createLinearGradient
+makeLinearGradient(x1, y1, x2, y2, ...args); // same as above, but merge it with gradient.addColorStop(offset, color) function
+drawFocusIfNeeded(path|element[, element]);
+setLineDash(array); // sets line dash array of the sub-path
+getLineDash(); // gets line dash array
+lineDashOffset(value); // sets the line dash offset
+lineJoin(type); // set the line join's type
+globalAlpha(alpha); // sets alpha of the sub-path
+globalCompositeOperation(style); // sets a global composite operation
+setSmoothingQuality(quality); // low, medium, high
+isPointInPath(x, y);
+isPointInStroke(x, y);
+setTransform(transformMatrix|[a, b, c, d, e, f]);
+getTransform();
+resetTransform();
+createPattern(image, repetition); // create a pattern for a given image
+createImageData([width, height] | imageData);
+putImageData(imageData, dx, dy[, dirtyX, dirtyY, dirtyWidth, dirtyHeight]);
+getImageData(sx, sy, sw, sh);
+drawImage(image, sx, sy[, sw, sh, dx, dy, dw, dh]);
+enableSmoothing(); // enable imageSmoothing
+disableSmoothing(); // disable imageSmoothing
+loadPixels(); // loads an array of pixels from the size of the canvas (width*height). Availible through the variable called "pixels"
+updatePixels(); // update the canvas with modified pixels
 ```
 
 
@@ -329,7 +376,7 @@ color.toString(); // "hsl(50, 20%, 70%)"
 color.intVal(); // same as HEX.intVal()
 ```
 
-#
+###
 
 You can pass a variable that is a class instance of a color and it will takes its value automatically.
 
@@ -402,6 +449,7 @@ abs(x); // absolute of x
 round(x); // the rounded value of x
 floor(x); // the floored value of x
 ceil(x); // the ceiled value of x
+trunc(x); // truncates x
 exp(x); // exponential of x
 log(x); // logarithm of x
 log10(x); // decimal logarithm of x
@@ -422,6 +470,7 @@ dist(v1, v2); // returns the distance between 2 vectors
 angleBetweenVectors(v1, v2); // in radian
 angleToVector(rad); // from angle to 2D vector
 vectorToAngle(v); // from a vector to angle in radian, comparing to horizontal line (vector(1, 0))
+
 ```
 
 
@@ -453,11 +502,11 @@ path(d);
 ### Custom Path
 You can create custom paths faster than doing
 ```js
-ctx.beginPath();
-    ctx.moveTo(10, 10);
-    ctx.lineTo(20, 20);
-    ctx.arc(20, 20, 50, 0, radian(90), false);
-ctx.closePath();
+beginPath();
+    moveTo(10, 10);
+    lineTo(20, 20);
+    arc(20, 20, 50, 0, radian(90), false);
+closePath();
 ```
 Doing this:
 ```js
@@ -498,7 +547,7 @@ let p = new Path(); // without x and y argument, p.x and p.y are null, then it c
 p.clear(); // clear the path
 
 p.MoveTo(x, y); // moveTo for relative way
-p.LineTo(x, y); // lineTO for relative way
+p.LineTo(x, y); // lineTo for relative way
 p.Horizontal(x); // p.horizontal(x) is the relative way
 p.Vertical(y); // p.vertical(y) is the relative way
 p.Arc(x, y, r, start, end, antiClockwise=false); // p.arc() for relative way
@@ -526,6 +575,8 @@ setFontSize(size); // number in px
 setFontFamily(font); // string
 
 alignText(alignment); // left, right, center, start or end. default is left
+
+const textLength = measureText("hello world"); // in pixels
 ```
 
 ### Shape personalization
@@ -662,6 +713,69 @@ let tri = new Triangle(x1,y1, x2,y2, x3,y3, fill='black', stroke='transparent', 
 ```
 
 same properties as `TriangleShape`.
+
+
+
+
+
+
+## Perlin noise
+
+The seed of perlin noise is generated only once, the first time you call the function.
+
+You only can reset it refreshing the page.
+
+```js
+const z = perlin(x[, y=0]);
+```
+
+You can modify its LOD (level of details) with this function :
+```js
+noiseDetails(lod);
+```
+
+If you want to reset efficiently the seed, and / or if you want to store the result array so you don't have to calculate it again and again each draw loop, you can create a `PerlinNoise` class instance :
+
+```js
+const p = new PerlinNoise(lod=10, x=0, y=0, w=width, h=height, mapNumber="default");
+p.setLOD(newLOD);
+p.regenerateSeed();
+p.setMapNumber(n);
+p.start = { x, y }; // starting coordinates of the array
+p.size = { width, height }; // size of the array
+p.array = [height][width]; // 2D array of floating points
+```
+
+The default LOD for both perlin and perlinNoise is 10.
+
+What is the `mapNumber` argument ?
+There're 3 types :
+- `n=0`: default
+- `n=1`: hexadecimal
+- `n=2`: hsl
+
+This parameter tells to the class in which interval the values has to be in the array.
+
+- By default, it stores [-1, 1] values.
+- For hexadecimal, it stores [0, 255] values.
+- For HSL, it stores [0, 360] values.
+
+However, you can store default values, and then map them with `map` function in the for loop.
+
+This can be useful if you want to display it them both with hexadecimal and hsl color (grey & colored).
+
+```js
+const HEXvalue = map(p.array[i][j], -1, 1, 0, 255);
+const HSLvalue = map(p.array[i][j], -1, 1, 0, 720); // 2*360
+```
+
+
+
+
+
+
+
+
 
 ## License
 
