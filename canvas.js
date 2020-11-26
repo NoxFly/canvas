@@ -98,7 +98,7 @@ const NOX_PV = {
 
 	// Treat color's entries
 	colorTreatment: (...oColor) => {
-		if(oColor instanceof CanvasGradient || oColor instanceof CanvasImageSource) return oColor;
+		if(oColor instanceof CanvasGradient || oColor instanceof CanvasPattern) return oColor;
 
 		let n = oColor.length;
 
