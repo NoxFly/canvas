@@ -306,7 +306,7 @@ export const polyline = (...values) => {
  */
 export const arc = (x, y, r, start, end, antiClockwise=false) => {
 	beginPath();
-		arc(x, y, r, start, end, antiClockwise);
+		ctx.arc(x, y, r, start, end, antiClockwise);
 		if(NOX_PV.bStroke) ctx.stroke();
 		if(NOX_PV.bFill) ctx.fill();
 	closePath();
