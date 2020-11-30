@@ -3110,6 +3110,101 @@ const collision = (shape1, shape2) => {
 
 // CLASSES
 
+class Time {
+	static units = {
+		// unit => milliseconds to unit
+		nano: ms => ms * 100000000,
+		micro: ms => ms * 1000,
+		milli: (t, unit='milli') => {
+			switch(unit) {
+				case 'nano': return t / 100000000 // nano to ms
+				case 'micro': return t / 1000 // micro to ms
+				case 'seconds': return t * 1000 // seconds to ms
+				case 'minutes': return t * 60000 // minutes to ms
+				default: return t;
+			}
+		},
+		seconds: ms => ms / 1000,
+		minutes: ms => ms / 60000
+	};
+
+	/**
+	 * Creates a timer since its instanciation.
+	 * 
+	 * If a parameter is given, the timer will starts from the given time.
+	 * 
+	 * The default time's unity is milliseconds if nothing's precised.
+	 * @param {number} value initial time value (by default in milliseconds).
+	 * @param {string} unity unity of given time (by default milliseconds).
+	 * 
+	 * It can be 'nano', 'micro', 'milli', 'seconds', 'minutes'
+	 */
+	constructor(startingTime=undefined, unity='milli') {
+		if(typeof startingTime === 'undefined' || !Object.keys(Time.units).includes(unity)) {
+			this.reset();
+			this.staticTime = false;
+		} else {
+			this.start = Time.units.milli(startingTime, unity);
+			this.staticTime = true;
+		}
+	}
+
+	/**
+	 * Returns the time elapsed as nanoseconds
+	 * @return {number}
+	 */
+	asNanoseconds() {
+		return Time.units.nano(this.asMilliseconds());
+	}
+
+	/**
+	 * Returns the time elapsed as microseconds
+	 * @return {number}
+	 */
+	asMicroseconds() {
+		return Time.units.micro(this.asMilliseconds());
+	}
+
+	/**
+	 * Returns the time elapsed as milliseconds
+	 * @return {number}
+	 */
+	asMilliseconds() {
+		return Time.units.milli(this.staticTime? this.start : (Date.now() - this.start));
+	}
+
+	/**
+	 * Returns the time elapsed as seconds
+	 * @return {number}
+	 */
+	asSeconds() {
+		return Time.units.seconds(this.asMilliseconds());
+	}
+
+	/**
+	 * Returns the time elapsed as minutes
+	 * @return {number}
+	 */
+	asMinutes() {
+		return Time.units.minutes(this.asMilliseconds());
+	}
+
+	/**
+	 * Resets the start timestamp of the timer
+	 */
+	reset() {
+		this.start = Date.now();
+	}
+}
+
+
+
+
+
+
+
+
+
 
 class Vector {
 	/**

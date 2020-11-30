@@ -771,8 +771,33 @@ const HSLvalue = map(p.array[i][j], -1, 1, 0, 720); // 2*360
 
 
 
+## Time
 
+This library can handle the time with a class that's used like a timer.
 
+```js
+const t = new Time(); // create a new time from now in milliseconds, starts from now
+t.asNanoseconds(); // as nano-seconds
+t.asMicroSeconds(); // as micro-seconds
+t.asMilliseconds(); // as milli-seconds
+t.asSeconds(); // as seconds
+t.asMinutes(); // as minutes
+
+t.reset(); // actualize the timer starting's time to now
+```
+
+However, you can tell the instance to start on a fixed timestamp :
+```js
+const t = new Time(3000); // Time(startingTime, unit)
+// this time, the given time is static, so it will not update over the time
+t.asSeconds(); // 3
+t.reset(); // becomes a non-static time, so it updates over the time from now
+
+const t2 = new Time(2, 'seconds'); // you can tell which time unit you want
+// availible time units :
+// nano, micro, milli, seconds, minutes
+t.asMilliseconds(); // 2000
+```
 
 
 
