@@ -121,7 +121,7 @@ The `draw` function is called after the setup function, and is looped every fixe
 If you already created one, it will overwrite the existing one.
 
 ```js
-createCanvas(canvasWidth, canvasHeight, canvasBackground='#000', requestPointerLock=false);
+createCanvas(canvasWidth, canvasHeight, canvasBackground='#000', requestPointerLock=false, container=document.body);
 ```
 
 This function has to be written in the setup function.

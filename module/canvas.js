@@ -2315,6 +2315,7 @@ export const setCanvasSize = (newWidth, newHeight) => {
  * @param {number} h height of the canvas
  * @param {Color} bg canvas background color
  * @param {Boolean} requestPointerLock request or not the pointer lock
+ * @param {HTMLElement} container the html element the canvas will be in. Default is document.body
  * @return {HTMLCanvasElement} created canvas. this created canvas is stored in a global variable named "canvas"
  * and its context named "ctx"
  * @example
@@ -2324,7 +2325,7 @@ export const setCanvasSize = (newWidth, newHeight) => {
  * createCanvas(200, 200, "#fff"); // create 200x200 canvas with white background
  * createCanvas(200, 200, 0, true); // create 200x200 canvas with black background, and enable requestPointerLock feature
  */
-export const createCanvas = (w, h, bg="#000", requestPointerLock=false) => {
+export const createCanvas = (w, h, bg="#000", requestPointerLock=false, container=document.body) => {
 	if(w === undefined && h === undefined) {
 		w = documentWidth();
 		h = documentHeight();
@@ -2358,7 +2359,7 @@ export const createCanvas = (w, h, bg="#000", requestPointerLock=false) => {
 	canvas.id = "dynamic-canvas";
 	canvas.style.background = NOX_PV.colorTreatment(bg);
 	
-	document.body.appendChild(canvas);
+	container.appendChild(canvas);
 
 
 	if(requestPointerLock) {
