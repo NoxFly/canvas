@@ -485,6 +485,7 @@ polyline(x1, y1, x2, y2, ...); // must take an even number of arguments
 arc(x, y, r, start, end, antiClockwise=false);
 circle(x, y, radius);
 rect(x, y, recWidth, recHeight);
+roundRect(x, y, w, h, radius[, radiusTR, radiusBR, radiusBL]); // if no radius precised, default is 0. first given radius is applied to all, or Top-Left if multiple are precised.
 fillRect(x, y, recWidth, recHeight);
 strokeRect(x, y, recWidth, recHeight);
 text(txt, x, y);
