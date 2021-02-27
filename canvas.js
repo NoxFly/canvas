@@ -387,6 +387,57 @@ const rect = (x, y, w, h) => {
 
 
 /**
+ * Draws a rounded rectangle
+ * @param {Number} x 
+ * @param {Number} y 
+ * @param {Number} w 
+ * @param {Number} h 
+ * @param  {...Number} radius 
+ */
+const roundRect = (x=0, y=0, w=0, h=0, radius=0, radiusTR, radiusBR, radiusBL) => {
+    if(radiusTR == undefined) radiusTR = radius;
+    if(radiusBR == undefined) radiusBR = radius;
+    if(radiusBL == undefined) radiusBL = radius;
+    
+    radius   = min(max(0, radius),   50);
+    radiusTR = min(max(0, radiusTR), 50);
+    radiusBR = min(max(0, radiusBR), 50);
+    radiusBL = min(max(0, radiusBL), 50);
+
+    const x1 = x + radius,
+          y1 = y;
+
+    const x2 = x + w - radiusTR,
+          y2 = y;
+
+    const x3 = x + w,
+          y3 = y + h - radiusBR;
+
+    const x4 = x + radiusBL,
+          y4 = y + h;
+
+    const x5 = x,
+          y5 = y + radius;
+
+    beginPath();
+        moveTo(x1, y1);
+        lineTo(x2, y2);
+        arcTo(x2 + radiusTR, y2, x2 + radiusTR, y2 + radiusTR, radiusTR);
+        lineTo(x3, y3);
+        arcTo(x3, y3 + radiusBR, x3 - radiusBR, y3 + radiusBR, radiusBR);
+        lineTo(x4, y4);
+        arcTo(x4 - radiusBL, y4, x, y4 - radiusBL, radiusBL);
+        lineTo(x5, y5);
+        arcTo(x5, y5 - radius, x1, y1, radius);
+
+        if(NOX_PV.bStroke) ctx.stroke();
+        if(NOX_PV.bFill) ctx.fill();
+    closePath();
+};
+
+
+
+/**
  * Create a custom path with assembly of shapes.
  * It's the same use as the <path> tag for SVG.
  * It adds the path to the current one.
