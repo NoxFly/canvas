@@ -98,9 +98,10 @@ const NOX_PV = {
 
 	// Treat color's entries
 	colorTreatment: (...oColor) => {
-		if(oColor instanceof CanvasGradient || oColor instanceof CanvasPattern) return oColor;
+		const n = oColor.length;
 
-		let n = oColor.length;
+		if(n > 0 && (oColor[0] instanceof CanvasGradient || oColor[0] instanceof CanvasPattern)) return oColor[0];
+
 
 		// number - only rgb value accepted
 		if(n == 1 && typeof oColor[0] == 'number') {
