@@ -26,7 +26,7 @@ As the default use, you can create animated and interactive canvas putting all t
 # Usage
 
 ```js
-import * as Canvas from 'canvas/module/canvas.min.js');
+import * as Canvas from 'canvas/module/canvas.min.js';
 
 const canvas = Canvas.createCanvas(640, 480);
 
