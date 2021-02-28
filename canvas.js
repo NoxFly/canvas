@@ -6,7 +6,7 @@
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.4.0}
+ * @version		{1.4.1}
 */
 
 
@@ -2771,7 +2771,7 @@ const handleTouchStart = e => {
  */
 const handleTouchMove = e => {
 
-	if(typeof mouseDown != "undefined" && NOX_PV.isMouseDown) mouseDown(e);
+	if(typeof mouseMove != "undefined" && NOX_PV.isMouseDown) mouseMove(e);
 
 	if(!NOX_PV.swipexDown || !NOX_PV.swipeyDown) {
 		return;
@@ -3001,7 +3001,7 @@ const initializeCanvasWorld = () => {
 
             // when user resize window or document
             window.onresize = () => {
-                let newWidth = document.documentElement.clientWidth,
+                const newWidth = document.documentElement.clientWidth,
                     newHeight = document.documentElement.clientHeight;
 
                 MIN_DOC_SIZE = min(newWidth, newHeight);
