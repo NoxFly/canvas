@@ -6,8 +6,8 @@
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.4.0}
-*/
+ * @version		{1.4.1}
+ */
 
 
 
@@ -16,23 +16,10 @@
  */
 export let ctx = null, canvas = null, width = 0, height = 0, realWidth = 0, realHeight = 0;
 export let mouseX = 0, mouseY = 0;
-export let pixels = undefined;
 export let fps = 60;
 
-/**
- * Returns the current document's width in pixel
- * @return {number} document's width
- */
 export const documentWidth = () => document.documentElement.clientWidth;
-
-/**
- * Returns the current document's height in pixel
- * @return {number} document's height
- */
 export const documentHeight = () => document.documentElement.clientHeight;
-
-// the minimum between document width & document height
-export let MIN_DOC_SIZE;
 
 // PI
 export const PI = Math.PI;
@@ -62,7 +49,12 @@ export let mouseDirection = {x: 0, y: 0};
 
 
 // private vars
-const NOX_PV = {
+let NOX_PV = {
+    // loop function
+    draw: null,
+
+    hasInitAllEventHandlers: false,
+
 	// either the fill | stroke is enable
 	bFill: true, bStroke: true,
 
@@ -91,17 +83,16 @@ const NOX_PV = {
 	// guide lines (cyan)
 	bGuideLines: false,
 
-	loop: true,
+    loop: true,
 
 	// date.now() | fps and draw interval
 	now: 0, then: Date.now(), interval: 1000/fps, delta: 0, counter: 0, time_el: 0,
 
-	// Treat color's entries
+	// ? color treatment - I think needs to be removed
 	colorTreatment: (...oColor) => {
-		const n = oColor.length;
+		let n = oColor.length;
 
-		if(n > 0 && (oColor[0] instanceof CanvasGradient || oColor[0] instanceof CanvasPattern)) return oColor[0];
-
+        if(n > 0 && (oColor[0] instanceof CanvasGradient || oColor[0] instanceof CanvasPattern)) return oColor[0];
 
 		// number - only rgb value accepted
 		if(n == 1 && typeof oColor[0] == 'number') {
@@ -153,11 +144,10 @@ const NOX_PV = {
 			return window.getComputedStyle(canvas).backgroundColor;
 		}
 
-		// default returned color if bad entry
 		return '#000';
 	},
 
-	perlin: {
+    perlin: {
 		lod: 10,
 		unit: 1.0,
 		gradient: [],
@@ -193,7 +183,15 @@ const NOX_PV = {
 			
 			return map(Li1 + Cy * (Li2 - Li1), -NOX_PV.perlin.unit, NOX_PV.perlin.unit, 0, 1);
 		}
-	}
+	},
+
+    callbackListeners: {},
+
+    callback: (event, e=undefined) => {
+        if(event in NOX_PV.callbackListeners) {
+            NOX_PV.callbackListeners[event](e);
+        }
+    }
 };
 
 NOX_PV.perlin.gradient = [
@@ -202,6 +200,7 @@ NOX_PV.perlin.gradient = [
 	[NOX_PV.perlin.unit, -NOX_PV.perlin.unit],
 	[-NOX_PV.perlin.unit,-NOX_PV.perlin.unit]
 ];
+
 
 
 
@@ -386,7 +385,6 @@ export const rect = (x, y, w, h) => {
 };
 
 
-
 /**
  * Draws a rounded rectangle
  * @param {Number} x 
@@ -399,7 +397,7 @@ export const roundRect = (x=0, y=0, w=0, h=0, radius=0, radiusTR, radiusBR, radi
     if(radiusTR == undefined) radiusTR = radius;
     if(radiusBR == undefined) radiusBR = radius;
     if(radiusBL == undefined) radiusBL = radius;
-    
+
     radius   = min(max(0, radius),   50);
     radiusTR = min(max(0, radiusTR), 50);
     radiusBR = min(max(0, radiusBR), 50);
@@ -840,7 +838,6 @@ export const rotate = degree => ctx.rotate(radian(degree));
  * beginPath();
  * arc(100, 75, 50, 0, PI * 2);
  * clip();
-
  * // Draw stuff that gets clipped
  * fill('blue');
  * fillRect(0, 0, width, height);
@@ -1633,7 +1630,8 @@ export const std = (...values) => sqrt(variance(...values));
 
 
 
-
+// the minimum between document width & document height
+export let MIN_DOC_SIZE = min(documentWidth(), documentHeight());
 
 
 
@@ -2350,17 +2348,6 @@ export const setCanvasSize = (newWidth, newHeight) => {
 	}
 };
 
-
-
-
-
-
-
-
-
-
-
-
 /**
  * Creates a new canvas. If already created, then remove the current one and create another canvas
  * @param {number} w width of the canvas
@@ -2368,7 +2355,7 @@ export const setCanvasSize = (newWidth, newHeight) => {
  * @param {Color} bg canvas background color
  * @param {Boolean} requestPointerLock request or not the pointer lock
  * @param {HTMLElement} container the html element the canvas will be in. Default is document.body
- * @return {HTMLCanvasElement} created canvas. this created canvas is stored in a global variable named "canvas"
+ * @return {{HTMLCanvasElement, CanvasRenderingContext2D}} created canvas. this created canvas is stored in a global variable named "canvas"
  * and its context named "ctx"
  * @example
  * createCanvas(); // fullscreen canvas
@@ -2435,8 +2422,10 @@ export const createCanvas = (w, h, bg="#000", requestPointerLock=false, containe
 	}
 
 	ctx = canvas.getContext('2d');
+
+    if(!NOX_PV.hasInitAllEventHandlers) initializeAllEventHandlers();
 	
-	return canvas;
+	return { canvas, ctx };
 };
 
 
@@ -2480,14 +2469,194 @@ export const setDrawCondition = (condition = null) => {
 
 
 
+/**
+ * Load all events about the canvas
+ */
+const initializeAllEventHandlers = () => {
+    NOX_PV.hasInitAllEventHandlers = true;
+
+    /**
+     * Calculate the {top, left} offset of a DOM element
+     * @param {DOMElement} elt the dom Element
+     */
+    const offset = elt => {
+        let rect = elt.getBoundingClientRect();
+
+        return {
+            top: rect.top + document.body.scrollTop,
+            left: rect.left + document.body.scrollLeft
+        };
+    };
+
+
+
+    // if the user created the canvas on the setup function
+    if(canvas) {
+
+        // event mouse move
+        canvas.addEventListener('mousemove', e => {
+            NOX_PV.oldMouseX = mouseX;
+            NOX_PV.oldMouseY = mouseY;
+
+            mouseX = e.clientX - offset(canvas).left;
+            mouseY = e.clientY - offset(canvas).top;
+
+            //if(NOX_PV.isPointerLocked) {
+                mouseDirection = {x: e.movementX, y: e.movementY};
+            //}
+
+            NOX_PV.callback('mousemove', e);
+        });
+
+
+
+        // event touch start
+        canvas.addEventListener('touchstart', handleTouchStart, false);
+        // event touch move
+        canvas.addEventListener('touchmove',  handleTouchMove, false);
+        // event mouse up
+        canvas.addEventListener('mouseup', e => {NOX_PV.isMouseDown = false; NOX_PV.callback('mouseup', e);});
+        // event click
+        canvas.addEventListener('click', e => {NOX_PV.callback('click', e);});
+
+
+
+
+        // if the swipe is enable on pc, call event handler
+        if(NOX_PV.swipePCEnable) {
+            canvas.addEventListener('mousedown', handleTouchStart, false);
+            canvas.addEventListener('mousemove', handleTouchMove, false);
+        }
+
+
+
+        canvas.addEventListener('swipeleft',  () => NOX_PV.callback('swipe', 'left'), false);
+        canvas.addEventListener('swiperight', () => NOX_PV.callback('swipe', 'right'), false);
+        canvas.addEventListener('swipeup',    () => NOX_PV.callback('swipe', 'up'), false);
+        canvas.addEventListener('swipedown',  () => NOX_PV.callback('swipe', 'down'), false);
+
+
+
+        // event mouse enter
+        canvas.addEventListener('mouseenter', e => NOX_PV.callback('mouseenter', e));
+        // event mouse leave
+        canvas.addEventListener('mouseleave', e => NOX_PV.callback('mouseleave', e));
+        // event wheel
+        canvas.addEventListener('wheel', e => NOX_PV.callback('wheel', e));
+
+        // right click
+        canvas.oncontextmenu = e => {
+            NOX_PV.callback('contextmenu', e);
+        }
+    
+        // double click
+        canvas.ondblclick = e => {
+            NOX_PV.callback('dblclick', e);
+        }
+
+    }
+    
+
+
+
+    // keyboard events
+
+    // key pressed
+    window.onkeypress = e => {
+        NOX_PV.keys[e.keyCode] = true;
+        NOX_PV.callback('keypress', e);
+    };
+
+
+    // key downed
+    window.onkeydown = e => {
+        NOX_PV.keys[e.keyCode] = true;
+        NOX_PV.callback('keydown', e);
+    };
+
+
+    // key upped
+    window.onkeyup = e => {
+        NOX_PV.keys[e.keyCode] = false;
+        NOX_PV.callback('keyup', e);
+    };
+
+    // when user resize window or document
+    window.onresize = () => {
+        const newWidth = document.documentElement.clientWidth,
+            newHeight = document.documentElement.clientHeight;
+
+        MIN_DOC_SIZE = min(newWidth, newHeight);
+
+        NOX_PV.callback('resize', { width: newWidth, height: newHeight });
+    };
+
+    // when user stop focus the document or the window
+    window.onblur = () => {
+        NOX_PV.callback('blur');
+    };
+
+    // when user focus the page
+    window.onfocus = () => {
+        NOX_PV.callback('focus');
+    }
+
+    // user goes online (internet)
+    window.ononline = e => {
+        NOX_PV.callback('online', e);
+    }
+
+    // user goes offline (internet)
+    window.onoffline = e => {
+        NOX_PV.callback('offline', e);
+    }
+};
 
 
 /**
- * The draw loop. If drawCond returns true, then executes the draw function of the user that uses the framework.
- * Manages the frame rate.
- * Show guide lines if enabled.
- * Clear then draw canvas if the draw() function has been created and if the drawCond() returns true.
- * Do not Call it.
+ * Listen to an event on the canvas or the window.
+ * resize, blur, focus, online, offline, keydown, keyup and keypress are part of window's listeners
+ * @param {'resize'|'blur'|'focus'|'online'|'offline'|'keydown'|'keyup'|'keypress'|'mouseup'|'mousemove'|'click'|'dblclick'|'mouseenter'|'mouseleave'|'wheel'|'contextmenu'|'swipe'} event - event to listen
+ * @param {function} callback function which's called once event is fired
+ */
+export const listen = (event, callback) => {
+    NOX_PV.callbackListeners[event] = callback;
+};
+
+export const stopListen = event => {
+    if(event in NOX_PV.callbackListeners) {
+        delete NOX_PV.callbackListeners[event];
+    }
+}
+
+
+
+/**
+ * Draw function that must be called for animated canvas
+ * @param {function} drawFunction the function that will be execute in loop to draw on the canvas
+ */
+export const draw = drawFunction => {
+    if(typeof drawFunction !== 'function') {
+        console.error(`The draw function must take an argument as type 'function'.`);
+    }
+
+    else if(NOX_PV.draw !== null) {
+        console.warn('You already declared your draw function.');
+    }
+
+    else {
+        NOX_PV.draw = drawFunction;
+        drawLoop();
+    }
+};
+
+
+
+
+
+
+/**
+ * The draw loop. If drawCond returns true, then execute the draw function of the user that uses the framework
  */
 const drawLoop = () => {
 	if(NOX_PV.loop === true) requestAnimationFrame(drawLoop);
@@ -2501,10 +2670,10 @@ const drawLoop = () => {
 		fps = parseInt(NOX_PV.counter / NOX_PV.time_el);
 
 		// if canvas created & drawCond returns true
-		if(ctx && typeof draw != "undefined" && drawCond()) {
+		if(ctx && drawCond()) {
 
 			clearRect(0, 0, width, height); // clear the canvas
-			draw(); // draw on the canvas
+			NOX_PV.draw(); // draw on the canvas
 
 			// if guidelines enabled
 			if(NOX_PV.bGuideLines) {
@@ -2755,7 +2924,7 @@ export class PerlinNoise {
 const handleTouchStart = e => {
 	NOX_PV.isMouseDown = true;
 
-	if(typeof mouseDown != "undefined") mouseDown(e);
+	NOX_PV.callback('mousedown', e);
 
 	let getTouches = e2 => e2.touches || [{clientX: e.clientX, clientY: e.clientY}, null];
 
@@ -2771,7 +2940,7 @@ const handleTouchStart = e => {
  */
 const handleTouchMove = e => {
 
-	if(typeof mouseDown != "undefined" && NOX_PV.isMouseDown) mouseDown(e);
+	NOX_PV.callback('mousemove', e);
 
 	if(!NOX_PV.swipexDown || !NOX_PV.swipeyDown) {
 		return;
@@ -2865,191 +3034,6 @@ export const getOffsetVector = shape => {
 
 	return vec;
 };
-
-
-
-
-
-// initialize all the canvas's environment, when window is ready
-const initializeCanvasWorld = () => {
-    if(window) {
-        window.onload = () => {
-            // the minimum between document width | height
-            MIN_DOC_SIZE = min(documentWidth(), documentHeight());
-            
-
-
-            // if user created a setup function
-            if(typeof setup != "undefined") {
-				setup();
-
-				if(pixels === undefined) {
-					delete pixels;
-				}
-            }
-
-
-
-            /**
-             * Calculate the {top, left} offset of a DOM element
-             * @param {DOMElement} elt the dom Element
-             */
-            const offset = elt => {
-                let rect = elt.getBoundingClientRect();
-
-                return {
-                    top: rect.top + document.body.scrollTop,
-                    left: rect.left + document.body.scrollLeft
-                };
-            };
-
-
-
-            // if the user created the canvas on the setup function
-            if(canvas) {
-
-                // event mouse move
-                canvas.addEventListener('mousemove', e => {
-                    NOX_PV.oldMouseX = mouseX;
-                    NOX_PV.oldMouseY = mouseY;
-
-                    mouseX = e.clientX - offset(canvas).left;
-                    mouseY = e.clientY - offset(canvas).top;
-
-                    //if(NOX_PV.isPointerLocked) {
-                        mouseDirection = {x: e.movementX, y: e.movementY};
-                    //}
-
-                    if(typeof mouseMove != "undefined") mouseMove(e);
-                });
-
-
-
-                // event touch start
-                canvas.addEventListener('touchstart', handleTouchStart, false);
-                // event touch move
-                canvas.addEventListener('touchmove',  handleTouchMove, false);
-                // event mouse up
-                canvas.addEventListener('mouseup', e => {NOX_PV.isMouseDown = false; if(typeof mouseUp != "undefined") mouseUp(e);});
-                // event click
-                canvas.addEventListener('click', e => {if(typeof onClick != "undefined") onClick(e);});
-
-
-
-
-                // if the swipe is enable on pc, call event handler
-                if(NOX_PV.swipePCEnable) {
-                    canvas.addEventListener('mousedown', handleTouchStart, false);
-                    canvas.addEventListener('mousemove', handleTouchMove, false);
-                }
-
-
-
-                // if the user has created a function onSwipe() {} then call it if it's swiping
-                if(typeof onSwipe != "undefined") {
-                    canvas.addEventListener('swipeleft',  () => {onSwipe('left');}, false);
-                    canvas.addEventListener('swiperight', () => {onSwipe('right');}, false);
-                    canvas.addEventListener('swipeup',    () => {onSwipe('up');}, false);
-                    canvas.addEventListener('swipedown',  () => {onSwipe('down');}, false);
-                }
-
-
-
-                // event mouse enter
-                canvas.addEventListener('mouseenter', e => {if(typeof mouseEnter != "undefined") mouseEnter(e);});
-                // event mouse leave
-                canvas.addEventListener('mouseleave', e => {if(typeof mouseLeave != "undefined") mouseLeave(e);});
-                // event wheel
-                canvas.addEventListener('wheel', e => {if(typeof mouseWheel != "undefined") mouseWheel(e);});
-
-                // right click
-                canvas.oncontextmenu = e => {
-                    if(typeof onContextmenu != "undefined") onContextmenu(e);
-                }
-            
-                // double click
-                canvas.ondblclick = e => {
-                    if(typeof onDblClick != "undefined") onDblClick(e);
-                }
-
-            }
-            
-
-
-
-            // keyboard events
-
-            // key pressed
-            window.onkeypress = e => {
-                NOX_PV.keys[e.keyCode] = true;
-                if(typeof keyPress != "undefined") keyPress(e);
-            };
-
-
-            // key downed
-            window.onkeydown = e => {
-                NOX_PV.keys[e.keyCode] = true;
-                if(typeof keyDown != "undefined") keyDown(e);
-            };
-
-
-            // key upped
-            window.onkeyup = e => {
-                NOX_PV.keys[e.keyCode] = false;
-                if(typeof keyUp != "undefined") keyUp(e);
-            };
-
-            // when user resize window or document
-            window.onresize = () => {
-                let newWidth = document.documentElement.clientWidth,
-                    newHeight = document.documentElement.clientHeight;
-
-                MIN_DOC_SIZE = min(newWidth, newHeight);
-
-                if(typeof onResize != "undefined") onResize(newWidth, newHeight);
-            };
-
-            // when user stop focus the document or the window
-            window.onblur = () => {
-                if(typeof onBlur != "undefined") onBlur();
-            };
-
-            // when user focus the page
-            window.onfocus = () => {
-                if(typeof onFocus != "undefined") onFocus();
-            }
-
-            // user goes online (internet)
-            window.ononline = e => {
-                if(typeof onOnline != "undefined") onOnline(e);
-            }
-
-            // user goes offline (internet)
-            window.onoffline = e => {
-                if(typeof onOffline != "undefined") onOffline(e);
-            }
-
-
-            // start running the draw loop
-            drawLoop();
-        };
-    }
-};
-
-
-
-/**
- * initialize everything from here
- * When the page has loaded
- */
-initializeCanvasWorld();
-
-
-
-
-
-
-
 
 
 
@@ -3163,7 +3147,6 @@ export const collision = (shape1, shape2) => {
 
 // CLASSES
 
-
 export class Time {
 	static units = {
 		// unit => milliseconds to unit
@@ -3250,6 +3233,7 @@ export class Time {
 		this.start = Date.now();
 	}
 }
+
 
 
 export class Vector {

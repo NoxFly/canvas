@@ -9,17 +9,11 @@
 [![GitHub stars](https://img.shields.io/github/stars/NoxFly/canvas.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/NoxFly/canvas/stargazers/)
 [![Npm Downloads](https://img.shields.io/npm/dt/@noxfly/canvas.svg?maxAge=3600)](https://img.shields.io/npm/dt/@noxfly/canvas.svg?maxAge=3600)
 
-All basics are in [default README](https://github.com/NoxFly/canvas#canvas-framework).
-
-Instead of creating a function `setup` that is launch once the document is ready, because you are in a module, you don't need this function.
-
-As the default use, you can create animated and interactive canvas putting all the drawing stuff in the `draw` function.
-
 ## CDN links
 
 ```html
 <script src='https://cdn.jsdelivr.net/gh/NoxFly/canvas/tree/master/module/canvas.js'></script>
-// minified version
+<!-- minified version -->
 <script src='https://cdn.jsdelivr.net/gh/NoxFly/canvas/tree/master/module/canvas.min.js'></script>
 ```
 
@@ -28,10 +22,22 @@ As the default use, you can create animated and interactive canvas putting all t
 ```js
 import * as Canvas from 'canvas/module/canvas.min.js';
 
-const canvas = Canvas.createCanvas(640, 480);
+const { canvas, ctx } = Canvas.createCanvas(); // initialize everything if called for the first time
 
-// ...
+Canvas.draw(() => {
+    // draw stuff here...
+});
+
+
+// to listen to events
+Canvas.listen('eventname', e => {
+    // ...
+});
 ```
+
+All basics are in [default README](https://github.com/NoxFly/canvas#canvas-framework).
+
+With module's type you don't have to create the `setup()` function.
 
 ## License
 
