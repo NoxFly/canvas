@@ -1,12 +1,12 @@
 /**
- * @copyright   Copyright (C) 2019 - 2020 Dorian Thivolle All rights reserved.
+ * @copyright   Copyright (C) 2019 - 2021 Dorian Thivolle All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  * @author		Dorian Thivolle
  * @name		canvas
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.4.1}
+ * @version		{1.5.0}
 */
 
 
@@ -65,36 +65,29 @@ let mouseDirection = {x: 0, y: 0};
 const NOX_PV = {
 	// either the fill | stroke is enable
 	bFill: true, bStroke: true,
-
 	// pressed keys
 	keys: {},
-
-	// boolean - mouse down
 	isMouseDown: false,
-	
 	// last frame mouse's position to know the mouse direction
 	oldMouseX: 0, oldMouseY: 0,
-
-	// boolean - pointer lock
 	isPointerLocked: false,
-
-	// swipe direction
 	swipexDown: null,
 	swipeyDown: null,
-
-	// boolean swipe enabled on pc
 	swipePCEnable: true,
-
 	// swipe direction
 	lastSwipe: null,
-
-	// guide lines (cyan)
 	bGuideLines: false,
-
 	loop: true,
-
-	// date.now() | fps and draw interval
 	now: 0, then: Date.now(), interval: 1000/fps, delta: 0, counter: 0, time_el: 0,
+    views: [],
+
+    createViewId: () => {
+        const ids = NOX_PV.views.map(v => v.id);
+        let id = 0;
+        while(ids.includes(id))
+            id++;
+        return id;
+    },
 
 	// Treat color's entries
 	colorTreatment: (...oColor) => {
@@ -2435,6 +2428,10 @@ const createCanvas = (w, h, bg="#000", requestPointerLock=false, container=docum
 	}
 
 	ctx = canvas.getContext('2d');
+
+    NOX_PV.views = []; // reset previous created views if they exist
+    new View(); // create new default view which is taken all canvas
+    getDefaultView();
 	
 	return canvas;
 };
@@ -2635,113 +2632,34 @@ const noiseDetails = detailLevel => {
 };
 
 
+/**
+ * Set a view's viewport to render in
+ * @param {View} view view to draw in its viewport
+ * @example
+ * const view = new View(0, 0, 100, 300);
+ * view.setViewport(0.25, 0.25, 0.5, 0.5);
+ * setView(view);
+ * circle(0, 0, 10); // draws a circle at 20%,20% of the canvas because 0,0 of the view is 20%,20%
+ */
+ const setView = view => {
+    if(view instanceof View) {
+        NOX_PV.currentViewId = view.id;
+    }
 
+    else {
+        console.error("Given argument isn't of type view");
+    }
+};
 
-class PerlinNoise {
-	static mapNumberTypes = ['default', 'rgb', 'hsl'];
-	static getMapNumberTypeIndex = typeStr => PerlinNoise.mapNumberTypes.indexOf(typeStr.toLowerCase())
-	/**
-	 * 
-	 * @param {number} lod level of details
-	 * @param {number} x start x of the array
-	 * @param {number} y start y of the array
-	 * @param {number} w width of the array
-	 * @param {number} h height of the array
-	 * @param {string} mapNumber map values to [auto: (-1,1)], [rgb: (0,255)], [hsl: (0, 360)]
-	 */
-	constructor(lod=10, x=0, y=0, w=width, h=height, mapNumber='default') {
-		this.lod = lod;
-		this.seed = NOX_PV.perlin.generateSeed();
-		this.start = { x, y };
-		this.size = { width: w, height: h };
-		this.array = [];
-		this.numberMapStyle = PerlinNoise.getMapNumberTypeIndex(mapNumber);
-		this.calculate();
-	}
-
-	/**
-	 * Sets the level of detail for this class instance.
-	 * If the lod changed, then it re-calculates the array.
-	 * @param {number} lod level of detail
-	 * @example
-	 * const p = new PerlinNoise();
-	 * p.setLOD(200);
-	 */
-	setLOD(lod) {
-		const tmp = this.lod;
-		this.lod = lod;
-
-		if(tmp !== lod) {
-			this.calculate();
-		}
-	}
-	
-	/**
-	 * Regenerates the noise's seed.
-	 * Then it re-calculates the array.
-	 * @example
-	 * const p = new PerlinNoise();
-	 * p.regenerateSeed();
-	 */
-	regenerateSeed() {
-		this.seed = NOX_PV.perlin.generateSeed();
-		this.calculate();
-	}
-
-	/**
-	 * Sets the map number of the array.
-	 * Default is [-1,1] (0).
-	 * You can choose [0,255] (1) or [0,360] (2).
-	 * @param {number} mapNumber map style's index
-	 * @example
-	 * const p = new PerlinNoise();
-	 * p.setMapNumber(1); // sets values between 0 and 255.
-	 */
-	setMapNumber(mapNumber) {
-		mapNumber = PerlinNoise.getMapNumberTypeIndex(mapNumber);
-		if(this.numberMapStyle === mapNumber) return;
-
-		let Lmin=0, Lmax=NOX_PV.perlin.unit, Rmin=0, Rmax=NOX_PV.perlin.unit;
-		
-		if(this.numberMapStyle > 0) [Lmin, Lmax] = [0, (this.numberMapStyle===1)?255:360];
-		this.numberMapStyle = mapNumber;
-		if(this.numberMapStyle > 0) [Rmin, Rmax] = [0, (this.numberMapStyle===1)?255:360];
-		
-		this.array.forEach((row, i) => {
-			this.array[i] = map(this.array[i], Lmin, Lmax, Rmin, Rmax);
-		});
-	}
-
-	/**
-	 * Calculates the noised array.
-	 * You normally don't have to call it. It's automatically called if an option is changed through methods.
-	 * @example
-	 * const p = new PerlinNoise();
-	 * p.calculate();
-	 */
-	calculate() {
-		this.array = [];
-
-		for(let y=this.start.y; y < this.start.y + this.size.height; y++) {
-			let row = [];
-
-			for(let x=this.start.x; x < this.start.x + this.size.width; x++) {
-				row.push(NOX_PV.perlin.get(x, y, this.lod, this.seed));
-			}
-
-			this.array.push(row);
-		}
-
-		if(this.numberMapStyle > 0) {
-			this.setMapNumber(PerlinNoise.mapNumberTypes[this.numberMapStyle]);
-		}
-	}
-}
-
-
-
-
-
+/**
+ * Returns the default used view of the canvas
+ * @returns {View} the default view of the canvas
+ * @example
+ * const view = getDefaultView();
+ */
+const getDefaultView = () => {
+    return NOX_PV.views[0];
+};
 
 
 
@@ -3162,6 +3080,358 @@ const collision = (shape1, shape2) => {
 
 
 // CLASSES
+
+class PerlinNoise {
+	static mapNumberTypes = ['default', 'rgb', 'hsl'];
+	static getMapNumberTypeIndex = typeStr => PerlinNoise.mapNumberTypes.indexOf(typeStr.toLowerCase())
+	/**
+	 * 
+	 * @param {number} lod level of details
+	 * @param {number} x start x of the array
+	 * @param {number} y start y of the array
+	 * @param {number} w width of the array
+	 * @param {number} h height of the array
+	 * @param {string} mapNumber map values to [auto: (-1,1)], [rgb: (0,255)], [hsl: (0, 360)]
+	 */
+	constructor(lod=10, x=0, y=0, w=width, h=height, mapNumber='default') {
+		this.lod = lod;
+		this.seed = NOX_PV.perlin.generateSeed();
+		this.start = { x, y };
+		this.size = { width: w, height: h };
+		this.array = [];
+		this.numberMapStyle = PerlinNoise.getMapNumberTypeIndex(mapNumber);
+		this.calculate();
+	}
+
+	/**
+	 * Sets the level of detail for this class instance.
+	 * If the lod changed, then it re-calculates the array.
+	 * @param {number} lod level of detail
+	 * @example
+	 * const p = new PerlinNoise();
+	 * p.setLOD(200);
+	 */
+	setLOD(lod) {
+		const tmp = this.lod;
+		this.lod = lod;
+
+		if(tmp !== lod) {
+			this.calculate();
+		}
+	}
+	
+	/**
+	 * Regenerates the noise's seed.
+	 * Then it re-calculates the array.
+	 * @example
+	 * const p = new PerlinNoise();
+	 * p.regenerateSeed();
+	 */
+	regenerateSeed() {
+		this.seed = NOX_PV.perlin.generateSeed();
+		this.calculate();
+	}
+
+	/**
+	 * Sets the map number of the array.
+	 * Default is [-1,1] (0).
+	 * You can choose [0,255] (1) or [0,360] (2).
+	 * @param {number} mapNumber map style's index
+	 * @example
+	 * const p = new PerlinNoise();
+	 * p.setMapNumber(1); // sets values between 0 and 255.
+	 */
+	setMapNumber(mapNumber) {
+		mapNumber = PerlinNoise.getMapNumberTypeIndex(mapNumber);
+		if(this.numberMapStyle === mapNumber) return;
+
+		let Lmin=0, Lmax=NOX_PV.perlin.unit, Rmin=0, Rmax=NOX_PV.perlin.unit;
+		
+		if(this.numberMapStyle > 0) [Lmin, Lmax] = [0, (this.numberMapStyle===1)?255:360];
+		this.numberMapStyle = mapNumber;
+		if(this.numberMapStyle > 0) [Rmin, Rmax] = [0, (this.numberMapStyle===1)?255:360];
+		
+		this.array.forEach((row, i) => {
+			this.array[i] = map(this.array[i], Lmin, Lmax, Rmin, Rmax);
+		});
+	}
+
+	/**
+	 * Calculates the noised array.
+	 * You normally don't have to call it. It's automatically called if an option is changed through methods.
+	 * @example
+	 * const p = new PerlinNoise();
+	 * p.calculate();
+	 */
+	calculate() {
+		this.array = [];
+
+		for(let y=this.start.y; y < this.start.y + this.size.height; y++) {
+			let row = [];
+
+			for(let x=this.start.x; x < this.start.x + this.size.width; x++) {
+				row.push(NOX_PV.perlin.get(x, y, this.lod, this.seed));
+			}
+
+			this.array.push(row);
+		}
+
+		if(this.numberMapStyle > 0) {
+			this.setMapNumber(PerlinNoise.mapNumberTypes[this.numberMapStyle]);
+		}
+	}
+}
+
+class View {
+    /**
+     * Creates a view that can be used in the canvas
+     * default parameters are covering all the canvas, with no rotation and a zoom level of 1 (basic zoom)
+     * @param {Number} x X-axis position of the view
+     * @param {Number} y Y-axis position of the view
+     * @param {Number} w Width of the view
+     * @param {Number} h Height of the view
+     * @example
+     * const view = new View(); // creating a view covering all the canvas (can be modified later)
+     * const view2 = new View(0, 0, width/2, height);
+     */
+    constructor(x=0, y=0, w=width, h=height) {
+        if(!ctx || !canvas)
+            return console.error("Cannot create view while canvas not created");
+    
+        this.static = Object.freeze({
+            id: NOX_PV.createViewId()
+        });
+
+        NOX_PV.views.push(this);
+        
+        this.set(x, y, w, h);
+        this.setViewport(0, 0, 1, 1);
+        this.rotation = 0;
+        this.zoomLevel = 1;
+    }
+
+    /**
+     * Set the X-axis, Y-axis position, width and height of the view
+     * @param {Number} x X-axis position of the view
+     * @param {Number} y Y-axis position of the view
+     * @param {Number} w Width of the view
+     * @param {Number} h Height of the view
+     * @example
+     * const view = new View();
+     * view.set(0, 0, width/2, height);
+     */
+    set(x, y, w, h) {
+        this.setPosition(x, y);
+        this.setSize(w, h);
+    }
+
+    /**
+     * Set the X-axis position of the view
+     * @param {Number} h X-axis position to set to the view
+     */
+    set x(x) {
+        if(isNaN(x))
+            return console.error("View's x must be an integer");
+        this.position.x = x;
+    }
+
+    /**
+     * Set the Y-axis position of the view
+     * @param {Number} h Y-axis position to set to the view
+     */
+    set y(y) {
+        if(isNaN(y))
+            return console.error("View's y must be an integer");
+        this.position.y = y;
+    }
+
+    /**
+     * Set the width of the view
+     * @param {Number} h width to set to the view
+     */
+    set width(w) {
+        if(isNaN(w))
+            return console.error("View's w must be an integer");
+        this.size.width = w;
+    }
+
+    /**
+     * Set the height of the view
+     * @param {Number} h height to set to the view
+     */
+    set height(h) {
+        if(isNaN(h))
+            return console.error("View's h must be an integer");
+        this.size.height = h;
+    }
+
+    /**
+     * Return the id of the view
+     * @returns {Number} view's id
+     */
+    get id() {return this.static.id;}
+
+    /**
+     * Returns the X-axis position of the view
+     * @return {Number} X-axis position of the view
+     */
+    get x() {return this.position.x;}
+
+    /**
+     * Returns the Y-axis position of the view
+     * @return {Number} Y-axis position of the view
+     */
+    get y() {return this.position.y;}
+
+    /**
+     * Returns the width of the view
+     * @return {Number} width of the view
+     */
+    get width() {return this.size.width;}
+
+    /**
+     * Returns the height of the view
+     * @return {Number} height of the view
+     */
+    get height() {return this.size.height;}
+
+    /**
+     * Set the view's position to given location (x,y)
+     * @param {Number} x view's x
+     * @param {Number} y view's y
+     * @example
+     * const view = new View(0, 0, width/2, height/2);
+     * view.setPosition(width/2, 0);
+     */
+    setPosition(x, y) {
+        if(typeof x !== 'number') x = 0;
+        if(typeof y !== 'number') y = 0;
+        this.x= x;
+        this.y = y;
+    }
+
+    /**
+     * Set the view's size
+     * @param {Number} w view's width
+     * @param {Number} h view's height
+     * @example
+     * const view = new View(40, 40); // view of canvas's size
+     * view.setSize(100, 100);
+     */
+    setSize(w, h) {
+        if(typeof w !== 'number') w = 0;
+        if(typeof h !== 'number') h = 0;
+        this.width = w;
+        this.height = h;
+    }
+
+    /**
+     * Places the view's center at the given location (x,y).
+     * It redefines the view's position (x,y)
+     * @param {Number} x view's center x
+     * @param {Number} y view's center y
+     * @example
+     * const view = new View(0, 0, 100, 100);
+     * view.setCenter(200, 200); // now view.x = 150 and view.y = 150
+     */
+    setCenter(x, y) {
+        if(typeof x !== 'number') x = 0;
+        if(typeof y !== 'number') y = 0;
+
+        this.setPosition(x - this.width/2, y - height/2);
+    }
+
+    /**
+     * Moves the view  adding to its position the given x and y
+     * @param {Number} x X-axis pixels number to move
+     * @param {Number} y Y-axis pixels number to move
+     * @example
+     * const view = new View(10, 10, 200, 200);
+     * view.move(10, 10); // now view.x = 20 and view.y = 20
+     */
+    move(x, y) {
+        if(typeof x !== 'number') x = 0;
+        if(typeof y !== 'number') y = 0;
+
+        this.x = this.x + x;
+        this.y = this.y + y;
+    }
+
+    /**
+     * Returns the view's position and size
+     * @returns {Object} the view's position and size object
+     */
+    getGlobalBounds() {
+        return {
+            position: this.position,
+            size: this.size
+        };
+    }
+
+    /**
+     * Defines the view's viewport in the canvas : where it is placed in the canvas.
+     * The given values are not pixel-based but a percentage between 0 and 1, 0 meaning 0, and 1 meaning the width or the height of the canvas
+     * @param {Number} x the viewport's x position in the canvas, between 0 and 1
+     * @param {Number} y the viewport's y position in the canvas, between 0 and 1
+     * @param {Number} w the viewport's width in the canvas, between 0 and 1
+     * @param {Number} h the viewport's height in the canvas, between 0 and 1
+     * @example
+     * view.setViewport(0, 0, 1, 1); // defines the full canvas viewport
+     * view.setViewport(0, 0, 0.5, 0.5); // defines the left-half of the canvas, for example for a 2 players game
+     */
+    setViewport(x, y, w, h) {
+        if(typeof x !== 'number') x = 0;
+        if(typeof y !== 'number') y = 0;
+        if(typeof w !== 'number') w = 1;
+        if(typeof h !== 'number') h = 1;
+
+        // ensure we're in the good interval [0, 1]
+        x = min(max(0, x), 1);
+        y = min(max(0, y), 1);
+        w = min(max(0, w), 1);
+        h = min(max(0, h), 1);
+
+        this.viewport = { x, y, width: w, height: h };
+    }
+
+    /**
+     * Set the rotation of the view
+     * @param {Number} deg rotation in degrees
+     * @example
+     * const view = new View(); // default rotation = 0
+     * view.setRotation(20); // now view.rotation = 20
+     * view.setRotation(40); // now view.rotation = 40
+     */
+    setRotation(deg) {
+        this.rotation = deg % 360;
+    }
+
+    /**
+     * Add given degrees to current view's rotation
+     * @param {Number} deg rotation in degrees
+     * @example
+     * const view = new View();
+     * view.rotate(10); // now view.rotation = 10
+     * view.rotate(10); // now view.rotation = 20
+     */
+    rotate(deg) {
+        this.rotatation = (this.rotation + deg) % 360;
+    }
+
+    /**
+     * Defines the zoom level of the view
+     * @param {Number} scaling scale level of the view
+     * @example
+     * const view = new View(); // default zoom = 1
+     * view.zoom(2); // set the view's zoom level to 2
+     * view.zoom(1); // come back to zoom level 1
+     */
+    zoom(scaling) {
+        this.zoomLevel = scaling;
+    }
+}
+
+
 
 class Time {
 	static units = {
