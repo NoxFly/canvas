@@ -3185,13 +3185,13 @@ class PerlinNoise {
 class View {
     /**
      * Creates a view that can be used in the canvas
-     * default parameters are covering all the canvas, with no rotation and a zoom level of 1 (basic zoom)
-     * @param {Number} x X-axis position of the view
-     * @param {Number} y Y-axis position of the view
-     * @param {Number} w Width of the view
-     * @param {Number} h Height of the view
+     * default parameters setting the scene's size as canvas's one, with no rotation and a zoom level of 1 (basic zoom)
+     * @param {Number} x X-axis position of the view in the scene
+     * @param {Number} y Y-axis position of the view in the scene
+     * @param {Number} w Width of the view in the scene
+     * @param {Number} h Height of the view in the scene
      * @example
-     * const view = new View(); // creating a view covering all the canvas (can be modified later)
+     * const view = new View(); // creating a view covering all the canvas's size in the scene (can be modified later)
      * const view2 = new View(0, 0, width/2, height);
      */
     constructor(x=0, y=0, w=width, h=height) {
@@ -3203,6 +3203,9 @@ class View {
         });
 
         NOX_PV.views.push(this);
+
+        this.viewport = {};
+        this.viewbox = {};
         
         this.set(x, y, w, h);
         this.setViewport(0, 0, 1, 1);
@@ -3211,7 +3214,7 @@ class View {
     }
 
     /**
-     * Set the X-axis, Y-axis position, width and height of the view
+     * Set the X-axis, Y-axis position, width and height of the view in the scene
      * @param {Number} x X-axis position of the view
      * @param {Number} y Y-axis position of the view
      * @param {Number} w Width of the view
@@ -3226,43 +3229,43 @@ class View {
     }
 
     /**
-     * Set the X-axis position of the view
+     * Set the X-axis position of the view in the scene
      * @param {Number} h X-axis position to set to the view
      */
     set x(x) {
         if(isNaN(x))
             return console.error("View's x must be an integer");
-        this.position.x = x;
+        this.viewbox.x = x;
     }
 
     /**
-     * Set the Y-axis position of the view
+     * Set the Y-axis position of the view in the scene
      * @param {Number} h Y-axis position to set to the view
      */
     set y(y) {
         if(isNaN(y))
             return console.error("View's y must be an integer");
-        this.position.y = y;
+        this.viewbox.y = y;
     }
 
     /**
-     * Set the width of the view
+     * Set the width of the view in the scene
      * @param {Number} h width to set to the view
      */
     set width(w) {
         if(isNaN(w))
             return console.error("View's w must be an integer");
-        this.size.width = w;
+        this.viewbox.width = w;
     }
 
     /**
-     * Set the height of the view
+     * Set the height of the view in the scene
      * @param {Number} h height to set to the view
      */
     set height(h) {
         if(isNaN(h))
             return console.error("View's h must be an integer");
-        this.size.height = h;
+        this.viewbox.height = h;
     }
 
     /**
@@ -3272,31 +3275,31 @@ class View {
     get id() {return this.static.id;}
 
     /**
-     * Returns the X-axis position of the view
+     * Returns the X-axis position of the view in the scene
      * @return {Number} X-axis position of the view
      */
-    get x() {return this.position.x;}
+    get x() {return this.viewbox.x;}
 
     /**
-     * Returns the Y-axis position of the view
+     * Returns the Y-axis position of the view in the scene
      * @return {Number} Y-axis position of the view
      */
-    get y() {return this.position.y;}
+    get y() {return this.viewbox.y;}
 
     /**
-     * Returns the width of the view
+     * Returns the width of the view in the scene
      * @return {Number} width of the view
      */
-    get width() {return this.size.width;}
+    get width() {return this.viewbox.width;}
 
     /**
-     * Returns the height of the view
+     * Returns the height of the view in the scene
      * @return {Number} height of the view
      */
-    get height() {return this.size.height;}
+    get height() {return this.viewbox.height;}
 
     /**
-     * Set the view's position to given location (x,y)
+     * Set the view's position in the scene to given location (x,y)
      * @param {Number} x view's x
      * @param {Number} y view's y
      * @example
@@ -3306,12 +3309,12 @@ class View {
     setPosition(x, y) {
         if(typeof x !== 'number') x = 0;
         if(typeof y !== 'number') y = 0;
-        this.x= x;
+        this.x = x;
         this.y = y;
     }
 
     /**
-     * Set the view's size
+     * Set the view's size in the scene
      * @param {Number} w view's width
      * @param {Number} h view's height
      * @example
@@ -3326,7 +3329,7 @@ class View {
     }
 
     /**
-     * Places the view's center at the given location (x,y).
+     * Places the view's center at the given location (x,y) in the scene.
      * It redefines the view's position (x,y)
      * @param {Number} x view's center x
      * @param {Number} y view's center y
@@ -3342,7 +3345,7 @@ class View {
     }
 
     /**
-     * Moves the view  adding to its position the given x and y
+     * Moves the view in the scene adding to its position the given x and y
      * @param {Number} x X-axis pixels number to move
      * @param {Number} y Y-axis pixels number to move
      * @example
@@ -3358,13 +3361,13 @@ class View {
     }
 
     /**
-     * Returns the view's position and size
+     * Returns the view's position and size in the scene
      * @returns {Object} the view's position and size object
      */
     getGlobalBounds() {
         return {
-            position: this.position,
-            size: this.size
+            position: { x: this.viewbox, y: this.viewbox.y },
+            size: { width: this.viewbox.width, height: this.viewbox.height }
         };
     }
 
@@ -3395,7 +3398,7 @@ class View {
     }
 
     /**
-     * Set the rotation of the view
+     * Set the rotation of the view in the scene
      * @param {Number} deg rotation in degrees
      * @example
      * const view = new View(); // default rotation = 0
@@ -3407,7 +3410,7 @@ class View {
     }
 
     /**
-     * Add given degrees to current view's rotation
+     * Add given degrees to current view's rotation in the scene
      * @param {Number} deg rotation in degrees
      * @example
      * const view = new View();
@@ -3419,7 +3422,7 @@ class View {
     }
 
     /**
-     * Defines the zoom level of the view
+     * Defines the zoom level of the view in the scene
      * @param {Number} scaling scale level of the view
      * @example
      * const view = new View(); // default zoom = 1
