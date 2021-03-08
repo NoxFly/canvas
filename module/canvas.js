@@ -342,8 +342,6 @@ export const circle = (x, y, r) => {
  */
 export const fillRect = (x, y, w, h) => {
 	ctx.fillRect(x, y, w, h);
-	if(NOX_PV.bFill) ctx.fill();
-	if(NOX_PV.bStroke) ctx.stroke();
 };
 
 
@@ -362,8 +360,6 @@ export const fillRect = (x, y, w, h) => {
  */
 export const strokeRect = (x, y, w, h) => {
 	ctx.strokeRect(x, y, w, h);
-	if(NOX_PV.bFill) ctx.fill();
-	if(NOX_PV.bStroke) ctx.stroke();
 };
 
 
