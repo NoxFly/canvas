@@ -75,17 +75,6 @@ As things progress, The little code grew up, and it's why I've finally though ab
 **If you're interested, you can contribute doing pull requests, and starring this repo.**
 
 
-### Examples
-you can give a look at the examples folder that is enumering everything from the framework.
-
-Run `./examples/index.php` to test all examples.
-
-**Notes :** this repo shows some examples of an older version.
-
-Thus, some things can not work, or some examples are missing for all the last features.
-
-
-
 ## Browser compatibility
 Tested and works on `Firefox`, `Chrome`, `Edge`, `new Edge`, `Opera`.
 
