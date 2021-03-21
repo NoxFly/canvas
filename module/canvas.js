@@ -3660,6 +3660,30 @@ export class Vector {
 		return arr;
 	}
 
+    /**
+     * Returns the vector's properties as a basic object { x, y, z }
+     * 
+     * { x } for dimension 1
+     * 
+     * { x, y } for dimension 2
+     * 
+     * { x, y, z } for dimension 3
+     * @return {Object}
+     */
+     object() {
+        let o = { x: this.x };
+
+        if(this.dimension > 1) {
+            o.y = this.y;
+
+            if(this.dimension > 2) {
+                o.z = this.z;
+            }
+        }
+
+        return o;
+    }
+
 	/**
 	 * Draw the vector on the canvas (1 & 2 dimensions only for now)
 	 * @param {number} x vector's position on the canvas

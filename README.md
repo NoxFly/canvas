@@ -401,6 +401,7 @@ v1.setMag(10); // change the vector's length without changing its direction
 
 v2.toString(); // "{x: 2, y: 3}"
 v2.array(); // [2, 3]
+v2.object(); // { x: 2, y: 3 }
 
 v2.invert(); // now v2.x = 3 and v2.y = 2
 v3.invert(); // clockwise [x, y, z] = [y, z, x]
