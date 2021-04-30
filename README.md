@@ -194,11 +194,11 @@ Here are the variables declared in the canvas file, that you can use:
 
 **isDevice**:  object that has 3 booleans:
 
-    * `mobile`: either it's a mobile/tablet or PC
+* `mobile`: either it's a mobile/tablet or PC
 
-    * `ios`: either it's an IOS or not
+* `ios`: either it's an IOS or not
     
-    * `android`: either it's an Android or not
+* `android`: either it's an Android or not
 
 **canvas**: the canvas DOM element
 
@@ -271,7 +271,7 @@ updatePixels(); // update the canvas with modified pixels
 
 ## Canvas event handlers
 
-The framework handle a lot of events, and you can catch them with functions that will be automatically executed when an event is handled.
+The framework handles a lot of events, and you can catch them with functions that will be automatically executed when an event is handled.
 ```js
 // mouse events
 function mouseMove(e) {}
