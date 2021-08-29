@@ -75,17 +75,6 @@ As things progress, The little code grew up, and it's why I've finally though ab
 **If you're interested, you can contribute doing pull requests, and starring this repo.**
 
 
-### Examples
-you can give a look at the examples folder that is enumering everything from the framework.
-
-Run `./examples/index.php` to test all examples.
-
-**Notes :** this repo shows some examples of an older version.
-
-Thus, some things can not work, or some examples are missing for all the last features.
-
-
-
 ## Browser compatibility
 Tested and works on `Firefox`, `Chrome`, `Edge`, `new Edge`, `Opera`.
 
@@ -221,11 +210,11 @@ Here are the variables declared in the canvas file, that you can use:
 
 **isDevice**:  object that has 3 booleans:
 
-    * `mobile`: either it's a mobile/tablet or PC
+* `mobile`: either it's a mobile/tablet or PC
 
-    * `ios`: either it's an IOS or not
+* `ios`: either it's an IOS or not
     
-    * `android`: either it's an Android or not
+* `android`: either it's an Android or not
 
 **canvas**: the canvas DOM element
 
@@ -301,7 +290,7 @@ isKeyUp(keyCode); // returns a boolean
 
 ## Canvas event handlers
 
-The framework handle a lot of events, and you can catch them with functions that will be automatically executed when an event is handled.
+The framework handles a lot of events, and you can catch them with functions that will be automatically executed when an event is handled.
 ```js
 // mouse events
 function mouseMove(e) {}
@@ -444,6 +433,7 @@ v1.setMag(10); // change the vector's length without changing its direction
 
 v2.toString(); // "{x: 2, y: 3}"
 v2.array(); // [2, 3]
+v2.object(); // { x: 2, y: 3 }
 
 v2.invert(); // now v2.x = 3 and v2.y = 2
 v3.invert(); // clockwise [x, y, z] = [y, z, x]
