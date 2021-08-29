@@ -1,13 +1,13 @@
 /**
- * @copyright   Copyright (C) 2019 - 2020 Dorian Thivolle All rights reserved.
+ * @copyright   Copyright (C) 2019 - 2021 Dorian Thivolle All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  * @author		Dorian Thivolle
  * @name		canvas
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.4.1}
-*/
+ * @version		{1.4.2}
+ */
 
 
 
@@ -17,7 +17,7 @@
 let ctx = null, canvas = null, width = 0, height = 0, realWidth = 0, realHeight = 0;
 let mouseX = 0, mouseY = 0;
 let fps = 60;
-pixels = undefined;
+var pixels = undefined;
 
 /**
  * Returns the current document's width in pixel
@@ -40,169 +40,14 @@ const PI = Math.PI;
 // object of boolean
 // either it's a mobile or not, in ios or android
 const isDevice = {
-	mobile: 	/iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
-	ios: 		/iPad|iPhone|iPod/.test(navigator.userAgent),
-	android: 	/Android/.test(navigator.userAgent)
+	mobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
+	ios: /iPad|iPhone|iPod/.test(navigator.userAgent),
+	android: /Android/.test(navigator.userAgent)
 };
-
-// the possible origins for a shape
-const originArr = [
-	'topLeft',    'top',    'topRight',
-	'left',       'center', 'right',
-	'bottomLeft', 'bottom', 'bottomRight'
-];
-
-// default text size & font-family
-let sFontSize = "12px";
-let sFontFamily = "Monospace";
 
 
 // mouse direction - can't be a vector class instance, just a basic object {x, y}
-let mouseDirection = {x: 0, y: 0};
-
-
-// private vars
-const NOX_PV = {
-	// either the fill | stroke is enable
-	bFill: true, bStroke: true,
-
-	// pressed keys
-	keys: {},
-
-	// boolean - mouse down
-	isMouseDown: false,
-	
-	// last frame mouse's position to know the mouse direction
-	oldMouseX: 0, oldMouseY: 0,
-
-	// boolean - pointer lock
-	isPointerLocked: false,
-
-	// swipe direction
-	swipexDown: null,
-	swipeyDown: null,
-
-	// boolean swipe enabled on pc
-	swipePCEnable: true,
-
-	// swipe direction
-	lastSwipe: null,
-
-	// guide lines (cyan)
-	bGuideLines: false,
-
-	loop: true,
-
-	// date.now() | fps and draw interval
-	now: 0, then: Date.now(), interval: 1000/fps, delta: 0, counter: 0, time_el: 0,
-
-	// Treat color's entries
-	colorTreatment: (...oColor) => {
-		const n = oColor.length;
-
-		if(n > 0 && (oColor[0] instanceof CanvasGradient || oColor[0] instanceof CanvasPattern)) return oColor[0];
-
-
-		// number - only rgb value accepted
-		if(n == 1 && typeof oColor[0] == 'number') {
-			oColor = oColor[0];
-
-			if(0 <= oColor && oColor <= 255) {
-				return `rgb(${oColor}, ${oColor}, ${oColor})`;
-			}
-		}
-
-		// rgb are the same value + alpha
-		else if(n == 2 && oColor.every((c, i) => typeof c == 'number' && (0 <= c && c <= 255) || (i == 4 && 0 <= c && c <= 1))) {
-			return `rgba(${oColor[0]}, ${oColor[0]}, ${oColor[0]}, ${oColor[1]>1?oColor[1]/255:oColor[1]})`;
-		}
-
-		// rgb or rgba integers
-		else if([3, 4].includes(n) && oColor.every(c => typeof c == 'number')) {
-			if(oColor.every((c, i) => (0 <= c && c <= 255) || (i == 4 && 0 <= c && c <= 1))) {
-				return `rgb${n==4?'a':''}(${oColor[0]}, ${oColor[1]}, ${oColor[2]}${n==4?`, ${oColor[3]>1?oColor[3]/255:oColor[3]}`:''})`;
-			}
-		}
-
-		// hex, hsl, rgb[a], color name
-		else if(n == 1 && typeof oColor[0] == 'string') {
-			oColor = oColor[0];
-
-			let color = oColor.replace(/\s/gi, '');
-
-			let reg = {
-				hex: /^#([0-9a-z]{3}){1,2}$/i,
-				rgb: /^rgba?\((\d{1,3},){2}\d{1,3}(,\d(\.\d+)?)?\)$/,
-				hsl: /^hsl\(\d{1,3},\d{1,3}%,\d{1,3}%\)$/,
-				name: /^\w{3,30}$/
-			};
-
-			for(let regex in reg) {
-				if(reg[regex].test(color)) {
-					return oColor;
-				}
-			}
-		}
-
-		// color class instance
-		else if(oColor[0] instanceof HEX || oColor[0] instanceof RGB || oColor[0] instanceof HSL) {
-			return oColor[0].toString();
-		}
-
-		if(canvas) {
-			return window.getComputedStyle(canvas).backgroundColor;
-		}
-
-		// default returned color if bad entry
-		return '#000';
-	},
-
-	perlin: {
-		lod: 10,
-		unit: 1.0,
-		gradient: [],
-		seed: [],
-		generateSeed: () => {
-			return Array(255).fill(0).map((i, j) => j).sort(() => Math.random() - 0.5);
-		},
-		get: (x, y, lod=NOX_PV.perlin.lod, seed=NOX_PV.perlin.seed) => {
-			// adapt the resolution
-			x /= lod;
-			y /= lod;
-
-			// get table integer indexes
-			const [x0, y0] = [floor(x), floor(y)];
-
-			// get decimal part (dx,dy) & create mask (ii, jj)
-			const [dx, dy, ii, jj] = [x-x0, y-y0, x0&255, y0&255];
-
-			// recover vectors
-			let stuv = [];
-			for(let i=0; i < 4; i++) {
-				try {
-					const v = seed[(ii + i%2 + seed[jj + floor(i/2)]) % 255] % NOX_PV.perlin.gradient.length;
-					stuv[i] = NOX_PV.perlin.gradient[v][0]*(dx - i%2) + NOX_PV.perlin.gradient[v][1]*(dy - floor(i/2));
-				} catch(e) {
-					stuv[i] = 0;
-				}
-			}
-
-			// smoothing
-			const [Cx, Cy] = [3*dx*dx - 2*dx*dx*dx, 3*dy*dy-2*dy*dy*dy];
-			const [Li1, Li2] = [stuv[0] + Cx * (stuv[1] - stuv[0]), stuv[2] + Cx * (stuv[3] - stuv[2])];
-			
-			return map(Li1 + Cy * (Li2 - Li1), -NOX_PV.perlin.unit, NOX_PV.perlin.unit, 0, 1);
-		}
-	}
-};
-
-NOX_PV.perlin.gradient = [
-	[NOX_PV.perlin.unit,  NOX_PV.perlin.unit],
-	[-NOX_PV.perlin.unit, NOX_PV.perlin.unit],
-	[NOX_PV.perlin.unit, -NOX_PV.perlin.unit],
-	[-NOX_PV.perlin.unit,-NOX_PV.perlin.unit]
-];
-
+const mouseDirection = { x: 0, y: 0 };
 
 
 /**
@@ -249,10 +94,10 @@ const arcTo = (x1, y1, x2, y2, r) => ctx.arcTo(x1, y1, x2, y2, r);
  */
 const line = (x1, y1, x2, y2) => {
 	beginPath();
-		moveTo(x1, y1);
-		lineTo(x2, y2);
-		
-		if(NOX_PV.bStroke) ctx.stroke();
+	moveTo(x1, y1);
+	lineTo(x2, y2);
+
+	if (NOX_PV.bStroke) ctx.stroke();
 	closePath();
 };
 
@@ -269,24 +114,24 @@ const line = (x1, y1, x2, y2) => {
  */
 const polyline = (...values) => {
 	// got an odd number of argument
-	if(values.length % 2 != 0) {
+	if (values.length % 2 != 0) {
 		return console.error('The function polyline must take an even number of values');
 	}
 
 	beginPath();
-		if(values.length > 0) {
-			moveTo(values[0], values[1]);
-		}
+	if (values.length > 0) {
+		moveTo(values[0], values[1]);
+	}
 
-		for(let i=2; i < values.length; i+=2) {
-			let x = values[i],
-				y = values[i+1];
-			
-			lineTo(x,y);
-		}
+	for (let i = 2; i < values.length; i += 2) {
+		const x = values[i],
+			y = values[i + 1];
 
-		if(NOX_PV.bStroke) ctx.stroke();
-		if(NOX_PV.bFill) ctx.fill();
+		lineTo(x, y);
+	}
+
+	if (NOX_PV.bStroke) ctx.stroke();
+	if (NOX_PV.bFill) ctx.fill();
 	closePath();
 };
 
@@ -305,11 +150,11 @@ const polyline = (...values) => {
  * @example
  * arc(100, 70, 20)
  */
-const arc = (x, y, r, start, end, antiClockwise=false) => {
+const arc = (x, y, r, start, end, antiClockwise = false) => {
 	beginPath();
-		ctx.arc(x, y, r, start, end, antiClockwise);
-		if(NOX_PV.bStroke) ctx.stroke();
-		if(NOX_PV.bFill) ctx.fill();
+	ctx.arc(x, y, r, start, end, antiClockwise);
+	if (NOX_PV.bStroke) ctx.stroke();
+	if (NOX_PV.bFill) ctx.fill();
 	closePath();
 };
 
@@ -326,7 +171,7 @@ const arc = (x, y, r, start, end, antiClockwise=false) => {
  * circle(70, 70, 15)
  */
 const circle = (x, y, r) => {
-	arc(x, y, r, 0, 2*PI);
+	arc(x, y, r, 0, 2 * PI);
 };
 
 
@@ -377,8 +222,8 @@ const strokeRect = (x, y, w, h) => {
  */
 const rect = (x, y, w, h) => {
 	ctx.rect(x, y, w, h);
-	if(NOX_PV.bFill) ctx.fill();
-	if(NOX_PV.bStroke) ctx.stroke();
+	if (NOX_PV.bFill) ctx.fill();
+	if (NOX_PV.bStroke) ctx.stroke();
 };
 
 
@@ -391,45 +236,45 @@ const rect = (x, y, w, h) => {
  * @param {Number} h 
  * @param  {...Number} radius 
  */
-const roundRect = (x=0, y=0, w=0, h=0, radius=0, radiusTR, radiusBR, radiusBL) => {
-    if(radiusTR == undefined) radiusTR = radius;
-    if(radiusBR == undefined) radiusBR = radius;
-    if(radiusBL == undefined) radiusBL = radius;
-    
-    radius   = min(max(0, radius),   50);
-    radiusTR = min(max(0, radiusTR), 50);
-    radiusBR = min(max(0, radiusBR), 50);
-    radiusBL = min(max(0, radiusBL), 50);
+const roundRect = (x = 0, y = 0, w = 0, h = 0, radius = 0, radiusTR, radiusBR, radiusBL) => {
+	if (radiusTR === undefined) radiusTR = radius;
+	if (radiusBR === undefined) radiusBR = radius;
+	if (radiusBL === undefined) radiusBL = radius;
 
-    const x1 = x + radius,
-          y1 = y;
+	radius = min(max(0, radius), 50);
+	radiusTR = min(max(0, radiusTR), 50);
+	radiusBR = min(max(0, radiusBR), 50);
+	radiusBL = min(max(0, radiusBL), 50);
 
-    const x2 = x + w - radiusTR,
-          y2 = y;
+	const x1 = x + radius,
+		y1 = y;
 
-    const x3 = x + w,
-          y3 = y + h - radiusBR;
+	const x2 = x + w - radiusTR,
+		y2 = y;
 
-    const x4 = x + radiusBL,
-          y4 = y + h;
+	const x3 = x + w,
+		y3 = y + h - radiusBR;
 
-    const x5 = x,
-          y5 = y + radius;
+	const x4 = x + radiusBL,
+		y4 = y + h;
 
-    beginPath();
-        moveTo(x1, y1);
-        lineTo(x2, y2);
-        arcTo(x2 + radiusTR, y2, x2 + radiusTR, y2 + radiusTR, radiusTR);
-        lineTo(x3, y3);
-        arcTo(x3, y3 + radiusBR, x3 - radiusBR, y3 + radiusBR, radiusBR);
-        lineTo(x4, y4);
-        arcTo(x4 - radiusBL, y4, x, y4 - radiusBL, radiusBL);
-        lineTo(x5, y5);
-        arcTo(x5, y5 - radius, x1, y1, radius);
+	const x5 = x,
+		y5 = y + radius;
 
-        if(NOX_PV.bStroke) ctx.stroke();
-        if(NOX_PV.bFill) ctx.fill();
-    closePath();
+	beginPath();
+	moveTo(x1, y1);
+	lineTo(x2, y2);
+	arcTo(x2 + radiusTR, y2, x2 + radiusTR, y2 + radiusTR, radiusTR);
+	lineTo(x3, y3);
+	arcTo(x3, y3 + radiusBR, x3 - radiusBR, y3 + radiusBR, radiusBR);
+	lineTo(x4, y4);
+	arcTo(x4 - radiusBL, y4, x, y4 - radiusBL, radiusBL);
+	lineTo(x5, y5);
+	arcTo(x5, y5 - radius, x1, y1, radius);
+
+	if (NOX_PV.bStroke) ctx.stroke();
+	if (NOX_PV.bFill) ctx.fill();
+	closePath();
 };
 
 
@@ -449,12 +294,12 @@ const path = p => {
 
 	// remove spaces at the start and the end of the string
 	p = p.trim();
-  
+
 	// a path must start with a moveTo instruction
-	if(!p.startsWith('M')) {
+	if (!p.startsWith('M')) {
 		return;
 	}
-	
+
 	// split each instructions / arguments
 	p = p.split(' ');
 
@@ -486,7 +331,7 @@ const path = p => {
 
 		A: {
 			n: 6,
-			f: (x, y, r, start, end, antiClockwise) => ctx.arc(x, y, r, radian(start), radian(end), antiClockwise===1)
+			f: (x, y, r, start, end, antiClockwise) => ctx.arc(x, y, r, radian(start), radian(end), antiClockwise === 1)
 		},
 
 		Z: {
@@ -498,38 +343,38 @@ const path = p => {
 
 	// regex to verify if each point is okay
 	const reg = new RegExp(`^[${Object.keys(modes).join('')}]|(\-?\d+(\.\d+)?)$`, 'i');
-	
+
 	// if a point isn't well written, then stop
-	if(p.filter(point => reg.test(point)).length == 0) {
+	if (p.filter(point => reg.test(point)).length === 0) {
 		return;
 	}
 
 	// doesn't need to try to draw something: need at least an instruction M first and 2 parameters x,y
-	if(p.length < 3) {
+	if (p.length < 3) {
 		return;
 	}
 
 	// code translated path
-	let d = [];
+	const d = [];
 	// number of points - 1: last index of the array of points
 	const lastIdx = p.length - 1;
 
 
 	// read arguments - normally starts with x,y of the M instruction
-	for(let i=0; i < p.length; i++) {
-		let point = p[i];
+	for (let i = 0; i < p.length; i++) {
+		const point = p[i];
 
 		// is a letter - new instruction
-		if(/[a-z]/i.test(point)) {
+		if (/[a-z]/i.test(point)) {
 			// lowercase - relative
 			// uppercase - absolute
 			// push pile of instructions (only 2 saved)
 			mode = point;
 
 			// if the instruction is Z
-			if(mode == 'Z') {
+			if (mode === 'Z') {
 				// and if it's the last mode
-				if(i == lastIdx) {
+				if (i === lastIdx) {
 					// then close the path
 					d.push("Z");
 				} else {
@@ -537,81 +382,81 @@ const path = p => {
 					return;
 				}
 			}
-			
+
 			// lowercase Z isn't recognized
-			if(['z'].includes(mode)) {
+			if (['z'].includes(mode)) {
 				return;
 			}
 
 			const nArg = modes[mode.toUpperCase()].n;
 
 			// depending on the current instruction, there need to have to right number of argument following this instruction
-			if(lastIdx-nArg < i) {
+			if (lastIdx - nArg < i) {
 				return;
 			}
 
 			//
-			let lastPos = {x: 0, y: 0};
+			const lastPos = { x: 0, y: 0 };
 
 			// get the last cursor position
-			if(d.length > 0) {
-				let prev = d[d.length-1];
+			if (d.length > 0) {
+				const prev = d[d.length - 1];
 
-				let hv = ['H', 'V'].indexOf(prev[0]);
+				const hv = ['H', 'V'].indexOf(prev[0]);
 
-				if(hv !== -1) {
+				if (hv !== -1) {
 					lastPos.x = prev[1 + hv]; // x of the last point
 					lastPos.y = prev[2 - hv]; // y of the last point
 				}
-				
+
 				else {
-					let k = 1;
+					const k = 1;
 
 					lastPos.x = prev[k]; // x of the last point
-					lastPos.y = prev[k+1]; // y of the last point
+					lastPos.y = prev[k + 1]; // y of the last point
 				}
 			}
 
 
 			// array that is refresh every instruction + argument given
-			let arr = [mode.toUpperCase()];
+			const arr = [mode.toUpperCase()];
 
 			// if it's H or V instruction, keep the last X or Y
-			let hv = ['H', 'V'].indexOf(arr[0]);
+			const hv = ['H', 'V'].indexOf(arr[0]);
 
 
 			// add each argument that are following the instruction
-			for(let j=0; j < nArg; j++) {
+			for (let j = 0; j < nArg; j++) {
 				i++;
 
-				let n = parseFloat(p[i]);
+				const n = parseFloat(p[i]);
 
 				// it must be a number
-				if(isNaN(n)) {
+				if (isNaN(n)) {
 					return;
 				}
-				
+
 				// push the treated argument
 				arr.push(n);
 			}
 
 
 			// onnly for H or V
-			if(hv !== -1) {
-				arr.push(lastPos[Object.keys(lastPos)[1-hv]]);
+			if (hv !== -1) {
+				arr.push(lastPos[Object.keys(lastPos)[1 - hv]]);
 			}
 
-			if(arr[0] == 'A') {
+			if (arr[0] === 'A') {
 				arr[1] -= arr[3];
 			}
 
 			// lowercase: relative to last point - only for MLHVA
-			if(/[mlhva]/.test(mode)) {
-				if(mode === 'v') {
+			if (/[mlhva]/.test(mode)) {
+				if (mode === 'v') {
 					arr[1] += lastPos.y;
 				}
 
-				else if(mode === 'h') {
+				else if (mode === 'h') {
 					arr[1] += lastPos.x;
 				}
 
@@ -621,18 +466,18 @@ const path = p => {
 				}
 			}
 
-			
+
 			// add the instruction and its arguments to the translated path
 			d.push(arr);
 
 
 			// draw the arc isn't enough, we have to move the cursor to the end of the arc too
-			if(arr[0] == 'A') {
+			if (arr[0] === 'A') {
 				// arr = ['A', x, y, r, start, end, acw]
 				const angle = radian(arr[5]);
 
-				let x = arr[1] + cos(angle) * arr[3]
-					y = arr[2] + sin(angle) * arr[3];
+				const x = arr[1] + cos(angle) * arr[3]
+				y = arr[2] + sin(angle) * arr[3];
 
 				d.push(['M', x, y]);
 			}
@@ -643,22 +488,22 @@ const path = p => {
 
 	// start draw depending on what's written
 	beginPath();
-		d.forEach(step => {
-			// surely Z()
-			if(typeof step === 'string') {
-				modes[step].f();
-			}
+	d.forEach(step => {
+		// surely Z()
+		if (typeof step === 'string') {
+			modes[step].f();
+		}
 
-			// else it's MLHVA with position arguments
-			else {
-				modes[step[0]].f(...step.slice(1));
-			}
-		});
+		// else it's MLHVA with position arguments
+		else {
+			modes[step[0]].f(...step.slice(1));
+		}
+	});
 
-		if(NOX_PV.bFill) ctx.fill();
-		if(NOX_PV.bStroke) ctx.stroke();
+	if (NOX_PV.bFill) ctx.fill();
+	if (NOX_PV.bStroke) ctx.stroke();
 	closePath();
-	
+
 }
 
 
@@ -672,17 +517,17 @@ const path = p => {
  * @example
  * text("Hello world", 20, 20)
  */
-const text = (txt, x=0, y=0) => {
+const text = (txt, x = 0, y = 0) => {
 	// multiple lines
-	if(/\n/.test(txt)) {
-		const size = sFontSize.replace(/(\d+)(\w+)?/, '$1');
+	if (/\n/.test(txt)) {
+		const size = NOX_PV.fontSize.replace(/(\d+)(\w+)?/, '$1');
 		txt = txt.split('\n');
 
-		for(let i=0; i < txt.length; i++) {
-			ctx.fillText(txt[i], x, y + i*size);
+		for (let i = 0; i < txt.length; i++) {
+			ctx.fillText(txt[i], x, y + i * size);
 		}
 	}
-	
+
 	// one line
 	else {
 		ctx.fillText(txt, x, y);
@@ -701,8 +546,8 @@ const text = (txt, x=0, y=0) => {
  */
 const setFont = (size, font) => {
 	ctx.font = `${size}px ${font}`;
-	sFontSize = `${size}px`;
-	sFontFamily = font;
+	NOX_PV.fontSize = `${size}px`;
+	NOX_PV.fontFamily = font;
 };
 
 
@@ -714,8 +559,8 @@ const setFont = (size, font) => {
  * fontSize(20)
  */
 const fontSize = size => {
-	ctx.font = `${size}px ${sFontFamily}`;
-	sFontSize = `${size}px`
+	ctx.font = `${size}px ${NOX_PV.fontFamily}`;
+	NOX_PV.fontSize = `${size}px`;
 };
 
 
@@ -727,8 +572,8 @@ const fontSize = size => {
  * fontFamily("Monospace")
  */
 const fontFamily = font => {
-	ctx.font = `${sFontSize} ${font}`;
-	sFontFamily = font
+	ctx.font = `${NOX_PV.fontSize} ${font}`;
+	NOX_PV.fontFamily = font;
 };
 
 
@@ -740,7 +585,7 @@ const fontFamily = font => {
  * alignText("center")
  */
 const alignText = alignment => {
-	ctx.textAlign = (['left', 'right', 'center', 'start', 'end'].indexOf(alignment) > -1)? alignment : 'left';
+	ctx.textAlign = (['left', 'right', 'center', 'start', 'end'].indexOf(alignment) > -1) ? alignment : 'left';
 };
 
 
@@ -814,13 +659,13 @@ const pop = () => ctx.restore();
  * @example
  * translate(100, 200)
  */
-const translate = (x, y) => ctx.translate(x,y);
+const translate = (x, y) => ctx.translate(NOX_PV.centerX + x, NOX_PV.centerY + y);
 
 /**
  * Adds a rotation to the transformation matrix.
- * @param {number} degree The rotation angle, clockwise in radians. You can use radian(deg) to calculate a radian from a degree.
+ * @param {number} degree The rotation angle, clockwise in degree. You can use radian(deg) to calculate a radian from a degree.
  * @example
- * rotate(radian(45)) // rotates 45 degrees
+ * rotate(45) // rotates 45 degrees
  */
 const rotate = degree => ctx.rotate(radian(degree));
 
@@ -836,7 +681,7 @@ const rotate = degree => ctx.rotate(radian(degree));
  * beginPath();
  * arc(100, 75, 50, 0, PI * 2);
  * clip();
-
+ 
  * // Draw stuff that gets clipped
  * fill('blue');
  * fillRect(0, 0, width, height);
@@ -858,7 +703,7 @@ const scale = (x, y) => ctx.scale(x, y);
  * Says to not fill next hapes
  */
 const noFill = () => {
-	NOX_PV.bFill   = false;
+	NOX_PV.bFill = false;
 };
 
 /**
@@ -890,7 +735,7 @@ const stroke = (...color) => {
  * Sets the strokeweight for next shapes to draw
  * @param {number} weight weight of the stroke
  */
-const strokeWeight = weight	=> {
+const strokeWeight = weight => {
 	ctx.lineWidth = weight;
 };
 
@@ -898,8 +743,8 @@ const strokeWeight = weight	=> {
  * Set the linecap style
  * @param {String} style linecap style
  */
-const linecap =	style => {
-	ctx.lineCap = ['butt','round','square'].indexOf(style) > -1? style : 'butt';
+const linecap = style => {
+	ctx.lineCap = ['butt', 'round', 'square'].indexOf(style) > -1 ? style : 'butt';
 };
 
 
@@ -934,16 +779,16 @@ const createLinearGradient = (x1, y1, x2, y2) => ctx.createLinearGradient(x1, y1
  * @example
  * makeLinearGradient(0, 0, width, height, 0, "black", 1, "white")
  */
-const makeLinearGradient  = (x1, y1, x2, y2, ...params) => {
-	if(params.length % 2 !== 0) {
+const makeLinearGradient = (x1, y1, x2, y2, ...params) => {
+	if (params.length % 2 !== 0) {
 		return console.error("you have to tell params by pair (offset, color). Odd number of arguments given.");
 	}
 
 	const grad = createLinearGradient(x1, y1, x2, y2);
 
-	for(let i=0; i < params.length; i+=2) {
+	for (let i = 0; i < params.length; i += 2) {
 		const offset = params[i];
-		const color = NOX_PV.colorTreatment(params[i+1]);
+		const color = NOX_PV.colorTreatment(params[i + 1]);
 
 		grad.addColorStop(offset, color);
 	}
@@ -961,7 +806,7 @@ const makeLinearGradient  = (x1, y1, x2, y2, ...params) => {
  * @example
  * clearRect(0, 0, width, height)
  */
-const clearRect = (x, y, w, h) => ctx.clearRect(x, y, x+w, y+h);
+const clearRect = (x, y, w, h) => ctx.clearRect(x, y, x + w, y + h);
 
 
 /**
@@ -987,8 +832,8 @@ const closePath = () => ctx.closePath();
  * @example
  * drawFocusIfNeeded(button1)
  */
-const drawFocusIfNeeded = (elementOrPath2D, element=null) => {
-	if(element === null && !(elementOrPath2D instanceof Path2D)) {
+const drawFocusIfNeeded = (elementOrPath2D, element = null) => {
+	if (element === null && !(elementOrPath2D instanceof Path2D)) {
 		ctx.drawFocusIfNeeded(elementOrPath2D);
 	} else {
 		ctx.drawFocusIfNeeded(elementOrPath2D, element);
@@ -1003,7 +848,7 @@ const drawFocusIfNeeded = (elementOrPath2D, element=null) => {
  * setLineDash([5, 15])
  */
 const setLineDash = array => {
-	if(!Array.isArray(array)) {
+	if (!Array.isArray(array)) {
 		return console.error("Array type expected. Got " + typeof array);
 	}
 
@@ -1052,7 +897,7 @@ const globalCompositeOperation = type => {
  * setSmoothingQuality('low')
  */
 const setSmoothingQuality = quality => {
-	if(!['low', 'medium', 'high'].includes(quality)) return;
+	if (!['low', 'medium', 'high'].includes(quality)) return;
 	ctx.imageSmoothingQuality = quality;
 };
 
@@ -1068,7 +913,7 @@ const setSmoothingQuality = quality => {
  * 	// ... do stuff
  * }
  */
-const isPointInPath = function(x, y, fillRule=null) {
+const isPointInPath = function (x, y, fillRule = null) {
 	return ctx.isPointInPath(...arguments);
 };
 
@@ -1082,7 +927,7 @@ const isPointInPath = function(x, y, fillRule=null) {
  * 	// ... do stuff
  * }
  */
-const isPointInStroke = function(x, y) {
+const isPointInStroke = function (x, y) {
 	return ctx.isPointInStroke(...arguments);
 };
 
@@ -1100,7 +945,7 @@ const getTransform = () => ctx.getTransform();
  * @example
  * lineDashOffset(1)
  */
-const lineDashOffset = (value=0.0) => {
+const lineDashOffset = (value = 0.0) => {
 	ctx.lineDashOffset = value;
 }
 
@@ -1183,7 +1028,7 @@ const createPattern = (image, repetition) => {
  * const imageData = createImageData(100, 50);
  * // ImageData { width: 100, height: 50, data: Uint8ClampedArray[20000] }
  */
-const createImageData = function(widthOrImageData, height=null) {
+const createImageData = function (widthOrImageData, height = null) {
 	return ctx.createImageData(...arguments);
 };
 
@@ -1202,8 +1047,8 @@ const createImageData = function(widthOrImageData, height=null) {
  * const imgData = getImageData(0, 0, width, height);
  * putImageData(imgData, 0, 0);
  */
-const putImageData = (imageData, dx, dy, dirtyX=null, dirtyY=null, dirtyWidth=null, dirtyHeight=null) => {
-	if(dirtyX === null) {
+const putImageData = (imageData, dx, dy, dirtyX = null, dirtyY = null, dirtyWidth = null, dirtyHeight = null) => {
+	if (dirtyX === null) {
 		ctx.putImageData(imageData, dx, dy);
 	} else {
 		ctx.putImageData(imageData, dx, dy, dirtyX, dirtyY, dirtyWidth, dirtyHeight);
@@ -1248,10 +1093,10 @@ const getImageData = (sx, sy, sw, sh) => {
  * 	drawImage(image, 33, 71, 104, 124, 21, 20, 87, 104);
  * });
  */
-const drawImage = (image, sx, sy, sWidth=null, sHeight=null, dx=null, dy=null, dWidth=null, dHeight=null) => {
-	if(sWidth === null) {
+const drawImage = (image, sx, sy, sWidth = null, sHeight = null, dx = null, dy = null, dWidth = null, dHeight = null) => {
+	if (sWidth === null) {
 		ctx.drawImage(image, sx, sy);
-	} else if(dx === null) {
+	} else if (dx === null) {
 		ctx.drawImage(image, sx, sy, sWidth, sHeight);
 	} else {
 		ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
@@ -1271,7 +1116,7 @@ const drawImage = (image, sx, sy, sWidth=null, sHeight=null, dx=null, dy=null, d
  * @example
  * radian(45)
  */
-const radian = deg => deg * (PI/180);
+const radian = deg => deg * (PI / 180);
 
 /**
  * Convert from radians to degrees
@@ -1279,7 +1124,7 @@ const radian = deg => deg * (PI/180);
  * @example
  * degree(0.3)
  */
-const degree = rad => rad * (180/PI);
+const degree = rad => rad * (180 / PI);
 
 /**
  * Convert an angle to a vector (class instance) (2d vector)
@@ -1330,7 +1175,26 @@ const angleBetweenVectors = (a, b) => {
  * const p2 = {x: 10, y: 0};
  * const distanceBetweenp1Andp2 = dist(p1, p2);
  */
-const dist = (a, b) =>  Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z);
+const dist = (a, b) => {
+	let s = 0;
+
+	if (a.x && b.x) {
+		const x = b.x - a.x;
+		s += x * x;
+	}
+
+	if (a.y && b.y) {
+		const y = b.y - a.y;
+		s += y * y;
+	}
+
+	if (a.z && b.z) {
+		const z = b.z - a.z;
+		s += z * z;
+	}
+
+	return sqrt(s);
+}
 
 /**
  * range mapping of a value
@@ -1347,10 +1211,10 @@ const dist = (a, b) =>  Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z);
  * console.info(map([-0.7, -0.35, 0, 0.1, 0.2, 0.5, 1], -1, 1, 0, 255));
  * // Array(7) [ 38.25000000000001, 82.875, 127.5, 140.25, 153, 191.25, 255 ]
  */
-const map =	(arrayOrValue, start1, end1, start2, end2) => {
+const map = (arrayOrValue, start1, end1, start2, end2) => {
 	const m = val => (val - start1) * (end2 - start2) / (end1 - start1) + start2;
 
-	if(typeof arrayOrValue === 'number') {
+	if (typeof arrayOrValue === 'number') {
 		return m(arrayOrValue);
 	}
 
@@ -1365,7 +1229,7 @@ const map =	(arrayOrValue, start1, end1, start2, end2) => {
  * const powerOfTwo = pow(2); // 4
  * const powerOf3By3 = pow(3, 3); // 27
  */
-const pow =	(n, p=2) => Math.pow(n, p);
+const pow = (n, p = 2) => Math.pow(n, p);
 
 /**
  * Returns the absolute value of the given one
@@ -1374,7 +1238,7 @@ const pow =	(n, p=2) => Math.pow(n, p);
  * abs(-1); // 1
  * abs(1); // 1
  */
-const abs =	n => (n >= 0)? n : -n;
+const abs = n => (n >= 0) ? n : -n;
 
 /**
  * Returns the sqrt of the given value
@@ -1449,7 +1313,7 @@ const trunc = n => Math.trunc(n);
  * random(20, 25); // a random int between 20 and 25
  * random(-25); // a random between -25 and 0
  */
-const random = (iMin, iMax=0) => floor(Math.random() * (max(iMin, iMax) - min(iMin, iMax) +1)) + min(iMin, iMax);
+const random = (iMin, iMax = 0) => floor(Math.random() * (max(iMin, iMax) - min(iMin, iMax) + 1)) + min(iMin, iMax);
 
 
 /**
@@ -1592,13 +1456,13 @@ const mean = (...values) => sum(...values) / values.length;
  * median(1, 2, 3);
  */
 const median = (...values) => {
-	if(values.length === 0) return 0;
+	if (values.length === 0) return 0;
 
 	values.sort((a, b) => a - b);
 
-	let half = floor(values.length / 2);
+	const half = floor(values.length / 2);
 
-	if(values.length % 2) return values[half];
+	if (values.length % 2) return values[half];
 	return (values[half - 1] + values[half]) / 2.0;
 };
 
@@ -1608,7 +1472,7 @@ const median = (...values) => {
  * @example
  * mode(1, 2, 3)
  */
-const mode = (...values) => values.reduce((a, b, i, arr) => (arr.filter(v => v === a).length >= arr.filter(v => v === b).length? a: b), null);
+const mode = (...values) => values.reduce((a, b, i, arr) => (arr.filter(v => v === a).length >= arr.filter(v => v === b).length ? a : b), null);
 
 /**
  * Returns the variance of the values in a list
@@ -1631,6 +1495,390 @@ const std = (...values) => sqrt(variance(...values));
 
 
 
+//////////////////////////
+// EASING FUNCTIONS
+// https://spicyyoghurt.com/tools/easing-functions
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeLinear = (t, b, c, d) => c * t / d + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeInQuad = (t, b, c, d) => c * (t /= d) * t + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeOutQuad = (t, b, c, d) => -c * (t /= d) * (t - 2) + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeInOutQuad = (t, b, c, d) => ((t /= d / 2) < 1) ? c / 2 * t * t + b : -c / 2 * ((--t) * (t - 2) - 1) + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeInSine = (t, b, c, d) => -c * cos(t / d * (PI / 2)) + c + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeOutSine = (t, b, c, d) => c * sin(t / d * (PI / 2)) + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeInOutSine = (t, b, c, d) => -c / 2 * (cos(PI * t / d) - 1) + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeInExpo = (t, b, c, d) => (t === 0) ? b : c * pow(2, 10 * (t / d - 1)) + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeOutExpo = (t, b, c, d) => (t === d) ? b + c : c * (-pow(2, -10 * t / d) + 1) + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeInOutExpo = (t, b, c, d) => (t === 0) ? b : (t === d) ? b + c : ((t /= d / 2) < 1) ? c / 2 * pow(2, 10 * (t - 1)) + b : c / 2 * (-pow(2, -10 * --t) + 2) + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeInCirc = (t, b, c, d) => -c * (sqrt(1 - (t /= d) * t) - 1) + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeOutCirc = (t, b, c, d) => c * sqrt(1 - (t = t / d - 1) * t) + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeInOutCirc = (t, b, c, d) => ((t /= d / 2) < 1) ? -c / 2 * (sqrt(1 - t * t) - 1) + b : c / 2 * (sqrt(1 - (t -= 2) * t) + 1) + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeInCubic = (t, b, c, d) => c * (t /= d) * t * t + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeOutCubic = (t, b, c, d) => c * ((t = t / d - 1) * t * t + 1) + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeInOutCubic = (t, b, c, d) => ((t /= d / 2) < 1) ? c / 2 * t * t * t + b : c / 2 * ((t -= 2) * t * t + 2) + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeInQuart = (t, b, c, d) => c * (t /= d) * t * t * t + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeOutQuart = (t, b, c, d) => -c * ((t = t / d - 1) * t * t * t - 1) + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeInOutQuart = (t, b, c, d) => ((t /= d / 2) < 1) ? c / 2 * t * t * t * t + b : -c / 2 * ((t -= 2) * t * t * t - 2) + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeInQuint = (t, b, c, d) => c * (t /= d) * t * t * t * t + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeOutQuint = (t, b, c, d) => c * ((t = t / d - 1) * t * t * t * t + 1) + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeInOutQuint = (t, b, c, d) => ((t /= d / 2) < 1) ? c / 2 * t * t * t * t * t + b : c / 2 * ((t -= 2) * t * t * t * t + 2) + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeInBack = (t, b, c, d) => c * (t /= d) * t * ((1.7 + 1) * t - 1.7) + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeOutBack = (t, b, c, d) => c * ((t = t / d - 1) * t * ((1.7 + 1) * t + 1.7) + 1) + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeInOutBack = (t, b, c, d) => ((t /= d / 2) < 1) ? c / 2 * (t * t * ((1.7 * 1.525 + 1) * t - 1.7)) + b : c / 2 * ((t -= 2) * t * ((1.7 * 1.525 + 1) * t + 1.7) + 2) + b;
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeInElastic = (t, b, c, d) => NOX_PV.easeElastic('in', t, b, c, d);
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeOutElastic = (t, b, c, d) => NOX_PV.easeElastic('out', t, b, c, d);
+
+/**
+ * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
+ * @param {Number} t Time passed during the beginning of the animation
+ * @param {Number} b Beginning - starting point of the animation - Usually static
+ * @param {Number} c The amount of change during the animation - Usually static
+ * @param {Number} d The duration of the animation - Usually static
+ * @returns {Number} The new position's value
+ */
+const easeInOutElastic = (t, b, c, d) => NOX_PV.easeElastic('inout', t, b, c, d);
+
+
+/**
+ * Sets the frame rate of the canvas - only positive number allowed
+ * @param {number} f frame rate
+ * @example
+ * frameRate(60)
+ */
+const frameRate = f => { if (f >= 0) NOX_PV.interval = 1000 / f };
+
+
+
+
+/**
+ * Returns last swipe direction
+ * @return {'left'|'right'|'up'|'down'} the last swipe direction.
+ * @example
+ * const lastSwipe = getSwipe();
+ */
+const getSwipe = () => NOX_PV.lastSwipe;
+
+
+
+
+
+// key events
+
+/**
+ * Returns either the key is currently down or not
+ * @param {number} key the key code
+ * @return {Boolean}
+ * @example
+ * if(isKeyDown(keyQ)) {
+ * 	// ... do stuff
+ * }
+ */
+const isKeyDown = key => NOX_PV.keys[key];
+
+/**
+ * Returns either the key is currently up or not (not down)
+ * @param {number} key the key code
+ * @return {Boolean}
+ * @example
+ * if(isKeyUp(keyQ)) {
+ * 	// ... do stuff
+ * }
+ */
+const isKeyUp = key => !NOX_PV.keys[key];
+
+
+
+
+// scale for rendering
+
+/**
+ * Convert pixel's position from real canvas size to translated canvas size that renders
+ * @param {number} x X-axis point
+ * @param {number} y Y-axis point
+ * @return {number} converted position
+ */
+const rendering = (x, y = null) => new Vector(((x instanceof Vector && !y) ? x.x : x) * width / realWidth, ((x instanceof Vector && !y) ? x.y : y) * height / realHeight);
+
+/**
+ * Does the rendering(x, y) function only for the X-axis
+ * @param {number} x X-axis point
+ * @return {number} converted position
+ */
+const renderingX = x => x * width / realWidth;
+
+/**
+ * Does the rendering(x, y) function only for the Y-axis
+ * @param {number} y Y-axis point
+ * @return {number} converted position
+ */
+const renderingY = y => y * height / realHeight;
+
+
+
+
+
+/**
+ * Returns the mouse's direction.
+ * If mouse is not moving, returns null.
+ * @return {'TOP_LEFT'|'UP'|'TOP_RIGHT'|'LEFT'|'RIGHT'|'BOTTOM_LEFT'|'DOWN'|'BOTTOM_RIGHT'|null} mouse's direction.
+ * @example
+ * if(mouseDir() === "RIGHT") {
+ * 	// ... do stuff
+ * }
+ */
+const mouseDir = () =>
+	NOX_PV.isPointerLocked ?
+		mouseDirection
+		:
+		(mouseX > NOX_PV.oldMouseX && mouseY > NOX_PV.oldMouseY) ? "BOTTOM_RIGHT" :
+		(mouseX > NOX_PV.oldMouseX && mouseY < NOX_PV.oldMouseY) ? "TOP_RIGHT" :
+		(mouseX < NOX_PV.oldMouseX && mouseY < NOX_PV.oldMouseY) ? "TOP_LEFT" :
+		(mouseX < NOX_PV.oldMouseX && mouseY > NOX_PV.oldMouseY) ? "BOTTOM_LEFT" :
+		(mouseX > NOX_PV.oldMouseX && mouseY === NOX_PV.oldMouseY) ? "RIGHT" :
+		(mouseX === NOX_PV.oldMouseX && mouseY > NOX_PV.oldMouseY) ? "DOWN" :
+		(mouseX === NOX_PV.oldMouseX && mouseY < NOX_PV.oldMouseY) ? "UP" :
+		(mouseX < NOX_PV.oldMouseX && mouseY === NOX_PV.oldMouseY) ? "LEFT" :
+		null;
 
 
 
@@ -1638,6 +1886,526 @@ const std = (...values) => sqrt(variance(...values));
 
 
 
+
+/**
+ * Allows or disallows the swipe feature on pc
+ * The swipe is by default enabled
+ * @param {Boolean} bool either it enables or disables the swipe on PC
+ * @example
+ * enablePCswip(false); // disable
+ * enablePCswip(true); // enable
+ */
+const enablePCswipe = bool => {
+	NOX_PV.swipePCEnable = typeof bool === "boolean" ? bool : true;
+
+	if (NOX_PV.swipePCEnable) {
+		document.addEventListener('mousedown', handleTouchStart, false);
+		document.addEventListener('mousemove', handleTouchMove, false);
+	} else {
+		document.removeEventListener('mousedown', handleTouchStart, true);
+		document.removeEventListener('mousemove', handleTouchMove, true);
+	}
+};
+
+
+
+
+
+
+
+
+
+/**
+ * Sets the html view rendering (canvas html element size & canvas view inside it)
+ * @param {number} w width
+ * @param {number} h height
+ * @example
+ * createCanvas(500, 500);
+ * setPixelResolution(1000, 1000);
+ * // now, HTML canvas element's size will do 500x500 pixels,
+ * // but inside it, the pixel's resolution will be 1000x1000 pixels
+ */
+const setPixelResolution = (w, h) => {
+	if (w <= 0 || h <= 0) return;
+
+	if (canvas && ctx) {
+		realWidth = w;
+		realHeight = h;
+
+		canvas.width = realWidth;
+		canvas.height = realHeight;
+
+		canvas.style.width = width + 'px';
+		canvas.style.height = height + 'px';
+	}
+
+	else {
+		console.warn("No canvas created yet, so cannot apply changes for its size.");
+	}
+};
+
+
+
+
+
+
+/**
+ * Resizes the canvas, affecting context too.
+ * @param {number} newWidth canvas width
+ * @param {number} newHeight canvas height
+ */
+const setCanvasSize = (newWidth, newHeight) => {
+	if (canvas && ctx) {
+		canvas.style.width = newWidth + 'px';
+		canvas.style.height = newHeight + 'px';
+
+		canvas.width = newWidth;
+		canvas.height = newHeight;
+
+		width = newWidth;
+		height = newHeight;
+	}
+
+	else {
+		console.warn("No canvas created yet, so cannot apply changes for its size.");
+	}
+};
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * Creates a new canvas. If already created, then remove the current one and create another canvas
+ * @param {number} w width of the canvas
+ * @param {number} h height of the canvas
+ * @param {Color} bg canvas background color
+ * @param {Boolean} requestPointerLock request or not the pointer lock
+ * @param {HTMLElement} container the html element the canvas will be in. Default is document.body
+ * @return {HTMLCanvasElement} created canvas. this created canvas is stored in a global variable named "canvas"
+ * and its context named "ctx"
+ * @example
+ * createCanvas(); // fullscreen canvas
+ * createCanvas(500, 250); // 500x250 canvas size
+ * createCanvas(MIN_DOC_SIZE, MIN_DOC_SIZE); // create a square canvas, depending on screen's size
+ * createCanvas(200, 200, "#fff"); // create 200x200 canvas with white background
+ * createCanvas(200, 200, 0, true); // create 200x200 canvas with black background, and enable requestPointerLock feature
+ */
+const createCanvas = (w = null, h = null, bg = "#000", requestPointerLock = false, container = document.body) => {
+	if (!('inSetup') in NOX_PV)
+		return console.warn("[Warning] createCanvas : usable only setup() function.");
+
+	if (w == null && h == null) {
+		w = documentWidth();
+		h = documentHeight();
+	}
+
+	if (w <= 0 || h <= 0) {
+		console.warn('Canvas size must be higher than 0');
+		return;
+	}
+
+	// if canvas already created, then remove it and recreate it
+	if (canvas != null) {
+		document.querySelector("#" + canvas.id).remove();
+		canvas = null;
+		ctx = null;
+	}
+
+	canvas = document.createElement('canvas');
+
+	width = w;
+	height = h;
+
+	canvas.width = width;
+	canvas.height = height;
+	canvas.style.width = width;
+	canvas.style.height = height;
+
+	realWidth = width;
+	realHeight = height;
+
+	canvas.id = "dynamic-canvas";
+	canvas.style.background = NOX_PV.colorTreatment(bg);
+
+	container.appendChild(canvas);
+
+	if (requestPointerLock) {
+		canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock;
+		document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
+
+		document.addEventListener('pointerlockchange', () => {
+			if (!document.pointerLockElement || document.pointerLockElement.id != 'dynamic-canvas') {
+				NOX_PV.isPointerLocked = false;
+			}
+		}, false);
+
+		canvas.addEventListener('click', () => {
+			if (!NOX_PV.isPointerLocked) {
+				NOX_PV.isPointerLocked = true;
+				canvas.requestPointerLock();
+			}
+		});
+	}
+
+	ctx = canvas.getContext('2d');
+
+	return canvas;
+};
+
+
+
+
+
+/**
+ * Shows cyan guidelines that are following the mouse on the canvas, telling the pixels x,y
+ * It's mostly a dev feature
+ * @param {Boolean} bool either it shows or not
+ * @example
+ * showGuideLines(true)
+ */
+const showGuideLines = bool => {
+	NOX_PV.bGuideLines = typeof bool === 'boolean' && bool;
+};
+
+
+
+
+
+
+
+/**
+ * Default draw condition - run in every cases
+ * Do not use it. Use setDrawCondition instead.
+ */
+let drawCond = () => true;
+
+/**
+ * Sets the condition on when the draw function has to be executed (pause it if not)
+ * @param {Function} condition condition in function
+ * @example
+ * setDrawCondition(() => x < 10);
+ */
+const setDrawCondition = (condition = null) => {
+	if (condition) drawCond = condition;
+};
+
+
+
+
+
+
+
+/**
+ * The draw loop. If drawCond returns true, then executes the draw function of the user that uses the library.
+ * Manages the frame rate.
+ * Show guide lines if enabled.
+ * Clear then draw canvas if the draw() function has been created and if the drawCond() returns true.
+ * Manages entities and camera.
+ * Do not Call it.
+ */
+const drawLoop = () => {
+	if (NOX_PV.loop === true)
+		requestAnimationFrame(drawLoop);
+
+	const t0 = performance.now();
+
+	if (NOX_PV.logPerfs && NOX_PV.drawLoopInfo.it === 0) {
+		NOX_PV.drawLoopInfo.start = t0;
+	}
+
+
+	NOX_PV.now = Date.now();
+	NOX_PV.delta = NOX_PV.now - NOX_PV.then;
+
+	NOX_PV.updateFunc(NOX_PV.timer.asMilliseconds()); // user update function
+
+	if (NOX_PV.logPerfs)
+		NOX_PV.drawLoopInfo.t1 += performance.now() - t0;
+
+	if (NOX_PV.delta > NOX_PV.interval) {
+		NOX_PV.then = NOX_PV.now - (NOX_PV.delta % NOX_PV.interval);
+
+		if(NOX_PV.then - NOX_PV.firstThen > 99999) {
+			NOX_PV.firstThen = NOX_PV.now;
+			NOX_PV.then = NOX_PV.firstThen;
+			NOX_PV.counter = 0;
+		}
+
+		NOX_PV.time_el = ((NOX_PV.then - NOX_PV.firstThen) / 1000) || 1;
+
+		NOX_PV.counter++;
+
+		fps = round(NOX_PV.counter / NOX_PV.time_el);
+
+		// if canvas created & drawCond returns true
+		if (ctx && drawCond()) {
+			const t = performance.now();
+
+			push();
+				clearRect(0, 0, width, height); // clear the canvas
+
+				NOX_PV.drawFunc(); // user draw function
+
+				// if guidelines enabled
+				if (NOX_PV.bGuideLines) {
+					push();
+						fill('#46eaea'); stroke('#46eaea');
+						strokeWeight(1);
+						line(0, mouseY, width, mouseY);
+						line(mouseX, 0, mouseX, height);
+						text(`${floor(mouseX)}, ${floor(mouseY)}`, mouseX + 5, mouseY - 5);
+					pop();
+				}
+			pop();
+
+			NOX_PV.drawLoopInfo.t2 += performance.now() - t;
+		}
+	}
+
+
+	if (NOX_PV.logPerfs) {
+		NOX_PV.drawLoopInfo.it = (NOX_PV.drawLoopInfo.it + 1) % NOX_PV.drawLoopInfo.freq;
+
+		if (NOX_PV.drawLoopInfo.it === 0) {
+			NOX_PV.drawLoopInfo.t1 /= NOX_PV.drawLoopInfo.freq;
+			NOX_PV.drawLoopInfo.t2 /= NOX_PV.drawLoopInfo.freq;
+
+			const t1 = floor(NOX_PV.drawLoopInfo.t1 * 100) / 100;
+			const t2 = floor(NOX_PV.drawLoopInfo.t2 * 100) / 100;
+			const t3 = floor((t1 + t2) * 100) / 100;
+
+			NOX_PV.drawLoopInfo.t1 = 0;
+			NOX_PV.drawLoopInfo.t2 = 0;
+
+			const data = {
+				update: { ms: t1 },
+				draw: { ms: t2 },
+				total: { ms: t3 },
+			};
+
+			console.table(data);
+		}
+	}
+};
+
+
+
+
+
+/**
+ * Disables draw loop. Draw only once.
+ * @example
+ * noLoop();
+ */
+const noLoop = () => {
+	NOX_PV.loop = false;
+};
+
+
+/**
+ * Enables image's smoothing.
+ * Context needs to exist
+ * @example
+ * enableSmoothing();
+ */
+const enableSmoothing = () => {
+	if (ctx) ctx.imageSmoothingEnabled = true;
+}
+
+/**
+ * Disables image's smoothing.
+ * Context needs to exist.
+ * @example
+ * disableSmoothing();
+ */
+const disableSmoothing = () => {
+	if (ctx) ctx.imageSmoothingEnabled = false;
+}
+
+
+
+/**
+ * Loads an 1D array (imageData) for each pixels of the canvas.
+ * Enable variable named "pixels" which are the data of loaded pixels.
+ * Each pixel has 4 values, rgba.
+ * So pixels[0], pixels[1], pixels[2] and pixels[3] are the value of the first pixel.
+ * @example
+ * loadPixels();
+ * pixels[0] = 255; // first pixel is now red
+ */
+const loadPixels = () => {
+	if (ctx instanceof CanvasRenderingContext2D && canvas instanceof HTMLCanvasElement) {
+		NOX_PV.pixels = ctx.createImageData(canvas.width, canvas.height);
+		pixels = NOX_PV.pixels.data;
+
+		for (let i = 0; i < width * height; i++) {
+			pixels[i * 4 + 3] = 255; // enable max opacity (to see each pixels)
+		}
+	}
+
+	else {
+		console.warn("Can't load canvas's pixels : no existing context found.");
+	}
+};
+
+/**
+ * Sends the array of pixels to the canvas.
+ * Directly draws on the canvas.
+ * Isn't affacted by other canvas's functions like fill() or stroke()
+ * @example
+ * updatePixels();
+ */
+const updatePixels = () => {
+	if (typeof pixels !== 'undefined' && ctx instanceof CanvasRenderingContext2D) {
+		NOX_PV.pixels.data = pixels;
+		ctx.putImageData(NOX_PV.pixels, 0, 0);
+	}
+};
+
+
+
+
+
+
+
+
+/**
+ * Perlin Noise function.
+ * Code from : http://pub.phyks.me/sdz/sdz/bruit-de-perlin.html
+ * Returns the perlin noise value between 0 and 1 for a given point (x,y)
+ * Lazily generates the perlin seed if not existing.
+ * It's the perlin noise of the page, so seed will always be the same.
+ * To have multiple custom Perlin noise arrays, create PerlinNoise class instance instead.
+ * @param {Number} x X-axis point coordinate
+ * @param {Number} y Y-axis point coordinate
+ * @return {Number} floating point between 0 and 1
+ * @example
+ * const value = perlin(0, 0); // value between -1 and 1.
+ */
+const perlin = (x, y = 0) => {
+	// create seed if never used perlin noise previously
+	if (!NOX_PV.perlin.seed || NOX_PV.perlin.seed.length === 0) {
+		NOX_PV.perlin.seed = NOX_PV.perlin.generateSeed();
+	}
+
+	return NOX_PV.perlin.get(x, y);
+};
+
+/**
+ * Sets the level of details for the Perlin noise function.
+ * Default is 10. If given argument isn't a number, does nothing.
+ * @param {number} detailLevel level of detail for Perlin noise function
+ * @example
+ * noiseDetails(200);
+ */
+const noiseDetails = detailLevel => {
+	if (typeof detailLevel === 'number') {
+		NOX_PV.perlin.lod = detailLevel;
+	}
+};
+
+
+/**
+ * Generates a random UUID
+ * @returns {String} the generated UUID
+ * @see https://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid#answer-21963136
+ */
+const generateUUID = () => {
+	const d0 = Math.random() * 0xffffffff | 0;
+	const d1 = Math.random() * 0xffffffff | 0;
+	const d2 = Math.random() * 0xffffffff | 0;
+	const d3 = Math.random() * 0xffffffff | 0;
+	return NOX_PV.lut[d0 & 0xff] + NOX_PV.lut[d0 >> 8 & 0xff] + NOX_PV.lut[d0 >> 16 & 0xff] + NOX_PV.lut[d0 >> 24 & 0xff] + '-' +
+		NOX_PV.lut[d1 & 0xff] + NOX_PV.lut[d1 >> 8 & 0xff] + '-' + NOX_PV.lut[d1 >> 16 & 0x0f | 0x40] + NOX_PV.lut[d1 >> 24 & 0xff] + '-' +
+		NOX_PV.lut[d2 & 0x3f | 0x80] + NOX_PV.lut[d2 >> 8 & 0xff] + '-' + NOX_PV.lut[d2 >> 16 & 0xff] + NOX_PV.lut[d2 >> 24 & 0xff] +
+		NOX_PV.lut[d3 & 0xff] + NOX_PV.lut[d3 >> 8 & 0xff] + NOX_PV.lut[d3 >> 16 & 0xff] + NOX_PV.lut[d3 >> 24 & 0xff];
+};
+
+
+
+/**
+ * Handled when the user starts to press screen with his finger / mouse
+ * @param {Object} e event default object
+ */
+const handleTouchStart = e => {
+	NOX_PV.isMouseDown = true;
+
+	if (typeof mouseDown === "function")
+		mouseDown(e);
+
+	const getTouches = e2 => e2.touches || [{ clientX: e.clientX, clientY: e.clientY }, null];
+
+	const firstTouch = getTouches(e)[0];
+
+	NOX_PV.swipexDown = firstTouch.clientX;
+	NOX_PV.swipeyDown = firstTouch.clientY;
+};
+
+/**
+ * Handled when the user moves his finger / mouse on the screen, while he is pressing it
+ * @param {Object} e event default object
+ */
+const handleTouchMove = e => {
+	if (typeof mouseMove === "function" && NOX_PV.isMouseDown)
+		mouseMove(e);
+
+	if (!NOX_PV.swipexDown || !NOX_PV.swipeyDown) {
+		return;
+	}
+
+	let xUp, yUp;
+
+	if (e.touches) {
+		xUp = e.touches[0].clientX;
+		yUp = e.touches[0].clientY;
+	}
+
+	else {
+		xUp = e.clientX;
+		yUp = e.clientY;
+	}
+
+	const xDiff = NOX_PV.swipexDown - xUp;
+	const yDiff = NOX_PV.swipeyDown - yUp;
+
+	let event, swipeDir;
+
+
+	if (abs(xDiff) > abs(yDiff)) {
+		if (xDiff > 0) (swipeDir = 'left') && (event = new CustomEvent('swipeleft', { detail: { swipe: 'left' } }));
+		else (swipeDir = 'right') && (event = new CustomEvent('swiperight', { detail: { swipe: 'right' } }));
+	}
+
+	else {
+		if (yDiff > 0) (swipeDir = 'up') && (event = new CustomEvent('swipeup', { detail: { swipe: 'up' } }));
+		else (swipeDir = 'down') && (event = new CustomEvent('swipedown', { detail: { swipe: 'down' } }));
+	}
+
+	canvas.dispatchEvent(event);
+
+	NOX_PV.lastSwipe = swipeDir;
+	NOX_PV.swipexDown = null;
+	NOX_PV.swipeyDown = null;
+};
+
+
+
+
+
+
+
+
+
+
+// CLASSES
 
 /** COLOR MANAGMENT SECTION */
 
@@ -1653,20 +2421,20 @@ class RGB {
 	 * @param {number} b blue value [0 - 255]
 	 * @param {number} a alpha (opacity) value [0 - 255]
 	 */
-	constructor(r, g=null, b=null, a=255) {
-		this.color = {r: 0, g: 0, b: 0};
+	constructor(r, g = null, b = null, a = 255) {
+		this.color = { r: 0, g: 0, b: 0 };
 
-		if(r === undefined) {
+		if (r === undefined) {
 			r = 0;
 		}
-		
-		if(g !== null && b === null) {
+
+		if (g !== null && b === null) {
 			a = g;
 			g = b = r;
 		}
 
 		// only one argument given: 3 are same (do grey)
-		if(g === null) {
+		if (g === null) {
 			g = r;
 			b = r;
 		}
@@ -1682,7 +2450,7 @@ class RGB {
 	 * @param {number} val A number
 	 */
 	valueInInterval(val) {
-		if(val < 0 || val > 255) {
+		if (val < 0 || val > 255) {
 			console.error(`Color interval [0 - 255] no repespected (${val} given)`);
 			return min(max(val, 0), 255);
 		}
@@ -1695,25 +2463,25 @@ class RGB {
 	 * Returns the red value of the color
 	 * @return {number} red value
 	 */
-	get r() {return this.color.r;}
+	get r() { return this.color.r; }
 
 	/**
 	 * Returns the green value of the color
 	 * @return {number} green value
 	 */
-	get g() {return this.color.g;}
+	get g() { return this.color.g; }
 
 	/**
 	 * Returns the blue value of the color
 	 * @return {number} blue value
 	 */
-	get b() {return this.color.b;}
+	get b() { return this.color.b; }
 
 	/**
 	 * Returns the alpha value of the color
 	 * @return {number} alpha value
 	 */
-	get a() {return this.color.a;}
+	get a() { return this.color.a; }
 
 	// setters
 
@@ -1771,11 +2539,11 @@ class RGB {
 	 * const color = new Color(0, 0, 0);
 	 * color.set(10, 20, 30); // now color.r = 10, color.g = 20 and color.b = 30
 	 */
-	set(r, g, b, a=null) {
+	set(r, g, b, a = null) {
 		this.r = r;
 		this.g = g;
 		this.b = b;
-		if(a !== null) this.a = a;
+		if (a !== null) this.a = a;
 	}
 
 	/**
@@ -1790,7 +2558,7 @@ class RGB {
 	 * console.info(color); // rgba(10, 20, 30, 0.3)
 	 */
 	toString() {
-		return `rgb${this.a!=255?'a':''}(${this.r}, ${this.g}, ${this.b}${this.a!=255?`, ${round(this.a/255*10)/10}`:''})`;
+		return `rgb${this.a != 255 ? 'a' : ''}(${this.r}, ${this.g}, ${this.b}${this.a != 255 ? `, ${round(this.a / 255 * 10) / 10}` : ''})`;
 	}
 
 	/**
@@ -1812,9 +2580,9 @@ class RGB {
 	 * console.info(color.toHEX()); // "#F00"
 	 */
 	toHEX() {
-		let r = Number(this.r).toString(16); if(r.length < 2) r = "0"+r;
-		let g = Number(this.g).toString(16); if(g.length < 2) g = "0"+g;
-		let b = Number(this.b).toString(16); if(b.length < 2) b = "0"+b;
+		const r = Number(this.r).toString(16); if (r.length < 2) r = "0" + r;
+		const g = Number(this.g).toString(16); if (g.length < 2) g = "0" + g;
+		const b = Number(this.b).toString(16); if (b.length < 2) b = "0" + b;
 		const rgb = '#' + r + g + b;
 
 		return new HEX(rgb);
@@ -1829,23 +2597,23 @@ class RGB {
 	 */
 	toHSL() {
 		const r = this.r / 255,
-			  g = this.g / 255,
-			  b = this.b / 255;
+			g = this.g / 255,
+			b = this.b / 255;
 
 		const imax = max(r, g, b),
-			  imin = min(r, g, b);
+			imin = min(r, g, b);
 
 		let h, s, l = (imax + imin) / 2;
 
-		if(imax == imin) {
+		if (imax === imin) {
 			h = s = 0;
 		}
-		
-		else {
-			let d = imax - imin;
-			s = (l > 0.5)? d / (2 - imax - imin) : d / (imax + imin);
 
-			switch(imax) {
+		else {
+			const d = imax - imin;
+			s = (l > 0.5) ? d / (2 - imax - imin) : d / (imax + imin);
+
+			switch (imax) {
 				case r: h = (g - b) / d + (g < b ? 6 : 0); break;
 				case g: h = (b - r) / d + 2; break;
 				case b: h = (r - g) / d + 4; break;
@@ -1881,13 +2649,13 @@ class HEX {
 	 * console.info(color); // "#FFF"
 	 * console.info(color.toString()); // is equivalent
 	 */
-	toString() {return this.color.str;}
+	toString() { return this.color.str; }
 
 	/**
 	 * Returns the int value of the color
 	 * @return {number} color value as int
 	 */
-	intVal() {return this.color.int;}
+	intVal() { return this.color.int; }
 
 	/**
 	 * Sets the new value of the color
@@ -1897,15 +2665,15 @@ class HEX {
 	 * color.set("#f00"); // red
 	 */
 	set(hexaColor) {
-		if(typeof hexaColor == 'number') {
+		if (typeof hexaColor === 'number') {
 			this.color.int = hexaColor;
-			let h = hexaColor.toString(16) + '';
-			this.color.str = '#' + (h.length == 4? '00' : '') + h;
+			const h = hexaColor.toString(16) + '';
+			this.color.str = '#' + (h.length === 4 ? '00' : '') + h;
 		}
 
-		else if(typeof hexaColor == 'string' && /^#?([0-9a-f]{3}){1,2}$/i.test(hexaColor)) {
+		else if (typeof hexaColor === 'string' && /^#?([0-9a-f]{3}){1,2}$/i.test(hexaColor)) {
 			hexaColor = hexaColor.replace('#', '');
-			if(hexaColor.length == 3) hexaColor = hexaColor[0].repeat(2) + hexaColor[1].repeat(2) + hexaColor[2].repeat(2);
+			if (hexaColor.length === 3) hexaColor = hexaColor[0].repeat(2) + hexaColor[1].repeat(2) + hexaColor[2].repeat(2);
 			this.color.str = '#' + hexaColor;
 			this.color.int = parseInt(hexaColor, 16);
 		}
@@ -1925,7 +2693,7 @@ class HEX {
 	toRGB() {
 		const r = (this.intVal() & 0xFF0000) >>> 16;
 		const g = (this.intVal() & 0xFF00) >>> 8;
-		const b = this.intVal()  & 0xFF;
+		const b = this.intVal() & 0xFF;
 
 		return new RGB(r, g, b);
 	}
@@ -1949,10 +2717,10 @@ class HSL {
 	 * @param {number} saturation saturation value [0 - 1]
 	 * @param {number} light brightness value [0 - 1]
 	 */
-	constructor(hue, saturation=0.5, light=0.5) {
-		this.color = {h: 0, s: 0, l: 0};
+	constructor(hue, saturation = 0.5, light = 0.5) {
+		this.color = { h: 0, s: 0, l: 0 };
 
-		if(typeof hue !== 'number') {
+		if (typeof hue !== 'number') {
 			console.error(`Hue given parameter isn't a recognized number value: ${hue}`);
 			hue = 0;
 		}
@@ -1966,19 +2734,19 @@ class HSL {
 	 * Returns the hue value of the color
 	 * @return {number} hue
 	 */
-	get h() {return this.color.h;}
+	get h() { return this.color.h; }
 
 	/**
 	 * Returns the saturation value of the color
 	 * @return {number} saturation
 	 */
-	get s() {return this.color.s;}
+	get s() { return this.color.s; }
 
 	/**
 	 * Returns the brightness value of the color
 	 * @return {number} brightness (luminosity)
 	 */
-	get l() {return this.color.l;}
+	get l() { return this.color.l; }
 
 	/**
 	 * Sets the hue value of the color
@@ -1988,7 +2756,7 @@ class HSL {
 	 * color.h(50);
 	 */
 	set h(hue) {
-		this.color.h = (hue >= 0)? hue % 360 : 360 - (abs(hue) % 360);
+		this.color.h = (hue >= 0) ? hue % 360 : 360 - (abs(hue) % 360);
 	}
 
 	/**
@@ -2088,7 +2856,7 @@ class HSL {
 	 * console.info(color.toString()); // is equivalent
 	 */
 	toString() {
-		return `hsl(${this.h}, ${this.s*100}%, ${this.l*100}%)`;
+		return `hsl(${this.h}, ${this.s * 100}%, ${this.l * 100}%)`;
 	}
 
 	/**
@@ -2129,12 +2897,12 @@ class HSL {
 
 		r = g = b = 0;
 
-		if(hh >= 0 && hh < 1)       [r, g] = [C, X];
+		if (hh >= 0 && hh < 1) [r, g] = [C, X];
 		else if (hh >= 1 && hh < 2) [r, g] = [X, C];
 		else if (hh >= 2 && hh < 3) [g, b] = [C, X];
 		else if (hh >= 3 && hh < 4) [g, b] = [X, C];
 		else if (hh >= 4 && hh < 5) [r, b] = [X, C];
-		else                        [r, b] = [C, X];
+		else[r, b] = [C, X];
 
 		const m = this.l - C / 2;
 
@@ -2145,492 +2913,6 @@ class HSL {
 		return new RGB(r, g, b);
 	}
 }
-
-
-
-
-
-
-
-/**
- * Sets the frame rate of the canvas - only positive number allowed
- * @param {number} f frame rate
- * @example
- * frameRate(60)
- */
-const frameRate = f => {if(f >= 0) NOX_PV.interval = 1000/f};
-
-
-
-
-/**
- * Returns last swipe direction
- * @return {String} the last swipe direction.
- * It can be "left", "right", "up" or "down"
- * @example
- * const lastSwipe = getSwipe();
- */
-const getSwipe = () => NOX_PV.lastSwipe;
-
-
-
-
-
-// key events
-
-/**
- * Returns either the key is currently down or not
- * @param {number} keyCode the key code
- * @return {Boolean}
- * @example
- * if(isKeyDown(65)) {
- * 	// ... do stuff
- * }
- */
-const isKeyDown = keyCode => NOX_PV.keys[keyCode];
-
-/**
- * Returns either the key is currently up or not (not down)
- * @param {number} keyCode the key code
- * @return {Boolean}
- * @example
- * if(isKeyUp(65)) {
- * 	// ... do stuff
- * }
- */
-const isKeyUp 	= keyCode => !NOX_PV.keys[keyCode];
-
-
-
-
-// scale for rendering
-
-/**
- * Convert pixel's position from real canvas size to translated canvas size that renders
- * @param {number} x X-axis point
- * @param {number} y Y-axis point
- * @return {number} converted position
- */
-const rendering  = (x, y=null) 	=> new Vector(((x instanceof Vector && !y)? x.x : x) * width/realWidth, ((x instanceof Vector && !y)?x.y : y) * height/realHeight);
-
-/**
- * Does the rendering(x, y) function only for the X-axis
- * @param {number} x X-axis point
- * @return {number} converted position
- */
-const renderingX = x 			=> x * width / realWidth;
-
-/**
- * Does the rendering(x, y) function only for the Y-axis
- * @param {number} y Y-axis point
- * @return {number} converted position
- */
-const renderingY = y 			=> y * height / realHeight;
-
-
-
-
-
-/**
- * Returns the mouse's direction.
- * If mouse is not moving, returns null.
- * @return {String} mouse's direction.
- * It can be "BOTTOM_RIGHT", "TOP_RIGHT", "TOP_LEFT", "BOTTOM_LEFT", "RIGHT", "DOWN", "UP", "LEFT"
- * @example
- * if(mouseDir() == "RIGHT") {
- * 	// ... do stuff
- * }
- */
-const mouseDir = () =>
-	NOX_PV.isPointerLocked?
-		mouseDirection
-	:
-		(mouseX >  NOX_PV.oldMouseX && mouseY >  NOX_PV.oldMouseY)? "BOTTOM_RIGHT" :
-		(mouseX >  NOX_PV.oldMouseX && mouseY <  NOX_PV.oldMouseY)? "TOP_RIGHT" :
-		(mouseX <  NOX_PV.oldMouseX && mouseY <  NOX_PV.oldMouseY)? "TOP_LEFT" :
-		(mouseX <  NOX_PV.oldMouseX && mouseY >  NOX_PV.oldMouseY)? "BOTTOM_LEFT" :
-		(mouseX >  NOX_PV.oldMouseX && mouseY == NOX_PV.oldMouseY)? "RIGHT" :
-		(mouseX == NOX_PV.oldMouseX && mouseY >  NOX_PV.oldMouseY)? "DOWN" :
-		(mouseX == NOX_PV.oldMouseX && mouseY <  NOX_PV.oldMouseY)? "UP" :
-		(mouseX <  NOX_PV.oldMouseX && mouseY == NOX_PV.oldMouseY)? "LEFT":
-	null;
-
-
-
-
-
-
-
-
-/**
- * Allows or disallows the swipe feature on pc
- * The swipe is by default enabled
- * @param {Boolean} bool either it enables or disables the swipe on PC
- * @example
- * enablePCswip(false); // disable
- * enablePCswip(true); // enable
- */
-const enablePCswipe = bool => {
-	NOX_PV.swipePCEnable = typeof bool == "boolean"? bool : true;
-
-	if(NOX_PV.swipePCEnable) {
-		document.addEventListener('mousedown', handleTouchStart, false);
-		document.addEventListener('mousemove', handleTouchMove, false);
-	} else {
-		document.removeEventListener('mousedown', handleTouchStart, true);
-		document.removeEventListener('mousemove', handleTouchMove, true);
-	}
-};
-
-
-
-
-
-
-
-
-
-/**
- * Sets the html view rendering (canvas html element size & canvas view inside it)
- * @param {number} w width
- * @param {number} h height
- * @example
- * createCanvas(500, 500);
- * setPixelResolution(1000, 1000);
- * // now, HTML canvas element's size will do 500x500 pixels,
- * // but inside it, the pixel's resolution will be 1000x1000 pixels
- */
-const setPixelResolution = (w, h) => {
-	if(w <= 0 || h <= 0) return;
-
-	if(canvas && ctx) {
-		realWidth = w;
-		realHeight = h;
-
-		canvas.width = realWidth;
-		canvas.height = realHeight;
-
-		canvas.style.width = width + 'px';
-		canvas.style.height = height + 'px';
-	}
-	
-	else {
-		console.warn("No canvas created yet, so cannot apply changes for its size.");
-	}
-};
-
-
-
-
-
-
-/**
- * Resizes the canvas, affecting context too.
- * @param {number} newWidth canvas width
- * @param {number} newHeight canvas height
- */
-const setCanvasSize = (newWidth, newHeight) => {
-	if(canvas && ctx) {
-		canvas.style.width = newWidth + 'px';
-		canvas.style.height = newHeight + 'px';
-
-		canvas.width = newWidth;
-		canvas.height = newHeight;
-
-		width = newWidth;
-		height = newHeight;
-	}
-
-	else {
-		console.warn("No canvas created yet, so cannot apply changes for its size.");
-	}
-};
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- * Creates a new canvas. If already created, then remove the current one and create another canvas
- * @param {number} w width of the canvas
- * @param {number} h height of the canvas
- * @param {Color} bg canvas background color
- * @param {Boolean} requestPointerLock request or not the pointer lock
- * @param {HTMLElement} container the html element the canvas will be in. Default is document.body
- * @return {HTMLCanvasElement} created canvas. this created canvas is stored in a global variable named "canvas"
- * and its context named "ctx"
- * @example
- * createCanvas(); // fullscreen canvas
- * createCanvas(500, 250); // 500x250 canvas size
- * createCanvas(MIN_DOC_SIZE, MIN_DOC_SIZE); // create a square canvas, depending on screen's size
- * createCanvas(200, 200, "#fff"); // create 200x200 canvas with white background
- * createCanvas(200, 200, 0, true); // create 200x200 canvas with black background, and enable requestPointerLock feature
- */
-const createCanvas = (w, h, bg="#000", requestPointerLock=false, container=document.body) => {
-	if(w === undefined && h === undefined) {
-		w = documentWidth();
-		h = documentHeight();
-	}
-
-	if(w <= 0 || h <= 0) {
-		console.warn('Canvas size must be higher than 0');
-		return;
-	}
-
-	// if canvas already created, then remove it and recreate it
-	if(canvas != null) {
-		document.querySelector("#"+canvas.id).remove();
-		canvas = null;
-		ctx = null;
-	}
-
-	canvas = document.createElement('canvas');
-
-	width = w;
-	height = h;
-
-	canvas.width = width;
-	canvas.height = height;
-	canvas.style.width = width;
-	canvas.style.height = height;
-
-	realWidth = width;
-	realHeight = height;
-
-	canvas.id = "dynamic-canvas";
-	canvas.style.background = NOX_PV.colorTreatment(bg);
-	
-	container.appendChild(canvas);
-
-
-	if(requestPointerLock) {
-
-		canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock;
-		document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
-
-		document.addEventListener('pointerlockchange', () => {
-			if(!document.pointerLockElement || document.pointerLockElement.id != 'dynamic-canvas') {
-				NOX_PV.isPointerLocked = false;
-			}
-		}, false);
-
-		canvas.onclick = () => {
-			if(!NOX_PV.isPointerLocked) {
-				NOX_PV.isPointerLocked = true;
-				canvas.requestPointerLock();
-			}
-		};
-
-	}
-
-	ctx = canvas.getContext('2d');
-	
-	return canvas;
-};
-
-
-
-
-
-/**
- * Shows cyan guidelines that are following the mouse on the canvas, telling the pixels x,y
- * It's mostly a dev feature
- * @param {Boolean} bool either it shows or not
- * @example
- * showGuideLines(true)
- */
-const showGuideLines = bool => {
-	NOX_PV.bGuideLines = typeof bool == 'boolean'? bool : false;
-};
-
-
-
-
-
-
-
-/**
- * Default draw condition - run in every cases
- * Do not use it. Use setDrawCondition instead.
- */
-let drawCond = () => true;
-
-/**
- * Sets the condition on when the draw function has to be executed (pause it if not)
- * @param {Function} condition condition in function
- * @example
- * setDrawCondition(() => x < 10);
- */
-const setDrawCondition = (condition = null) => {
-	if(condition) drawCond = condition;
-};
-
-
-
-
-
-
-
-/**
- * The draw loop. If drawCond returns true, then executes the draw function of the user that uses the framework.
- * Manages the frame rate.
- * Show guide lines if enabled.
- * Clear then draw canvas if the draw() function has been created and if the drawCond() returns true.
- * Do not Call it.
- */
-const drawLoop = () => {
-	if(NOX_PV.loop === true) requestAnimationFrame(drawLoop);
-
-	NOX_PV.now = Date.now();
-	NOX_PV.delta = NOX_PV.now - NOX_PV.then;
-
-	if(NOX_PV.delta > NOX_PV.interval) {
-
-		NOX_PV.then = NOX_PV.now - (NOX_PV.delta % NOX_PV.interval);
-		fps = parseInt(NOX_PV.counter / NOX_PV.time_el);
-
-		// if canvas created & drawCond returns true
-		if(ctx && typeof draw != "undefined" && drawCond()) {
-
-			clearRect(0, 0, width, height); // clear the canvas
-			draw(); // draw on the canvas
-
-			// if guidelines enabled
-			if(NOX_PV.bGuideLines) {
-				fill('#46eaea'); stroke('#46eaea'); strokeWeight(1);
-				line(0, mouseY, width, mouseY); line(mouseX, 0, mouseX, height);
-				text(`${Math.floor(mouseX)}, ${Math.floor(mouseY)}`, mouseX + 5, mouseY - 5);
-			}
-
-		}
-
-	}
-};
-
-
-
-
-
-/**
- * Disables draw loop. Draw only once.
- * @example
- * noLoop();
- */
-const noLoop = () => {
-	NOX_PV.loop = false;
-};
-
-
-/**
- * Enables image's smoothing.
- * Context needs to exist
- * @example
- * enableSmoothing();
- */
-const enableSmoothing = () => {
-	if(ctx) ctx.imageSmoothingEnabled = true;
-}
-
-/**
- * Disables image's smoothing.
- * Context needs to exist.
- * @example
- * disableSmoothing();
- */
-const disableSmoothing = () => {
-	if(ctx) ctx.imageSmoothingEnabled = false;
-}
-
-
-
-/**
- * Loads an 1D array (imageData) for each pixels of the canvas.
- * Enable variable named "pixels" which are the data of loaded pixels.
- * Each pixel has 4 values, rgba.
- * So pixels[0], pixels[1], pixels[2] and pixels[3] are the value of the first pixel.
- * @example
- * loadPixels();
- * pixels[0] = 255; // first pixel is now red
- */
-const loadPixels = () => {
-	if(typeof ctx !== "undefined" && typeof canvas !== "undefined" && ctx !== null && canvas !== null) {
-		NOX_PV.pixels = ctx.createImageData(canvas.width, canvas.height);
-		pixels = NOX_PV.pixels.data;
-
-		for(let i=0; i < width * height; i++) {
-			pixels[i*4 + 3] = 255; // enable max opacity (to see each pixels)
-		}
-	}
-
-	else {
-		console.warn("Can't load canvas's pixels : no existing context found.");
-	}
-};
-
-/**
- * Sends the array of pixels to the canvas.
- * Directly draws on the canvas.
- * Isn't affacted by other canvas's functions like fill() or stroke()
- * @example
- * updatePixels();
- */
-const updatePixels = () => {
-	if(typeof pixels !== 'undefined' && ctx) {
-		NOX_PV.pixels.data = pixels;
-		ctx.putImageData(NOX_PV.pixels, 0, 0);
-	}
-};
-
-
-
-
-
-
-
-
-/**
- * Perlin Noise function.
- * Code from : http://pub.phyks.me/sdz/sdz/bruit-de-perlin.html
- * Returns the perlin noise value between 0 and 1 for a given point (x,y)
- * Lazily generates the perlin seed if not existing.
- * It's the perlin noise of the page, so seed will always be the same.
- * To have multiple custom Perlin noise arrays, create PerlinNoise class instance instead.
- * @param {Number} x X-axis point coordinate
- * @param {Number} y Y-axis point coordinate
- * @return {Number} floating point between 0 and 1
- * @example
- * const value = perlin(0, 0); // value between -1 and 1.
- */
-const perlin = (x, y=0) => {
-	// create seed if never used perlin noise previously
-	if(!NOX_PV.perlin.seed || NOX_PV.perlin.seed.length === 0) {
-		NOX_PV.perlin.seed = NOX_PV.perlin.generateSeed();
-	}
-
-	return NOX_PV.perlin.get(x, y);
-};
-
-/**
- * Sets the level of details for the Perlin noise function.
- * Default is 10. If given argument isn't a number, does nothing.
- * @param {number} detailLevel level of detail for Perlin noise function
- * @example
- * noiseDetails(200);
- */
-const noiseDetails = detailLevel => {
-	if(typeof detailLevel === 'number') {
-		NOX_PV.perlin.lod = detailLevel;
-	}
-};
-
-
 
 
 class PerlinNoise {
@@ -2645,7 +2927,7 @@ class PerlinNoise {
 	 * @param {number} h height of the array
 	 * @param {string} mapNumber map values to [auto: (-1,1)], [rgb: (0,255)], [hsl: (0, 360)]
 	 */
-	constructor(lod=10, x=0, y=0, w=width, h=height, mapNumber='default') {
+	constructor(lod = 10, x = 0, y = 0, w = width, h = height, mapNumber = 'default') {
 		this.lod = lod;
 		this.seed = NOX_PV.perlin.generateSeed();
 		this.start = { x, y };
@@ -2667,11 +2949,11 @@ class PerlinNoise {
 		const tmp = this.lod;
 		this.lod = lod;
 
-		if(tmp !== lod) {
+		if (tmp !== lod) {
 			this.calculate();
 		}
 	}
-	
+
 	/**
 	 * Regenerates the noise's seed.
 	 * Then it re-calculates the array.
@@ -2695,14 +2977,14 @@ class PerlinNoise {
 	 */
 	setMapNumber(mapNumber) {
 		mapNumber = PerlinNoise.getMapNumberTypeIndex(mapNumber);
-		if(this.numberMapStyle === mapNumber) return;
+		if (this.numberMapStyle === mapNumber) return;
 
-		let Lmin=0, Lmax=NOX_PV.perlin.unit, Rmin=0, Rmax=NOX_PV.perlin.unit;
-		
-		if(this.numberMapStyle > 0) [Lmin, Lmax] = [0, (this.numberMapStyle===1)?255:360];
+		let Lmin = 0, Lmax = NOX_PV.perlin.unit, Rmin = 0, Rmax = NOX_PV.perlin.unit;
+
+		if (this.numberMapStyle > 0) [Lmin, Lmax] = [0, (this.numberMapStyle === 1) ? 255 : 360];
 		this.numberMapStyle = mapNumber;
-		if(this.numberMapStyle > 0) [Rmin, Rmax] = [0, (this.numberMapStyle===1)?255:360];
-		
+		if (this.numberMapStyle > 0) [Rmin, Rmax] = [0, (this.numberMapStyle === 1) ? 255 : 360];
+
 		this.array.forEach((row, i) => {
 			this.array[i] = map(this.array[i], Lmin, Lmax, Rmin, Rmax);
 		});
@@ -2718,17 +3000,17 @@ class PerlinNoise {
 	calculate() {
 		this.array = [];
 
-		for(let y=this.start.y; y < this.start.y + this.size.height; y++) {
-			let row = [];
+		for (const y = this.start.y; y < this.start.y + this.size.height; y++) {
+			const row = [];
 
-			for(let x=this.start.x; x < this.start.x + this.size.width; x++) {
+			for (const x = this.start.x; x < this.start.x + this.size.width; x++) {
 				row.push(NOX_PV.perlin.get(x, y, this.lod, this.seed));
 			}
 
 			this.array.push(row);
 		}
 
-		if(this.numberMapStyle > 0) {
+		if (this.numberMapStyle > 0) {
 			this.setMapNumber(PerlinNoise.mapNumberTypes[this.numberMapStyle]);
 		}
 	}
@@ -2736,436 +3018,13 @@ class PerlinNoise {
 
 
 
-
-
-
-
-
-
-
-
-/**
- * Handled when the user starts to press screen with his finger / mouse
- * @param {Object} e event default object
- */
-const handleTouchStart = e => {
-	NOX_PV.isMouseDown = true;
-
-	if(typeof mouseDown != "undefined") mouseDown(e);
-
-	let getTouches = e2 => e2.touches || [{clientX: e.clientX, clientY: e.clientY}, null];
-
-	const firstTouch = getTouches(e)[0];
-
-	NOX_PV.swipexDown = firstTouch.clientX;
-	NOX_PV.swipeyDown = firstTouch.clientY;
-};
-
-/**
- * Handled when the user moves his finger / mouse on the screen, while he is pressing it
- * @param {Object} e event default object
- */
-const handleTouchMove = e => {
-
-	if(typeof mouseMove != "undefined" && NOX_PV.isMouseDown) mouseMove(e);
-
-	if(!NOX_PV.swipexDown || !NOX_PV.swipeyDown) {
-		return;
-	}
-
-	let xUp, yUp;
-
-
-	if(e.touches) {
-		xUp = e.touches[0].clientX;
-		yUp = e.touches[0].clientY;
-	}
-	
-	else {
-		xUp = e.clientX;
-		yUp = e.clientY;
-	}
-
-
-
-	let xDiff = NOX_PV.swipexDown - xUp;
-	let yDiff = NOX_PV.swipeyDown - yUp;
-
-	let event, swipeDir;
-
-
-
-	if(Math.abs(xDiff) > Math.abs(yDiff)) {
-		if(xDiff > 0) 	(swipeDir = 'left')  && (event = new CustomEvent('swipeleft',  {detail: {swipe: 'left'}}));
-		else 			(swipeDir = 'right') && (event = new CustomEvent('swiperight', {detail: {swipe: 'right'}}));
-	}
-	
-	else {
-		if(yDiff > 0) 	(swipeDir = 'up')    && (event = new CustomEvent('swipeup',    {detail: {swipe: 'up'}}));
-		else 			(swipeDir = 'down')  && (event = new CustomEvent('swipedown',  {detail: {swipe: 'down'}}));
-	}
-
-
-
-	canvas.dispatchEvent(event);
-
-	NOX_PV.lastSwipe = swipeDir;
-	
-	NOX_PV.swipexDown = null;
-	NOX_PV.swipeyDown = null;
-};
-
-
-
-/**
- * Returns the vector from center to origin of the shape
- * @param {Shape} shape shape instance
- * @return {Vector} offset vector of a Shape
- * @example
- * const r = new Rectangle(10, 10, 50, 50);
- * console.info(getOffsetVector(r));
- */
-const getOffsetVector = shape => {
-	if(!(shape instanceof Shape)) {
-		console.error('Argument must be a Shape type');
-		return new Vector(0, 0);
-	}
-
-	let vec = new Vector(0, 0), w, h, o;
-
-	if(shape instanceof RectangleShape) {
-		w = shape.width / 2;
-		h = shape.height / 2;
-		o = new Vector(0, 0);
-	}
-
-	else if(shape instanceof CircleShape) {
-		w = shape.r;
-		h = w;
-		o = new Vector(shape.r, shape.r);
-		
-		vec.set(shape.r, shape.r);
-	}
-	
-	switch(shape.origin) {
-		case 'topLeft':		vec.set(-o.x,		-o.y);		break;
-		case 'top': 		vec.set(w-o.x,		-o.y); 		break;
-		case 'topRight': 	vec.set(w*2-o.x,	-o.y); 		break;
-		case 'left': 		vec.set(-o.x,		h-o.y); 	break;
-		case 'center': 		vec.set(w-o.x,		h-o.y); 	break;
-		case 'right': 		vec.set(w*2-o.x,	h-o.y); 	break;
-		case 'bottomLeft': 	vec.set(-o.x,		h*2-o.y); 	break;
-		case 'bottom': 		vec.set(w-o.x,		h*2-o.y); 	break;
-		case 'bottomRight': vec.set(w*2-o.x,	h*2-o.y);
-	}
-
-	return vec;
-};
-
-
-
-
-
-// initialize all the canvas's environment, when window is ready
-const initializeCanvasWorld = () => {
-    if(window) {
-        window.onload = () => {
-            // the minimum between document width | height
-            MIN_DOC_SIZE = min(documentWidth(), documentHeight());
-            
-
-
-            // if user created a setup function
-            if(typeof setup != "undefined") {
-				setup();
-
-				if(pixels === undefined) {
-					delete pixels;
-				}
-            }
-
-
-
-            /**
-             * Calculate the {top, left} offset of a DOM element
-             * @param {DOMElement} elt the dom Element
-             */
-            const offset = elt => {
-                let rect = elt.getBoundingClientRect();
-
-                return {
-                    top: rect.top + document.body.scrollTop,
-                    left: rect.left + document.body.scrollLeft
-                };
-            };
-
-
-
-            // if the user created the canvas on the setup function
-            if(canvas) {
-
-                // event mouse move
-                canvas.addEventListener('mousemove', e => {
-                    NOX_PV.oldMouseX = mouseX;
-                    NOX_PV.oldMouseY = mouseY;
-
-                    mouseX = e.clientX - offset(canvas).left;
-                    mouseY = e.clientY - offset(canvas).top;
-
-                    //if(NOX_PV.isPointerLocked) {
-                        mouseDirection = {x: e.movementX, y: e.movementY};
-                    //}
-
-                    if(typeof mouseMove != "undefined") mouseMove(e);
-                });
-
-
-
-                // event touch start
-                canvas.addEventListener('touchstart', handleTouchStart, false);
-                // event touch move
-                canvas.addEventListener('touchmove',  handleTouchMove, false);
-                // event mouse up
-                canvas.addEventListener('mouseup', e => {NOX_PV.isMouseDown = false; if(typeof mouseUp != "undefined") mouseUp(e);});
-                // event click
-                canvas.addEventListener('click', e => {if(typeof onClick != "undefined") onClick(e);});
-
-
-
-
-                // if the swipe is enable on pc, call event handler
-                if(NOX_PV.swipePCEnable) {
-                    canvas.addEventListener('mousedown', handleTouchStart, false);
-                    canvas.addEventListener('mousemove', handleTouchMove, false);
-                }
-
-
-
-                // if the user has created a function onSwipe() {} then call it if it's swiping
-                if(typeof onSwipe != "undefined") {
-                    canvas.addEventListener('swipeleft',  () => {onSwipe('left');}, false);
-                    canvas.addEventListener('swiperight', () => {onSwipe('right');}, false);
-                    canvas.addEventListener('swipeup',    () => {onSwipe('up');}, false);
-                    canvas.addEventListener('swipedown',  () => {onSwipe('down');}, false);
-                }
-
-
-
-                // event mouse enter
-                canvas.addEventListener('mouseenter', e => {if(typeof mouseEnter != "undefined") mouseEnter(e);});
-                // event mouse leave
-                canvas.addEventListener('mouseleave', e => {if(typeof mouseLeave != "undefined") mouseLeave(e);});
-                // event wheel
-                canvas.addEventListener('wheel', e => {if(typeof mouseWheel != "undefined") mouseWheel(e);});
-
-                // right click
-                canvas.oncontextmenu = e => {
-                    if(typeof onContextmenu != "undefined") onContextmenu(e);
-                }
-            
-                // double click
-                canvas.ondblclick = e => {
-                    if(typeof onDblClick != "undefined") onDblClick(e);
-                }
-
-            }
-            
-
-
-
-            // keyboard events
-
-            // key pressed
-            window.onkeypress = e => {
-                NOX_PV.keys[e.keyCode] = true;
-                if(typeof keyPress != "undefined") keyPress(e);
-            };
-
-
-            // key downed
-            window.onkeydown = e => {
-                NOX_PV.keys[e.keyCode] = true;
-                if(typeof keyDown != "undefined") keyDown(e);
-            };
-
-
-            // key upped
-            window.onkeyup = e => {
-                NOX_PV.keys[e.keyCode] = false;
-                if(typeof keyUp != "undefined") keyUp(e);
-            };
-
-            // when user resize window or document
-            window.onresize = () => {
-                const newWidth = document.documentElement.clientWidth,
-                    newHeight = document.documentElement.clientHeight;
-
-                MIN_DOC_SIZE = min(newWidth, newHeight);
-
-                if(typeof onResize != "undefined") onResize(newWidth, newHeight);
-            };
-
-            // when user stop focus the document or the window
-            window.onblur = () => {
-                if(typeof onBlur != "undefined") onBlur();
-            };
-
-            // when user focus the page
-            window.onfocus = () => {
-                if(typeof onFocus != "undefined") onFocus();
-            }
-
-            // user goes online (internet)
-            window.ononline = e => {
-                if(typeof onOnline != "undefined") onOnline(e);
-            }
-
-            // user goes offline (internet)
-            window.onoffline = e => {
-                if(typeof onOffline != "undefined") onOffline(e);
-            }
-
-
-            // start running the draw loop
-            drawLoop();
-        };
-    }
-};
-
-
-
-/**
- * initialize everything from here
- * When the page has loaded
- */
-initializeCanvasWorld();
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- * Calculates the collision between two shapes
- * @param {Shape} shape1 first shape
- * @param {Shape} shape2 second shape
- * @return {Boolean} either the shapes are colliding or not
- * @example
- * const s1 = new Circle(0, 0, 10);
- * const s2 = new Circle(20, 20, 5);
- * console.info(collision(s1, s2)); // false
- */
-const collision = (shape1, shape2) => {
-	// must be 2 instances of shape
-	if(!(shape1 instanceof Shape && shape2 instanceof Shape)) {
-		console.error('Collision is only for 2 Shape types');
-		return undefined;
-	}
-
-	// collision: Rectangle & Rectangle
-	const colRaR = (a, b) => {
-		let x2 = x1 + a.width, y2 = y1 + a.height,
-			x4 = x3 + b.width, y4 = y3 + b.height;
-		return 	x1 < x4 && x2 > x3 && y1 < y4 && y2 > y3;
-	};
-
-	// collision: Rectangle & Circle
-	const colRaC = (r, c) => {
-		offset1 = getOffsetVector(r);
-		offset2 = getOffsetVector(c);
-
-		let cx = c.x - offset2.x, cy = c.y - offset2.y,
-			rx = r.x - offset1.x, ry = r.y - offset1.y;
-
-		let testX = (cx < rx)? rx : (cx > rx+r.width)?  rx + r.width :  cx,
-			testY = (cy < ry)? ry : (cy > ry+r.height)? ry + r.height : cy;
-
-		return sqrt(pow(cx - testX) + pow(cy - testY)) <= c.r;
-	};
-
-	// collision: Circle & Circle
-	const colCaC = (c1, c2) => {
-		let dx = x1 - x3,
-			dy = y1 - y3;
-
-		return sqrt(dx * dx + dy * dy) < c1.r + c2.r;
-	};
-
-	
-	
-	let offset1 = getOffsetVector(shape1),
-		offset2 = getOffsetVector(shape2);
-
-	
-	
-	let x1 = shape1.x - offset1.x, y1 = shape1.y  - offset1.y,
-		x3 = shape2.x - offset2.x, y3 = shape2.y - offset2.y;
-
-	
-	// check instances
-
-	// shape1 is Rectangle
-	if(shape1 instanceof RectangleShape) {
-		// shape2 is Rectangle
-		if(shape2 instanceof RectangleShape) 	return colRaR(shape1, shape2);
-		// shape2 is Circle
-		else if(shape2 instanceof CircleShape) 	return colRaC(shape1, shape2);
-	}
-	
-	// shape1 is Circle
-	else if(shape1 instanceof CircleShape) {
-		// shape2 is Circle
-		if(shape2 instanceof CircleShape) 		return colCaC(shape1, shape2);
-		// shape2 is Rectangle
-		if(shape2 instanceof RectangleShape) 	return colRaC(shape2, shape1);
-	}
-
-	// default return if previous code bugs
-	return false;
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// CLASSES
-
 class Time {
 	static units = {
 		// unit => milliseconds to unit
 		nano: ms => ms * 100000000,
 		micro: ms => ms * 1000,
-		milli: (t, unit='milli') => {
-			switch(unit) {
+		milli: (t, unit = 'milli') => {
+			switch (unit) {
 				case 'nano': return t / 100000000 // nano to ms
 				case 'micro': return t / 1000 // micro to ms
 				case 'seconds': return t * 1000 // seconds to ms
@@ -3188,8 +3047,8 @@ class Time {
 	 * 
 	 * It can be 'nano', 'micro', 'milli', 'seconds', 'minutes'
 	 */
-	constructor(startingTime=undefined, unity='milli') {
-		if(typeof startingTime === 'undefined' || !Object.keys(Time.units).includes(unity)) {
+	constructor(startingTime = undefined, unity = 'milli') {
+		if (typeof startingTime === 'undefined' || !Object.keys(Time.units).includes(unity)) {
 			this.reset();
 			this.staticTime = false;
 		} else {
@@ -3219,7 +3078,7 @@ class Time {
 	 * @return {number}
 	 */
 	asMilliseconds() {
-		return Time.units.milli(this.staticTime? this.start : (Date.now() - this.start));
+		return Time.units.milli(this.staticTime ? this.start : (Date.now() - this.start));
 	}
 
 	/**
@@ -3257,12 +3116,12 @@ class Time {
 
 class Vector {
 	/**
-	 * CREATE A VECTOR 1/2/3 Dimension(s)
+	 * Creates a vector of dimension 1, 2 or 3
 	 * @param {number} x x vector's coordinate
 	 * @param {number} y y vector's coordinate
 	 * @param {number} z z vector's coordinate
 	 */
-	constructor(x, y=null, z=null) {
+	constructor(x, y = null, z = null) {
 		let dimension = 1;
 
 		this.coords = {
@@ -3271,44 +3130,28 @@ class Vector {
 			z: 0
 		};
 
+		const tmp = { x: 0, y: 0, z: 0 };
+
 		// import from another vector
-		if(x instanceof Vector) {
+		if (x instanceof Vector) {
 			// same dimension
 			dimension = x.dimension;
-
-			this.coords.x = x.x;
-			if(dimension == 2) this.coords.y = x.y;
-			if(dimension == 3) this.coords.z = x.z;
+			tmp.x = x.x;
+			tmp.y = x.y;
+			tmp.z = x.z;
 		}
 
 		// create new vector
 		else {
-			// 1D
-			this.coords.x = x;
-			
-			// 2D
-			if(y !== null) {
-				this.coords.y = y;
-				dimension++;
-			}
-			// not 2D
-			else {
-				this.coords.y = 0;
-			}
-
-			// 3D
-			if(z !== null) {
-				this.coords.z = z;
-				dimension++;
-			}
-			// not 3D
-			else {
-				this.coords.z = 0;
-			}
+			dimension = Array.from(arguments).filter(a => typeof a === 'number').length;
+			tmp.x = x;
+			tmp.y = y;
+			tmp.z = z;
 		}
 
 		// cannot modify the initial vector's dimension
-		this.constants = Object.freeze({dimension: dimension});
+		this.constants = Object.freeze({ dimension: dimension });
+		this.set(tmp.x, tmp.y, tmp.z);
 	}
 
 	/**
@@ -3318,7 +3161,7 @@ class Vector {
 	 * const v = new Vector(10, 10);
 	 * console.info(v.dimension); // 2
 	 */
-	get dimension() {return this.constants.dimension;}
+	get dimension() { return this.constants.dimension; }
 
 	/**
 	 * Returns the x value of the vector
@@ -3327,7 +3170,7 @@ class Vector {
 	 * const v = new Vector(10, 20);
 	 * console.info(v.x); // 10
 	 */
-	get x() {return this.coords.x;}
+	get x() { return this.coords.x; }
 
 	/**
 	 * Returns the y value of the vector.
@@ -3337,7 +3180,7 @@ class Vector {
 	 * const v = new Vector(10, 20);
 	 * console.info(v.x); // 20
 	 */
-	get y() {return this.coords.y;}
+	get y() { return this.coords.y; }
 
 	/**
 	 * Returns the z value of the vector.
@@ -3347,7 +3190,7 @@ class Vector {
 	 * const v = new Vector(10, 20, 30);
 	 * console.info(v.x); // 30
 	 */
-	get z() {return this.coords.z;}
+	get z() { return this.coords.z; }
 
 	/**
 	 * Sets the x value of the vector
@@ -3356,8 +3199,8 @@ class Vector {
 	 * const v = new Vector(10, 20);
 	 * v.x = 10;
 	 */
-	set x(x) {this.coords.x = x;}
-	
+	set x(x) { this.coords.x = x; }
+
 	/**
 	 * Sets the y value of the vector.
 	 * Does an error if trying to modify 1D vector.
@@ -3367,7 +3210,7 @@ class Vector {
 	 * v.y = 10;
 	 */
 	set y(y) {
-		if(this.dimension > 1) {
+		if (this.dimension > 1) {
 			this.coords.y = y;
 		} else {
 			console.error('Cannot modify the Y of a 1D vector');
@@ -3383,7 +3226,7 @@ class Vector {
 	 * v.z = 10;
 	 */
 	set z(z) {
-		if(this.dimension > 2) {
+		if (this.dimension > 2) {
 			this.coords.z = z;
 		} else {
 			console.error(`Cannot modify the Y of a ${this.dimension}D vector`);
@@ -3401,51 +3244,82 @@ class Vector {
 	 * v.set(20);
 	 * const v2 = v.normalize(); // v.x = 20, v2.x = 1
 	 */
-	normalize(apply=false) {
+	normalize(apply = false) {
 		// does not care about vector dimension
-		let norm = Math.sqrt(pow(this.x) + pow(this.y) + pow(this.z));
+		const norm = Math.hypot(this.x, this.y, this.z);
 
-		let me = new Vector(this);
-
-		if(norm != 0) {
-			if(apply) {
-				this.x = this.x / norm;
-				// care about dimension because we divide
-				if(this.dimension > 1) this.y = this.y / norm;
-				if(this.dimension > 2) this.z = this.z / norm;
-			}
-
-			me.x = me.x / norm;
-			// care about dimension because we divide
-			if(me.dimension > 1) me.y = me.y / norm;
-			if(me.dimension > 2) me.z = me.z / norm;
+		if (!apply) {
+			return new Vector(this).normalize(true);
 		}
 
-		return me;
+		if (norm != 0) {
+			this.x = this.x / norm;
+
+			if (this.dimension > 1) {
+				this.y = this.y / norm;
+
+				if (this.dimension === 3) {
+					this.z = this.z / norm;
+				}
+			}
+		}
+
+		return this;
 	}
 
 	/**
 	 * Changes the vector's values.
 	 * If vector's dimension is lower than number of argument passed, it does not change the value for it.
-	 * @param {number} x new X
+	 * @param {number|Vector} x new X
 	 * @param {number} y new y
 	 * @param {number} z new z
 	 * @example
 	 * const v = new Vector(10, 20, 30);
 	 * v.set(30, 20, 10);
 	 */
-	set(x, y=0, z=0) {
-		this.x = x;
-		if(this.dimension > 1) this.y = y;
-		if(this.dimension > 2) this.z = z;
+	set(x, y = null, z = null) {
+		if (x instanceof Vector) {
+			this.x = x.x;
+			if (this.dimension === 2) this.y = x.y;
+			if (this.dimension === 3) this.z = x.z;
+		}
+
+		else if (typeof x !== 'number') {
+			return console.error("[Error] Vector::set : x parameter must be a number or a Vector");
+		}
+
+		else {
+			if (this.dimension > 1) {
+				if (y !== null && typeof y !== 'number') {
+					return console.error("[Error] Vector::set : y parameter must be a number");
+				}
+
+				if (z !== null && this.dimension > 2 && typeof z !== 'number') {
+					return console.error("[Error] Vector::set : z parameter must be a number");
+				}
+			}
+
+			this.x = x;
+
+			if (this.dimension > 1) {
+				if (y !== null) {
+					this.y = y;
+				}
+
+				if (this.dimension === 3 && z != null) {
+					this.z = z;
+				}
+			}
+		}
 
 		return this;
 	}
 
 	/**
 	 * Adds values to the vector and returns it.
-	 * @param {Vector|number} vec or x vector additionning the vector
-	 * @param {number} y A number
+	 * @param {Vector|number} x
+	 * @param {number} y
+	 * @param {number} z
 	 * @return {Vector} modified vector
 	 * @example
 	 * const v = new Vector(10, 10);
@@ -3453,50 +3327,28 @@ class Vector {
 	 * const v3 = v.add(1, 2); // now v{x: 11, y: 12} and v3 is same
 	 * v2.add(v); // now v2{x: 31, y: 32}
 	 */
-	add(vec) {
-		// add a vector to the vector
-		if(vec instanceof Vector) {
-			this.x += vec.x;
-			if(this.dimension > 1 && vec.dimension > 1) this.y += vec.y;
-			if(this.dimension > 2 && vec.dimension > 2) this.z += vec.z;
+	add(x, y = null, z = null) {
+		if (x instanceof Vector) {
+			return this.set(this.x + x.x, this.y + x.y, this.z + x.z);
 		}
-		
-		// number given
-		else if(typeof vec == 'number') {
-			
-			if(arguments.length == 1) {
-				this.x += vec;
-				if(this.dimension > 1) this.y += vec;
-				if(this.dimension > 2) this.z += vec;
-			}
-			
-			else if(arguments.length == 2 && this.dimension == 2) {
-				this.x += vec;
-				this.y += arguments[1];
-			}
-			
-			else if(arguments.length == 3 && this.dimension == 3) {
-				this.x += vec;
-				this.y += arguments[1];
-				this.z += arguments[2];
-			}
-			
-			else {
-				console.error(`Wrong number of argument compared to the vector's dimension (${this.dimension})`);
-			}
 
-		} else {
-			console.error('Argument type not accepted');
+		if (y === null) {
+			y = x;
 		}
-		
-		return this;
+
+		if (z === null) {
+			z = x;
+		}
+
+		return this.set(this.x + x, this.y + y, this.z + z);
 	}
 
 	/**
 	 * mutliplys the vector by another vector / or x,y and returns it.
 	 * You can multiply 2 vectors from 2 different dimension.
-	 * @param {Vector|number} vec or x vector multiplying the vector
-	 * @param {number} y A number
+	 * @param {Vector|number} x
+	 * @param {number} y
+	 * @param {number} z
 	 * @return {Vector} modified vector
 	 * @example
 	 * const v = new Vector(10, 10);
@@ -3505,49 +3357,27 @@ class Vector {
 	 * const v3 = v.mult(1, 2); // now v{x: 20, y: 40} and v3 is same
 	 * v2.mult(v); // now v2{x: 400, y: 800}
 	 */
-	mult(vec) {
-		// mult a vector to the vector
-		if(vec instanceof Vector) {
-			this.x *= vec.x;
-			if(this.dimension > 1 && vec.dimension > 1) this.y *= vec.y;
-			if(this.dimension > 2 && vec.dimension > 2) this.z *= vec.z;
-		}
-		
-		// number given
-		else if(typeof vec == 'number') {
-			
-			if(arguments.length == 1) {
-				this.x *= vec;
-				if(this.dimension > 1) this.y *= vec;
-				if(this.dimension > 2) this.z *= vec;
-			}
-			
-			else if(arguments.length == 2 && this.dimension == 2) {
-				this.x *= vec;
-				this.y *= arguments[1];
-			}
-			
-			else if(arguments.length == 3 && this.dimension == 3) {
-				this.x *= vec;
-				this.y *= arguments[1];
-				this.z *= arguments[2];
-			}
-			
-			else {
-				console.error(`Wrong number of argument compared to the vector's dimension (${this.dimension})`);
-			}
-			
-		} else {
-			console.error('Argument type not accepted');
+	mult(x, y = null, z = null) {
+		if (x instanceof Vector) {
+			return this.set(this.x * x.x, this.y * x.y, this.z * x.z);
 		}
 
-		return this;
+		if (y === null) {
+			y = x;
+		}
+
+		if (z === null) {
+			z = x;
+		}
+
+		return this.set(this.x * x, this.y * y, this.z * z);
 	}
 
 	/**
 	 * Divides the vector by another vector / or x,y and returns it.
-	 * @param {Vector|number} vec or x vector dividing the vector
-	 * @param {number} y A number
+	 * @param {Vector|number} x
+	 * @param {number} y
+	 * @param {number} z
 	 * @return {Vector} modified vector
 	 * @example
 	 * const v = new Vector(10, 10);
@@ -3555,43 +3385,20 @@ class Vector {
 	 * const v3 = v.div(2); // now v{x: 5, 5} and v3 is same
 	 * v2.div(v); // now v2{x: 4, y: 4}
 	 */
-	div(vec) {
-		// divide a vector to the vector
-		if(vec instanceof Vector) {
-			this.x /= vec.x;
-			if(this.dimension > 1 && vec.dimension > 1) this.y /= vec.y;
-			if(this.dimension > 2 && vec.dimension > 2) this.z /= vec.z;
-		}
-		
-		// number given
-		else if(typeof vec == 'number') {
-			
-			if(arguments.length == 1) {
-				this.x /= vec;
-				if(this.dimension > 1) this.y /= vec;
-				if(this.dimension > 2) this.z /= vec;
-			}
-			
-			else if(arguments.length == 2 && this.dimension == 2) {
-				this.x /= vec;
-				this.y /= arguments[1];
-			}
-			
-			else if(arguments.length == 3 && this.dimension == 3) {
-				this.x /= vec;
-				this.y /= arguments[1];
-				this.z /= arguments[2];
-			}
-			
-			else {
-				console.error(`Wrong number of argument compared to the vector's dimension (${this.dimension})`);
-			}
-			
-		} else {
-			console.error('Argument type not accepted');
+	div(x, y = null, z = null) {
+		if (x instanceof Vector) {
+			return this.set(this.x / x.x, this.y / x.y, this.z / x.z);
 		}
 
-		return this;
+		if (y === null) {
+			y = x;
+		}
+
+		if (z === null) {
+			z = x;
+		}
+
+		return this.set(this.x / x, this.y / y, this.z / z);
 	}
 
 	/**
@@ -3606,18 +3413,18 @@ class Vector {
 	 * v2.invert(); // now v2{x: 3, y: 1, z: 2}
 	 * v2.invert(true); // now v2{x: 1, y:2, z: 3}
 	 */
-	invert(antiClockwise=false) {
+	invert(antiClockwise = false) {
 		// not 1D, else we just have to do x = x
-		if(this.dimension > 1) {
+		if (this.dimension > 1) {
 
 			// 2D
-			if(this.dimension == 2) {
+			if (this.dimension === 2) {
 				[this.x, this.y] = [this.y, this.x];
 			}
-			
+
 			// 3D
 			else {
-				if(antiClockwise) {
+				if (antiClockwise) {
 					[this.x, this.y, this.z] = [this.y, this.z, this.x];
 				} else {
 					[this.x, this.y, this.z] = [this.z, this.x, this.y];
@@ -3650,8 +3457,8 @@ class Vector {
 	 */
 	setMag(newMag) {
 		this.x = this.x * newMag / this.mag;
-		if(this.dimension > 1) this.y = this.y * newMag / this.mag;
-		if(this.dimension > 2) this.z = this.z * newMag / this.mag;
+		if (this.dimension > 1) this.y = this.y * newMag / this.mag;
+		if (this.dimension > 2) this.z = this.z * newMag / this.mag;
 
 		return this;
 	}
@@ -3665,7 +3472,7 @@ class Vector {
 	 * console.info(v.toString()); // is equivalent
 	 */
 	toString() {
-		return `{x: ${this.x}${(this.dimension > 1)? `, y: ${this.y}` : ''}${(this.dimension > 2)? `, z: ${this.z}` : ''}}`;
+		return `{ x: ${this.x}${(this.dimension > 1) ? `, y: ${this.y}` : ''}${(this.dimension > 2) ? `, z: ${this.z}` : ''} }`;
 	}
 
 	/**
@@ -3676,9 +3483,9 @@ class Vector {
 	 * console.info(v.array()); // [1, 2]
 	 */
 	array() {
-		let arr = [this.x];
-		if(this.dimension > 1) arr.push(this.y);
-		if(this.dimension > 2) arr.push(this.z);
+		const arr = [this.x];
+		if (this.dimension > 1) arr.push(this.y);
+		if (this.dimension > 2) arr.push(this.z);
 
 		return arr;
 	}
@@ -3689,23 +3496,23 @@ class Vector {
 	 * @param {number} y vector's position on the canvas
 	 * @param {Object (strokeWeight: number, stroke: any)} style bow's fill & stroke style
 	 */
-	bow(x, y, style={}) {
+	bow(x, y, style = {}) {
 		// not implemented for the 3rd dimension yet
-		if(this.dimension == 3) return;
+		if (this.dimension === 3) return;
 
 		// arrow's style
-		if(style.strokeWeight) strokeWeight(style.strokeWeight);
+		if (style.strokeWeight) strokeWeight(style.strokeWeight);
 		else strokeWeight(1);
 
-		if(style.stroke) stroke(style.stroke);
+		if (style.stroke) stroke(style.stroke);
 		else stroke('#fff');
-		
+
 
 		// calculate the vector's rotation from the horizontal
 		let rotation = degree(vectorToAngle(this));
 		// know if it's pointing to the top or to the bottom
-		if(this.y < 0) rotation *= -1;
-		
+		if (this.y < 0) rotation *= -1;
+
 		push();
 			// trunk
 			translate(x, y);
@@ -3715,356 +3522,638 @@ class Vector {
 			// spike
 			push();
 				translate(this.x, this.y);
-			
+
 				push();
 					// left
 					rotate(rotation + 25);
-					line(0, 0, -min(this.mag/2.5, 10), 0);
+					line(0, 0, -min(this.mag / 2.5, 10), 0);
 
 					// right
 					rotate(-50);
-					line(0, 0, -min(this.mag/2.5, 10), 0);
+					line(0, 0, -min(this.mag / 2.5, 10), 0);
 				pop();
 			pop();
-
 		pop();
 	}
 }
 
 
+class Matrix {
+
+	properties = {
+		array: [],
+		width: 0,
+		height: 0
+	};
 
 
-
-
-
-class Shape {
 	/**
-	 * Creates a shape instance with properties
-	 * @param {number} x shape's position X
-	 * @param {number} y shape's position Y
-	 * @param {any} fill shape's background
-	 * @param {any} stroke shape's outline
-	 * @param {number} strokeWeight shape outline's size
+	 * Creates a Matrix of numbers, with 4 signatures.
+	 * 
+	 * 1. with matrix's size (and default fill value ? - default 0)
+	 * 
+	 * 2. with multiple arrays of numbers
+	 * 
+	 * 3. with a 2D array of numbers
+	 * 
+	 * 4. from another Matrix
+	 * 
+	 * @signature new Matrix(width, height, fill)
+	 * @param {Number} width size X of the matrix
+	 * @param {Number} height size Y of the matrix. If not precised, a square matrix is created
+	 * @param {Number} fill fill value in the matrix (default is 0)
+	 * @example
+	 * // [ [0, 0, 0], [0, 0, 0], [0, 0, 0] ]
+	 * const m1 = new Matrix(3);
+	 * // [ [0, 0, 0], [0, 0, 0] ]
+	 * const m2 = new Matrix(3, 2);
+	 * // [ [1, 1], [1, 1] ]
+	 * const m3 = new Matrix(2, 2, 1);
+	 * 
+	 * @signature new Matrix([0, 0, 0], ...)
+	 * @param {...Array<Number>} args multiple arrays of numbers
+	 * @example
+	 * // [ [0, 0, 0], [0, 0, 0] ]
+	 * const m1 = new Matrix([0, 0, 0], [0, 0, 0]);
+	 * 
+	 * @signature new Matrix([[0, 0, 0], ...])
+	 * @param {Array<Number[]>} args 2D array of numbers
+	 * @example
+	 * // [ [0, 0, 0], [0, 0, 0] ]
+	 * const m1 = new Matrix([[0, 0, 0], [0, 0, 0]]);
+	 * 
+	 * @signature new Matrix(matrix)
+	 * @param {Matrix} args existing matrix
+	 * @example
+	 * const m1 = new Matrix(3);
+	 * const m2 = new Matrix(m1); // creates a copy of m1
 	 */
-	constructor(x, y, fill='transparent', stroke='transparent', strokeWeight=1) {
-		this.pos = new Vector(x, y);
+	constructor(...args) {
+		if (args.length > 0) {
+			if (args[0] instanceof Matrix) {
+				this.properties.width = args[0].width;
+				this.properties.height = args[0].height;
 
-		this.style = {
-			background: fill,
-			stroke: stroke,
-			strokeWeight: strokeWeight
+				for (let i = 0; i < args[0].height; i++) {
+					const row = [];
+					for (let j = 0; j < args[0].width; j++) {
+						row.push(args[0].at(j, i));
+					}
+					this.properties.array.push(row);
+				}
+			}
+
+			// [width, height, fill?]
+			else if (typeof args[0] === 'number') {
+				let fill = 0;
+				const w = args[0];
+				let h = w;
+
+				if (args.length > 1 && typeof args[1] === 'number') {
+					h = args[1];
+
+					if (args.length > 2 && typeof args[2] === 'number') {
+						fill = args[2];
+					}
+				} // else square matrix if only 1 number given
+
+				for (let i = 0; i < h; i++) {
+					const row = [];
+					for (let j = 0; j < w; j++) {
+						row.push(fill);
+					}
+					this.properties.array.push(row);
+				}
+
+				this.properties.width = w;
+				this.properties.height = h;
+			}
+
+			// argument is an array (of arrays ?)
+			else if (args.length === 1 && Array.isArray(args[0]) && args[0].every(a => Array.isArray(a) && a.length === args[0][0].length && a.every(e => typeof e === 'number'))) {
+				// all elements of parent array are arrays
+				// form of argument :
+				// [[0, 0, 0],[0, 0, 0]] : 2D array
+				this.properties.array = args[0];
+				if (args[0].length > 0) this.properties.width = args[0][0].length;
+				this.properties.height = args[0].length;
+			}
+
+			// all elements of parent array are numbers
+			// form of argument :
+			// [0, 0, 0], [0, 0, 0] : multiple arguments which are arrays of numbers
+			else if (args.every(a => Array.isArray(a) && a.length === args[0].length && a.every(e => typeof e === 'number'))) {
+				this.properties.array = args;
+				this.properties.width = args[0].length;
+				this.properties.height = args.length;
+			}
+
+			else {
+				console.error("[Error] Matrix constructor : Unrecognized parameters.");
+			}
+		}
+
+		this.properties.size = Object.freeze({
+			x: this.properties.width,
+			y: this.properties.height
+		});
+
+		delete this.properties.width;
+		delete this.properties.height;
+	}
+
+	/**
+	 * Returns the matrix as 2D array.
+	 * @returns {Array<Number[]>} The matrix
+	 */
+	get array() {
+		return this.properties.array;
+	}
+
+	/**
+	 * Returns the matrix's values in an 1D array
+	 * @returns {Array<Number>} The matrix as 1D array
+	 */
+	get array1D() {
+		return this.array.reduce((a, b) => [...a, ...b], []);
+	}
+
+	/**
+	 * Returns the matrix's width.
+	 * @returns {Number} The matrix's width
+	 */
+	get width() {
+		return this.properties.size.x;
+	}
+
+	/**
+	 * Returns the matrix's height.
+	 * @returns {Number} The matrix's height
+	 */
+	get height() {
+		return this.properties.size.y;
+	}
+
+	/**
+	 * Returns the dimension of the matrix
+	 * @returns {Object} The dimension of the matrix {x, y}
+	 */
+	get dimension() {
+		return this.properties.size;
+	}
+
+	/**
+	 * Returns the matrix as a string
+	 * @returns {String} The matrix as string
+	 */
+	toString(uncluttered = false) {
+		const sep = this.height > 0 ? '\n' : '';
+		const brackets = {
+			open: uncluttered ? '' : '[',
+			close: uncluttered ? '' : ']'
 		};
+		const m = uncluttered ? max(...this.array.map(a => max(...a.map(e => e.toString().length)))) : 0;
 
-		this.drawOrigin 	= false;
-		this.speed 			= 0;
-		this.acceleration 	= 0;
-		this.isRunning 		= false;
-		this.origin 		= 'topLeft';
+		const _format = uncluttered ?
+			arr => {
+				return arr.map(e => ' '.repeat(6 + m - e.toString().length * 2) + e).join(' ');
+			} :
+			arr => arr.join(', ');
+
+		return brackets.open + sep +
+			this.properties.array.map(a => '\t' + brackets.open + _format(a) + brackets.close).join('\n') +
+			sep + brackets.close;
 	}
 
-
-	set fill(color) 		{this.style.background = color;}
-	set stroke(color) 		{this.style.stroke = color;}
-	set strokeWeight(int) 	{this.style.strokeWeight = int;}
-	set run(bool) 			{this.running = typeof bool == "boolean"?  bool : false;}
-
-	get background() 		{return this.style.background;}
-	get stroke() 			{return this.style.stroke;}
-	get strokeWeight() 		{return this.style.strokeWeight;}
-	get x() 				{return this.pos.x;}
-	get y() 				{return this.pos.y;}
-	get running() 			{return this.isRunning;}
-
-
-
-	showOrigin(bool) {this.drawOrigin = typeof bool == "boolean"?  bool : false;}
-
-	setOrigin(newOrigin) {
-		this.origin = originArr.includes(newOrigin)? newOrigin : 'topLeft';
-	}
-
-	setPosition(x, y=null) {
-		if(!y && x instanceof Vector) {
-			this.pos.x = x.x;
-			this.pos.y = x.y;
+	/**
+	 * Returns the value of an element at given indexes
+	 * @param {Number} x X-Axis index of the element
+	 * @param {Number} y Y-Axis index of the element
+	 * @returns {Number|null} The value of the element - null if wrong indexes given
+	 * @example
+	 * const m1 = new Matrix(3);
+	 * m1.at(0, 0); // first element of first row - 0
+	 */
+	at(x, y) {
+		if (typeof x === 'number' && typeof y === 'number' && x > -1 && y > -1 && x < this.width && y < this.height) {
+			return this.array[y][x];
 		}
-		
+
+		return null;
+	}
+
+	/**
+	 * Set the given value at the given indexes in the matrix
+	 * @param {Number} x X-Axis index in the matrix
+	 * @param {Number} y Y-Axis index in the matrix
+	 * @param {Number} value Value to set at the given indexes in the matrix
+	 * @example
+	 * const m1 = new Matrix(3);
+	 * m1.set(0, 0, 1); // m1[0][0] = 1
+	 */
+	set(x, y, value) {
+		if (this.at(x, y) !== null && typeof value === 'number') {
+			this.array[y][x] = value;
+		}
+	}
+
+	/**
+	 * Compares the two matrices and returns either these have the same matrix or not
+	 * @param {Matrix} matrix the matrix to compare with
+	 * @returns {Boolean} Either the 2 matrices are equals or not
+	 * @example
+	 * const m1 = new Matrix(3);
+	 * const m2 = new Matrix(3);
+	 * m1.equals(m2); // true
+	 * m1.set(0, 0, 1);
+	 * m1.equals(m2); // false
+	 */
+	equals(matrix) {
+		if (matrix.width !== this.width || matrix.height !== this.height)
+			return false;
+
+		for (let i = 0; i < this.height; i++) {
+			for (let j = 0; j < this.width; j++) {
+				if (matrix.at(j, i) !== this.at(j, i))
+					return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Returns either the matrix is symmetrical or not
+	 * @returns {Boolean} Either the matrix is symmetrical or not
+	 */
+	get isSymmetrical() {
+		for (let i = 0; i < this.width; i++) {
+			for (let j = 0; j < this.height; j++) {
+				if (this.at(i, j) !== this.at(j, i))
+					return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Returns either the matrix is a square matrix or not.
+	 * 
+	 * A square matrix has its width equals to its height.
+	 * @returns {Boolean} Either it's a square matrix or not
+	 */
+	get isSquare() {
+		return this.width === this.height;
+	}
+
+	/**
+	 * Returns either the matrix is idendity/unity matrix.
+	 * 
+	 * An idendity/unity matrix has its diagonal filled by 1, all other elements are 0
+	 * @returns {Boolean} Either the matrix is an identity/unity matrix or not
+	 */
+	get isIdentity() {
+		return this.isSquare && this.array.every((arr, i) => arr.every((e, j) => (i === j && e === 1) || (i !== j && e === 0)));
+	}
+
+	/**
+	 * Returns either the matrix has is a diagonal matrix or not.
+	 * 
+	 * A diagonal matrix is a matrix with a diagonal filled by values different from 0, all other elements are 0
+	 * @returns {Boolean} Either the matrix is a diagonal matrix or not
+	 */
+	get isDiagonal() {
+		return this.isSquare && this.array.every((arr, i) => arr.every((e, j) => (i === j && e !== 0) || (i !== j && e === 0)));
+	}
+
+	/**
+	 * Returns either the matrix is triangular or not. (lower triangular or upper triangular)
+	 * @returns {Boolean} Either the matrix is triangular or not
+	 */
+	get isTriangular() {
+		const a = this.isLowerTri;
+		const b = this.isUpperTri;
+		return a ? !b : b;
+	}
+
+	/**
+	 * Returns either the matrix is lower triangular or not.
+	 * 
+	 * A lower triangular matrix is a matrix with all the entries above the main diagonal equals to zero
+	 * @returns {Boolean} Either the matrix is lower triangular or not
+	 */
+	get isLowerTri() {
+		if (!this.isSquare)
+			return false;
+
+		for (let i = 0; i < this.height; i++) {
+			for (let j = 0; j < this.width; j++) {
+				const e = this.at(j, i);
+				if (j >= i && e !== 0)
+					return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Returns either the matrix is upper triangular or not.
+	 * 
+	 * An upper triangular matrix is a matrix with all the entries below the main diagonal equals to zero
+	 * @returns {Boolean} Either the matrix is upper triangular or not
+	 */
+	get isUpperTri() {
+		if (!this.isSquare)
+			return false;
+
+		for (let i = 0; i < this.height; i++) {
+			for (let j = 0; j < this.width; j++) {
+				const e = this.at(j, i);
+				if (j <= i && e !== 0)
+					return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Returns a 1D array with the diagonal of the matrix if the matrix is a square matrix.
+	 * 
+	 * If the matrix is not a square matrix, then it returns an empty array.
+	 * @returns {Number[]} The diagonal values
+	 */
+	get diagonal() {
+		if (this.isSquare)
+			return this.array.map((arr, i) => arr[i]);
+
+		return [];
+	}
+
+	/**
+	 * Returns the matrix determining. det(M).
+	 * @returns {Number} The determining of the matrix
+	 */
+	get det() {
+		if (!this.isSquare)
+			return 0;
+
+		if (this.isIdendity)
+			return 1;
+
+		if (this.isDiagonal || this.isTriangular) {
+			const diag = this.diagonal;
+			return diag.reduce((acc, curr) => acc * curr, 1);
+		}
+
+		if (this.width === 2) {
+			return this.at(0, 0) * this.at(1, 1) - this.at(1, 0) * this.at(0, 1);
+		}
+
+		else if (this.width === 3) {
+			const [a, b, c, d, e, f, g, h, i] = this.array1D;
+			return a * e * i + d * h * c + b * f * g - (g * e * c + d * b * i + a * h * f);
+		}
+
 		else {
-			this.pos.x = x;
-			this.pos.y = y;
+			const det = m =>
+				m.length === 1 ? m[0][0] :
+					m.length === 2 ? m[0][0] * m[1][1] - m[0][1] * m[1][0] :
+						m[0].reduce((r, e, i) => r + (-1) ** (i + 2) * e * det(m.slice(1).map(c => c.filter((_, j) => i != j))), 0);
+			return det(this.array);
 		}
 	}
 
-	move(x, y) {
-		let speed = this.speed + (this.running? this.acceleration : 0);
+	/**
+	 * Operates an addition between 2 matrices. Matrices must have the same dimension
+	 * @param {Matrix|Number} matrix The matrix to addition with, or a number to apply the operation on each element of the matrix
+	 * @param {Boolean} onACopy Either it has to store the result in the current matrix or just return the result
+	 * @returns {Matrix} Either 'this' or a newly created matrix, the result of the operation
+	 * @example
+	 * const m1 = new Matrix(3, 2, 1);
+	 * const m2 = new Matrix(3, 2, 1);
+	 * const m3 = m1.add(m2);
+	 * // m3 = [ [2, 2, 2], [2, 2, 2] ]
+	 * const m4 = m1.add(m2, true);
+	 * // m4 = m1 = [ [2, 2, 2], [2, 2, 2]]
+	 */
+	add(matrix, onACopy = false) {
+		if (!('op' in this))
+			this.op = (a, b) => a + b;
 
-		if(!y && x instanceof Vector) {
-			this.pos.x += x.x * speed;
-			this.pos.y += x.y * speed;
+		if (!(matrix instanceof Matrix) && typeof matrix !== 'number') {
+			console.error(`[Error] Matrix::add : Matrix expected, ${typeof matrix} given`);
+			delete this.op;
+			return this;
 		}
-		
+
+		if (matrix instanceof Matrix) {
+			if (matrix.width !== this.width || matrix.height !== this.height) {
+				console.error("[Error] Matrix::add : Cannot operate an addition between 2 matrices with different dimensions.");
+				delete this.op;
+				return this;
+			}
+		}
+
+		const result = onACopy ? new Matrix(this) : this;
+		const b = matrix instanceof Matrix;
+
+		// operate
+		for (let i = 0; i < result.height; i++) {
+			for (let j = 0; j < result.width; j++) {
+				result.set(j, i, this.op(result.at(j, i), (b ? matrix.at(j, i) : matrix)));
+			}
+		}
+
+		delete this.op;
+		return result;
+	}
+
+	/**
+	 * Operates a substraction between 2 matrices. Matrices must have the same dimension
+	 * @param {Matrix|Number} matrix The matrix to substract, or a number to apply the operation on each element of the matrix
+	 * @param {Boolean} onACopy Either it has to store the result in the current matrix or just return the result
+	 * @returns {Matrix} Either 'this' or a newly created matrix, the result of the operation
+	 * @example
+	 * const m1 = new Matrix(3, 2, 1);
+	 * const m2 = new Matrix(3, 2, 1);
+	 * const m3 = m1.add(m2);
+	 * // m3 = [ [0, 0, 0], [0, 0, 0] ]
+	 * const m4 = m1.add(m2, true);
+	 * // m4 = m1 = [ [0, 0, 0], [0, 0, 0]]
+	 */
+	sub(matrix, onACopy = false) {
+		this.op = (a, b) => a - b;
+		return this.add(matrix, onACopy);
+	}
+
+	/**
+	 * Multiplies the matrix by a number (scalar) or another matrix.
+	 * @param {Matrix|Number} matrixOrNumber Either a matrix or a number
+	 * @param {Boolean} onACopy Either it has to operate on a copy or on the matrix itself. If it's a matrix product, it's on another matrix
+	 * @return {Matrix} Either 'this' or a copy, depending of the parameter 'save'
+	 */
+	mult(matrixOrNumber, onACopy = false) {
+		const m = matrixOrNumber;
+		const result = onACopy ? new Matrix(this) : this;
+
+		// scalar product
+		if (typeof m === 'number') {
+			for (let i = 0; i < result.height; i++) {
+				for (let j = 0; j < result.width; j++) {
+					result.set(j, i, result.at(j, i) * m);
+				}
+			}
+		}
+
+		// matrices multiplication
+		else if (m instanceof Matrix) {
+			if (m.height !== this.width || m.width !== this.height) {
+				console.error("[Error] Matrix::mult : matrices must have same transposed size.");
+			}
+
+			else {
+				result = new Matrix(this.height);
+
+				for (let i = 0; i < this.height; i++) {
+					for (let j = 0; j < this.height; j++) {
+						let s = 0;
+						for (let k = 0; k < this.width; k++) {
+							s += this.at(k, i) * m.at(j, k);
+						}
+						result.set(j, i, s);
+					}
+				}
+			}
+		}
+
 		else {
-			this.pos.x += x * speed;
-			this.pos.y += y * speed;
+			console.error(`[Error] Matrix::mult : Matrix or number expected, got ${typeof matrixOrNumber}`);
 		}
+
+		return result;
 	}
-}
 
-
-
-
-
-
-
-
-
-
-
-
-class RectangleShape extends Shape {
 	/**
-	 * Create a Rectangle shape instance with properties, heeriting from Shape class
-	 * @param {number} x rectangle's position X
-	 * @param {number} y rectangle's position Y
-	 * @param {any} fill rectangle's background
-	 * @param {any} stroke rectangle's outline
-	 * @param {number} strokeWeight rectangle outline's size
+	 * Transposes the rows and columns of the matrix
+	 * @param {Boolean} onACopy Either it has to operate on the matrix itself or on a copy. By default false
+	 * @returns {Matrix} The transformed matrix
 	 */
-	constructor(x, y, w, h, fill='black', stroke='transparent', strokeWeight=1) {
-		super(x, y, fill, stroke, strokeWeight);
-		this.dim = new Vector(w, h);
-	}
+	transpose(onACopy = false) {
+		const copy = new Matrix(this);
+		const me = this;
 
-	get width() {return this.dim.x;}
-	get height() {return this.dim.y;}
-	
-	set width(newWidth) {this.dim.x = newWidth;}
-	set height(newHeight) {this.dim.y = newHeight;}
+		if (onACopy)
+			[copy, me] = [me, copy];
 
-	draw() {
-		fill(this.background);
-		stroke(this.stroke);
-		strokeWeight(this.strokeWeight);
-		
-		let offset = getOffsetVector(this);
+		me.properties.size = Object.freeze({
+			x: me.properties.size.y,
+			y: me.properties.size.x
+		});
 
-		fillRect(this.x-offset.x, this.y-offset.y, this.width, this.height);
-		// top
-		line(this.x-offset.x-this.strokeWeight/2, this.y-offset.y, this.x-offset.x+this.width+this.strokeWeight/2, this.y-offset.y);
-		// bottom
-		line(this.x-offset.x-this.strokeWeight/2, this.y-offset.y+this.height, this.x-offset.x+this.width+this.strokeWeight/2, this.y-offset.y+this.height);
-		// left
-		line(this.x-offset.x, this.y-offset.y, this.x-offset.x, this.y-offset.y+this.height);
-		// right
-		line(this.x-offset.x+this.width, this.y-offset.y, this.x-offset.x+this.width, this.y-offset.y+this.height);
+		me.properties.array = [];
 
-		// put a little green circle at the shape's origin
-		if(this.drawOrigin) {
-			fill('#0F8');
-			noStroke();
-			circle(this.x, this.y, 2);
+		for (let i = 0; i < copy.width; i++) {
+			const row = [];
+			for (let j = 0; j < copy.height; j++) {
+				row.push(0);
+			}
+			me.properties.array.push(row);
 		}
-	}
 
-	hover() {
-		let offset = getOffsetVector(this);
-		let x1 = this.x - offset.x,
-			y1 = this.y - offset.y;
-		let x2 = x1 + this.width,
-			y2 = y1 + this.height;
-
-		return x1 <= mouseX && mouseX <= x2 && y1 <= mouseY && mouseY <= y2;
-	}
-}
-
-
-
-
-
-
-
-
-
-
-
-class CircleShape extends Shape {
-	/**
-	 * Create Circle shape instance with properties, heriting from Shape class
-	 * @param {number} x circle's position X
-	 * @param {number} y circle's position Y
-	 * @param {number} r circle's radius
-	 * @param {any} fill circle's background
-	 * @param {any} stroke circle's outline
-	 * @param {number} strokeWeight circle outline's size
-	 */
-	constructor(x, y, r, fill='black', stroke='transparent', strokeWeight=1) {
-		super(x, y, fill, stroke, strokeWeight);
-		this.radius = r - strokeWeight;
-		this.origin = "center";
-	}
-
-	get r() {return this.radius + this.strokeWeight;}
-	set r(newRadius) {this.radius = newRadius - this.strokeWeight;}
-
-	draw() {
-		fill(this.background);
-		stroke(this.stroke);
-		strokeWeight(this.strokeWeight);
-
-		let offset = getOffsetVector(this);
-
-		circle(this.x-offset.x, this.y-offset.y, this.r);
-
-		if(this.drawOrigin) {
-			fill('#0F8');
-			noStroke();
-			circle(this.x, this.y, 2);
+		for (let i = 0; i < copy.height; i++) {
+			for (let j = 0; j < copy.width; j++) {
+				me.set(i, j, copy.at(j, i));
+			}
 		}
+
+		return me;
 	}
 
-	hover() {
-		let offset = getOffsetVector(this);
-		return pow(mouseX - this.x-offset.x) + pow(mouseY - this.y-offset.y) < pow(this.r);
-	}
-}
-
-
-
-
-
-
-
-
-
-
-class TriangleShape extends Shape {
 	/**
-	 * Create Triangle shape instance with properties, heriting from Shape class
-	 * @param {number} x triangle's position X
-	 * @param {number} y triangle's position Y
-	 * @param {number} baseLength triangle's base length
-	 * @param {number} baseTiltinDegree triangle's rotation (in degree)
-	 * @param {number} triangleHeight triangle's height
-	 * @param {number} heightPosition triangle's height position from its base. 0 is the center
-	 * @param {any} fill triangle's background
-	 * @param {any} stroke triangle's outline
-	 * @param {number} strokeWeight triangle outline's size
+	 * Returns the column at given index.
+	 * 
+	 * If wrong index given returns an empty array.
+	 * @param {Number} x The index of the column to get
+	 * @returns {Number[]} The column
 	 */
-	constructor(x, y, baseLength, baseTiltinDegree, triangleHeight, heightPosition, fill='black', stroke='transparent', strokeWeight=1) {
-		super(x, y, fill, stroke, strokeWeight);
-		this.baseLength = baseLength;
-		this.baseTilt = radian(baseTiltinDegree);
-		this.height = triangleHeight;
-		this.heightPos = heightPosition;
-		this.origin = "bottomLeft";
+	getColumn(x) {
+		if (x < 0 || x > this.width)
+			return [];
 
-		this.vertex = {
-			A: new Vector(0, 0),
-			B: new Vector(0, 0),
-			C: new Vector(0, 0)
-		};
-
-		this.refreshVertexPos();
+		const column = [];
+		for (let i = 0; i < this.height; i++)
+			column.push(this.at(x, i));
+		return column;
 	}
 
-	get A() {return this.vertex.A;}
-	get B() {return this.vertex.B;}
-	get C() {return this.vertex.C;}
-
-	draw() {
-		this.refreshVertexPos();
-
-		fill(this.background);
-		stroke(this.stroke);
-		strokeWeight(this.strokeWeight);
-
-		polyline(this.A.x, this.A.y, this.B.x, this.B.y, this.C.x, this.C.y, this.vertex.A.x, this.A.y);
-
-		if(this.drawOrigin) {
-			fill('#0F8');
-			noStroke();
-			circle(this.x, this.y, 2);
-		}
-	} 
-
-	refreshVertexPos() {
-		let vec = angleToVector(this.baseTilt);
-
-		this.vertex.A.set(this.x, this.y);
-
-		this.vertex.B.set(this.A.x + this.baseLength*vec.x, this.A.y + this.baseLength*vec.y);
-
-		let d = dist(this.A, this.B)/2;
-
-		let k = new Vector(this.A.x + d*vec.x, this.A.y + d*vec.y);
-
-		let angle = angleToVector(radian(degree(this.baseTilt) - 90));
-
-		this.vertex.C.set(k.x + this.height*angle.x, k.y + this.height*angle.y, 5);
-	}
-
-	hover() {
-		let triArea = 	abs((this.B.x-this.A.x)	* (this.C.y-this.A.y) 	- (this.C.x-this.A.x)	* (this.B.y-this.A.y));
-		let area1 = 	abs((this.A.x-mouseX)	* (this.B.y-mouseY) 	- (this.B.x-mouseX)		* (this.A.y-mouseY));
-		let area2 = 	abs((this.B.x-mouseX)	* (this.C.y-mouseY) 	- (this.C.x-mouseX)		* (this.B.y-mouseY));
-		let area3 = 	abs((this.C.x-mouseX)	* (this.A.y-mouseY) 	- (this.A.x-mouseX)		* (this.C.y-mouseY));
-
-		return area1 + area2 + area3 == triArea;
-	}
-}
-
-
-
-
-
-
-
-
-class Triangle extends TriangleShape {
 	/**
-	 * Create Triangle shape instance with properties, heriting from Shape class
-	 * @param {number} x1 first point position X
-	 * @param {number} y1 first point position Y
-	 * @param {number} x2 second point position X
-	 * @param {number} y2 second point position Y
-	 * @param {number} x3 third point position X
-	 * @param {number} y3 third point position Y
-	 * @param {any} fill triangle's background
-	 * @param {any} stroke triangle's outline
-	 * @param {number} strokeWeight triangle outline's size
+	 * Returns the column at given idnex.
+	 * 
+	 * If wrong idnex given, returns an empty array.
+	 * @param {Number} y The index of the row to get
+	 * @returns {Number[]} The row
 	 */
-	constructor(x1, y1, x2, y2, x3, y3, fill='black', stroke='black', strokeWeight=1) {
-		let A = new Vector(x1, y1),
-			B = new Vector(x2, y2),
-			C = new Vector(x3, y3);
+	getRow(y) {
+		if (y < 0 || y > this.height)
+			return [];
 
-		let baseTilt = degree(Math.atan2(B.y-A.y, B.x-A.x)),
-			base = dist(A, B);
+		return this.properties.array[y];
+	}
 
-		let atv = angleToVector(radian(baseTilt));
+	/**
+	 * Updates a column in the matrix.
+	 * @param {Number} x The index of the column
+	 * @param {Number[]} column The column of values to set
+	 * @returns {Matrix} 'this'
+	 */
+	setColumn(x, column) {
+		if (x < 0 || x > this.width)
+			return console.error("[Error] Matrix::setColumn : wrong index given.");
 
-		let k = new Vector(A.x + base/2 * atv.x, A.y + base/2 * atv.y);
+		if (column.length !== this.height)
+			return console.error("[Error] Matrix::setColumn : column must have the same length as the matrix's height.");
 
-		let tHeight = dist(k,C), heightPosition = C.x-A.x;
+		for (let i = 0; i < this.height; i++)
+			this.set(x, i, column[i]);
 
-		super(A.x, A.y, base, baseTilt, tHeight, heightPosition, fill, stroke, strokeWeight);
+		return this;
+	}
+
+	/**
+	 * Updates a row in the matrix.
+	 * @param {Number} y The index of the row
+	 * @param {Number[]} row The row of values to set
+	 * @returns {Matrix} 'this'
+	 */
+	setRow(y, row) {
+		if (y < 0 || y > this.height)
+			return console.error("[Error] Matrix::setRow : wrong index given.");
+
+		if (row.length !== this.height)
+			return console.error("[Error] Matrix::setRow : row must have the same length as the matrix's width.");
+
+		this.properties.array[y] = row;
+
+		return this;
 	}
 }
-
 
 
 
 class Path {
 	/**
-	 * Create Path instance
+	 * Creates Path instance
 	 * @param {number} x where must start the path X
 	 * @param {number} y where must start the path Y
 	 */
-	constructor(x=null, y=null) {
+	constructor(x = null, y = null) {
 		this.d = null;
 		this.isClosed = false;
 
-		if(x && y) {
+		if (x && y) {
 			this.MoveTo(x, y);
 		}
 	}
@@ -4080,8 +4169,8 @@ class Path {
 	 * Draws the path
 	 */
 	draw() {
-		if(this.d !== null) {
-			path(this.d + (this.isClosed? ' Z' : ''));
+		if (this.d !== null) {
+			path(this.d + (this.isClosed ? ' Z' : ''));
 		}
 
 		else {
@@ -4095,22 +4184,22 @@ class Path {
 	 * @param {number} y Y-axis coordinate
 	 */
 	MoveTo(x, y) {
-		if(this.d === null) {
+		if (this.d === null) {
 			this.d = `M ${x} ${y}`;
 		}
-	
+
 		else {
 			this.d += ` M ${x} ${y}`;
 		}
 	}
-	
+
 	/**
 	 * moveTo instruction - relative
 	 * @param {number} x X-axis coordinate
 	 * @param {number} y Y-axis coordinate
 	 */
 	moveTo(x, y) {
-		if(this.d === null) return console.error("You have to initialize the fist path's position");
+		if (this.d === null) return console.error("You have to initialize the fist path's position");
 		this.d += ` m ${x} ${y}`;
 	}
 
@@ -4121,7 +4210,7 @@ class Path {
 	 * @param {number} y y-axis coordinate
 	 */
 	LineTo(x, y) {
-		if(this.d === null) return console.error("You have to initialize the first path's position");
+		if (this.d === null) return console.error("You have to initialize the first path's position");
 		this.d += ` L ${x} ${y}`;
 	}
 
@@ -4131,7 +4220,7 @@ class Path {
 	 * @param {number} y y-axis coordinate
 	 */
 	lineTo(x, y) {
-		if(this.d === null) return console.error("You have to initialize the first path's position");
+		if (this.d === null) return console.error("You have to initialize the first path's position");
 		this.d += ` l ${x} ${y}`;
 
 	}
@@ -4142,7 +4231,7 @@ class Path {
 	 * @param {number} x X-axis coordinate
 	 */
 	Horizontal(x) {
-		if(this.d === null) return console.error("You have to initialize the first path's position");
+		if (this.d === null) return console.error("You have to initialize the first path's position");
 		this.d += ` H ${x}`;
 	}
 
@@ -4151,7 +4240,7 @@ class Path {
 	 * @param {number} x X-axis coordinate
 	 */
 	horizontal(x) {
-		if(this.d === null) return console.error("You have to initialize the first path's position");
+		if (this.d === null) return console.error("You have to initialize the first path's position");
 		this.d += ` h ${x}`;
 	}
 
@@ -4161,7 +4250,7 @@ class Path {
 	 * @param {number} y Y-axis coordinate
 	 */
 	Vertical(y) {
-		if(this.d === null) return console.error("You have to initialize the first path's position");
+		if (this.d === null) return console.error("You have to initialize the first path's position");
 		this.d += ` V ${y}`;
 	}
 
@@ -4170,11 +4259,11 @@ class Path {
 	 * @param {number} y Y-axis coordinate
 	 */
 	vertical(y) {
-		if(this.d === null) return console.error("You have to initialize the first path's position");
+		if (this.d === null) return console.error("You have to initialize the first path's position");
 		this.d += ` v ${y}`;
 	}
 
-	
+
 	/**
 	 * Arc instruction - absolute
 	 * @param {number} x X-axis coordinate
@@ -4184,9 +4273,9 @@ class Path {
 	 * @param {number} end end angle
 	 * @param {Boolean} antiClockwise either it has to draw it anti-clockwisly or not
 	 */
-	Arc(x, y, r, start, end, antiClockwise=false) {
-		if(this.d === null) return console.error("You have to initialize the first path's position");
-		this.d += ` A ${x} ${y} ${r} ${start} ${end} ${(antiClockwise===true)?1:0}`;
+	Arc(x, y, r, start, end, antiClockwise = false) {
+		if (this.d === null) return console.error("You have to initialize the first path's position");
+		this.d += ` A ${x} ${y} ${r} ${start} ${end} ${(antiClockwise === true) ? 1 : 0}`;
 	}
 
 	/**
@@ -4198,9 +4287,9 @@ class Path {
 	 * @param {number} end end angle
 	 * @param {Boolean} antiClockwise either it has to draw it anti-clockwisly or not
 	 */
-	arc(x, y, r, start, end, antiClockwise=false) {
-		if(this.d === null) return console.error("You have to initialize the first path's position");
-		this.d += ` a ${x} ${y} ${r} ${start} ${end} ${(antiClockwise===true)?1:0}`;
+	arc(x, y, r, start, end, antiClockwise = false) {
+		if (this.d === null) return console.error("You have to initialize the first path's position");
+		this.d += ` a ${x} ${y} ${r} ${start} ${end} ${(antiClockwise === true) ? 1 : 0}`;
 	}
 
 
@@ -4208,7 +4297,7 @@ class Path {
 	 * Close path
 	 */
 	close() {
-		if(this.d === null) return console.error("You have to initialize the first path's position");
+		if (this.d === null) return console.error("You have to initialize the first path's position");
 		this.isClosed = true;
 	}
 
@@ -4216,7 +4305,7 @@ class Path {
 	 * Removes the instruction that close the path if it was.
 	 */
 	open() {
-		if(this.d === null) return console.error("You have to initialize the first path's position");
+		if (this.d === null) return console.error("You have to initialize the first path's position");
 		this.isClosed = false;
 	}
 
@@ -4225,20 +4314,376 @@ class Path {
 	 * @param {number} x X-axis coordinate
 	 * @param {number} y Y-axis coordinate
 	 */
-	move(x, y=null) {
+	move(x, y = null) {
 		// 1 argument and it's a vector
-		if(y === null && x instanceof Vector) {
+		if (y === null && x instanceof Vector) {
 			[x, y] = [x.x, x.y];
 		}
 
-		if(this.d === null) return;
+		if (this.d === null) return;
 
 		this.d = this.d.replace(/([MLHVA])\s([\d\.]+)(\s([\d\.]+))?/g, (c, p1, p2, p3) => {
-			if(p1 == 'H') return `${p1} ${parseFloat(p2) + x}`;
-			
-			if(p1 == 'V') return `${p1} ${parseFloat(p2) + y}`;
-			
+			if (p1 === 'H') return `${p1} ${parseFloat(p2) + x}`;
+
+			if (p1 === 'V') return `${p1} ${parseFloat(p2) + y}`;
+
 			return `${p1} ${parseFloat(p2) + x} ${parseFloat(p3) + y}`;
 		});
 	}
 }
+
+
+
+
+
+
+
+
+
+// initialize all the canvas's environment, when window is ready
+const initializeCanvasWorld = () => {
+	if (window) {
+		window.addEventListener('load', () => {
+			const t0 = performance.now();
+
+			// the minimum between document width | height
+			MIN_DOC_SIZE = min(documentWidth(), documentHeight());
+
+			// if user created a setup function
+			if (typeof setup === "function") {
+				NOX_PV.inSetup = true;
+				setup();
+				delete NOX_PV.notSetup;
+
+				if (pixels === undefined) {
+					delete pixels;
+				}
+			}
+
+			const t1 = performance.now();
+
+			if (typeof draw === 'function') {
+				NOX_PV.drawFunc = draw;
+			}
+
+			if (typeof update === 'function') {
+				NOX_PV.updateFunc = update;
+			}
+
+			/**
+			 * Calculate the {top, left} offset of a DOM element
+			 * @param {DOMElement} elt the dom Element
+			 */
+			const offset = elt => {
+				const rect = elt.getBoundingClientRect();
+
+				return {
+					top: rect.top + document.body.scrollTop,
+					left: rect.left + document.body.scrollLeft
+				};
+			};
+
+
+			// if the user created the canvas on the setup function
+			if (canvas) {
+
+				// event mouse move
+				canvas.addEventListener('mousemove', e => {
+					NOX_PV.oldMouseX = mouseX;
+					NOX_PV.oldMouseY = mouseY;
+
+					mouseX = e.clientX - offset(canvas).left;
+					mouseY = e.clientY - offset(canvas).top;
+
+					//if(NOX_PV.isPointerLocked) {
+					mouseDirection.x = e.movementX;
+					mouseDirection.y = e.movementY;
+					//}
+
+					if (typeof mouseMove === "function") mouseMove(e);
+				});
+
+				canvas.addEventListener('touchstart', handleTouchStart, false);
+				canvas.addEventListener('touchmove', handleTouchMove, false);
+				canvas.addEventListener('mouseup', e => { NOX_PV.isMouseDown = false; if (typeof mouseUp === "function") mouseUp(e); });
+				canvas.addEventListener('click', e => { if (typeof onClick === "function") onClick(e); });
+				canvas.addEventListener('mouseenter', e => { if (typeof mouseEnter === "function") mouseEnter(e); });
+				canvas.addEventListener('mouseleave', e => { if (typeof mouseLeave === "function") mouseLeave(e); });
+				canvas.addEventListener('wheel', e => { if (typeof mouseWheel === "function") mouseWheel(e); });
+				canvas.addEventListener('contextmenu', e => { if (typeof onContextmenu === "function") onContextmenu(e); });
+				canvas.addEventListener('dblclick', e => { if (typeof onDblClick === "function") onDblClick(e); });
+
+
+				// if the swipe is enable on pc, call event handler
+				if (NOX_PV.swipePCEnable) {
+					canvas.addEventListener('mousedown', handleTouchStart, false);
+					canvas.addEventListener('mousemove', handleTouchMove, false);
+				}
+
+
+				// if the user has created a function onSwipe() {} then call it if it's swiping
+				if (typeof onSwipe === "function") {
+					canvas.addEventListener('swipeleft', () => { onSwipe('left'); }, false);
+					canvas.addEventListener('swiperight', () => { onSwipe('right'); }, false);
+					canvas.addEventListener('swipeup', () => { onSwipe('up'); }, false);
+					canvas.addEventListener('swipedown', () => { onSwipe('down'); }, false);
+				}
+
+			}
+
+
+			// keyboard events
+
+			// key pressed
+			window.addEventListener('keypress', e => {
+				NOX_PV.keys[e.code] = true;
+				if (typeof keyPress === "function") keyPress(e);
+			});
+
+
+			// key downed
+			window.addEventListener('keydown', e => {
+				NOX_PV.keys[e.code] = true;
+				if (typeof keyDown === "function") keyDown(e);
+			});
+
+
+			// key upped
+			window.addEventListener('keyup', e => {
+				NOX_PV.keys[e.code] = false;
+				if (typeof keyUp === "function") keyUp(e);
+			});
+
+			// when user resize window or document
+			window.addEventListener('resize', () => {
+				const newWidth = document.documentElement.clientWidth,
+					newHeight = document.documentElement.clientHeight;
+
+				MIN_DOC_SIZE = min(newWidth, newHeight);
+
+				if (typeof onResize === "function") onResize(newWidth, newHeight);
+			});
+
+			window.addEventListener('blur', () => { if (typeof onBlur === "function") onBlur(); });
+			window.addEventListener('focus', () => { if (typeof onFocus === "function") onFocus(); });
+			window.addEventListener('online', e => { if (typeof onOnline === "function") onOnline(e); });
+			window.addEventListener('offline', e => { if (typeof onOffline === "function") onOffline(e); });
+
+			const t2 = performance.now();
+
+			if (NOX_PV.logPerfs) {
+				const perfData = {
+					setup: { ms: (t1 - t0) },
+					InitWorld: { ms: (t2 - t1) }
+				};
+
+				console.info('Performances while initializing the canvas environment :');
+				console.table(perfData);
+			}
+
+			NOX_PV.timer = new Time();
+
+			drawLoop();
+		});
+	}
+};
+
+/**
+ * This will tell the library to log in the console the performances about the initialization of the canvas.
+ */
+const logPerformances = () => {
+	NOX_PV.logPerfs = true;
+};
+
+
+// private vars
+const NOX_PV = {
+	updateFunc: () => { },
+	drawFunc: () => { },
+
+	notSetup: true,
+	logPerfs: false,
+	drawLoopInfo: {
+		it: 0,
+		t0: 0, // start
+		t1: 0, // update time
+		t2: 0, // draw time
+		freq: 720
+	},
+
+	lut: [],
+
+	// either the fill | stroke is enable
+	bFill: true, bStroke: true,
+
+	// pressed keys
+	keys: {},
+	// boolean - mouse down
+	isMouseDown: false,
+	// last frame mouse's position to know the mouse direction
+	oldMouseX: 0, oldMouseY: 0,
+
+	// boolean - pointer lock
+	isPointerLocked: false,
+
+	// swipe direction
+	swipexDown: null, swipeyDown: null,
+	// boolean swipe enabled on pc
+	swipePCEnable: true,
+	// swipe direction
+	lastSwipe: null,
+
+	// guide lines (cyan)
+	bGuideLines: false,
+
+	// default text size & font-family
+	fontSize: "12px",
+	fontFamily: "Monospace",
+
+	loop: true,
+
+	timer: 0,
+	now: 0, then: Date.now(), firstThen: Date.now(), interval: 1000 / fps, delta: 0, counter: 0, time_el: 0,
+
+	// Treat color's entries
+	colorTreatment: (...oColor) => {
+		const n = oColor.length;
+
+		if (n > 0 && (oColor[0] instanceof CanvasGradient || oColor[0] instanceof CanvasPattern)) return oColor[0];
+
+
+		// number - only rgb value accepted
+		if (n === 1 && typeof oColor[0] === 'number') {
+			oColor = oColor[0];
+
+			if (0 <= oColor && oColor <= 255) {
+				return `rgb(${oColor}, ${oColor}, ${oColor})`;
+			}
+		}
+
+		// rgb are the same value + alpha
+		else if (n === 2 && oColor.every((c, i) => typeof c === 'number' && (0 <= c && c <= 255) || (i === 4 && 0 <= c && c <= 1))) {
+			return `rgba(${oColor[0]}, ${oColor[0]}, ${oColor[0]}, ${oColor[1] > 1 ? oColor[1] / 255 : oColor[1]})`;
+		}
+
+		// rgb or rgba integers
+		else if ([3, 4].includes(n) && oColor.every(c => typeof c === 'number')) {
+			if (oColor.every((c, i) => (0 <= c && c <= 255) || (i === 4 && 0 <= c && c <= 1))) {
+				return `rgb${n === 4 ? 'a' : ''}(${oColor[0]}, ${oColor[1]}, ${oColor[2]}${n === 4 ? `, ${oColor[3] > 1 ? oColor[3] / 255 : oColor[3]}` : ''})`;
+			}
+		}
+
+		// hex, hsl, rgb[a], color name
+		else if (n === 1 && typeof oColor[0] === 'string') {
+			oColor = oColor[0];
+
+			const color = oColor.replace(/\s/gi, '');
+
+			const reg = {
+				hex: /^#([0-9a-z]{3}){1,2}$/i,
+				rgb: /^rgba?\((\d{1,3},){2}\d{1,3}(,\d(\.\d+)?)?\)$/,
+				hsl: /^hsl\(\d{1,3},\d{1,3}%,\d{1,3}%\)$/,
+				name: /^\w{3,30}$/
+			};
+
+			for (let regex in reg) {
+				if (reg[regex].test(color)) {
+					return oColor;
+				}
+			}
+		}
+
+		// color class instance
+		else if (oColor[0] instanceof HEX || oColor[0] instanceof RGB || oColor[0] instanceof HSL) {
+			return oColor[0].toString();
+		}
+
+		if (canvas) {
+			return window.getComputedStyle(canvas).backgroundColor;
+		}
+
+		// default returned color if bad entry
+		return '#000';
+	},
+
+	perlin: {
+		lod: 10,
+		unit: 1.0,
+		gradient: [],
+		seed: [],
+		generateSeed: () => {
+			return Array(255).fill(0).map((i, j) => j).sort(() => Math.random() - 0.5);
+		},
+		get: (x, y, lod = NOX_PV.perlin.lod, seed = NOX_PV.perlin.seed) => {
+			// adapt the resolution
+			x /= lod;
+			y /= lod;
+
+			// get table integer indexes
+			const [x0, y0] = [floor(x), floor(y)];
+
+			// get decimal part (dx,dy) & create mask (ii, jj)
+			const [dx, dy, ii, jj] = [x - x0, y - y0, x0 & 255, y0 & 255];
+
+			// recover vectors
+			const stuv = [];
+			for (let i = 0; i < 4; i++) {
+				try {
+					const v = seed[(ii + i % 2 + seed[jj + floor(i / 2)]) % 255] % NOX_PV.perlin.gradient.length;
+					stuv.push(NOX_PV.perlin.gradient[v][0] * (dx - i % 2) + NOX_PV.perlin.gradient[v][1] * (dy - floor(i / 2)));
+				} catch (e) {
+					stuv.push(0);
+				}
+			}
+
+			// smoothing
+			const [Cx, Cy] = [3 * dx * dx - 2 * dx * dx * dx, 3 * dy * dy - 2 * dy * dy * dy];
+			const [Li1, Li2] = [stuv[0] + Cx * (stuv[1] - stuv[0]), stuv[2] + Cx * (stuv[3] - stuv[2])];
+
+			return map(Li1 + Cy * (Li2 - Li1), -NOX_PV.perlin.unit, NOX_PV.perlin.unit, 0, 1);
+		}
+	},
+
+	easeElastic: (type, t, b, c, d) => {
+		if (t === 0) return b;
+		if ((t /= d) === 1) return b + c;
+		const p = d * .3;
+		const s = p / ((c < 0) ? 4 : (2 * PI) * asin(c / a));
+		const x = sin((t * d - s) * (2 * PI) / p);
+		return (type === 'in') ? -(a * pow(2, 10 * (t -= 1)) * x) + b :
+			(type === 'out') ? a * pow(2, -10 * t) * x + c + b :
+				(t < 1) ?
+					-.5 * (a * pow(2, 10 * (t -= 1)) * x) + b :
+					a * pow(2, -10 * (t -= 1)) * x * .5 + c + b;
+	}
+};
+
+NOX_PV.perlin.gradient = [
+	[NOX_PV.perlin.unit, NOX_PV.perlin.unit],
+	[-NOX_PV.perlin.unit, NOX_PV.perlin.unit],
+	[NOX_PV.perlin.unit, -NOX_PV.perlin.unit],
+	[-NOX_PV.perlin.unit, -NOX_PV.perlin.unit]
+];
+
+for (let i = 0; i < 256; i++) {
+	NOX_PV.lut[i] = (i < 16 ? '0' : '') + (i).toString(16);
+}
+
+NOX_PV.easeFuncMap = {
+	linear: easeLinear,
+	quadIn: easeInQuad, quadOut: easeOutQuad, quadInOut: easeInOutQuad,
+	sineIn: easeInSine, sineOut: easeOutSine, sineInOut: easeInOutSine,
+	expoIn: easeInExpo, expoOut: easeOutExpo, expoInOut: easeInOutExpo,
+	circIn: easeInCirc, circOut: easeOutCirc, circInOut: easeInOutCirc,
+	cubicIn: easeInCubic, cubicOut: easeOutCubic, cubicInOut: easeInOutCubic,
+	quartIn: easeInQuart, quartOut: easeOutQuart, quartInOut: easeInOutQuart,
+	quintIn: easeInQuint, quintOut: easeOutQuint, quintInOut: easeInOutQuint,
+	backIn: easeInBack, backOut: easeOutBack, backInOut: easeInOutBack,
+	elasticIn: easeInElastic, elasticOut: easeOutElastic, elasticInOut: easeInOutElastic,
+};
+
+/**
+ * initialize everything from here
+ * When the page has loaded
+ */
+initializeCanvasWorld();

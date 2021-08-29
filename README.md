@@ -103,14 +103,19 @@ function setup() {
     // create canvas & setup everything here
 }
 
+function update(ms) {
+    // called every loop
+    // ms is the milliseconds ellapsed from when the page has loaded
+}
+
 function draw() {
-    // this function will loop to draw on the canvas
+    // called in the loop, after the update function if it exists, and after the canvas is cleared
 }
 ```
 
 The `setup` function is called when the window has loaded.
 
-The `draw` function is called after the setup function, and is looped every fixed frames (can be changed whenever you want).
+The `update` and `draw` functions are called after the setup function, and are looped every fixed frames (can be changed whenever you want).
 
 
 
@@ -122,6 +127,8 @@ If you already created one, it will overwrite the existing one.
 
 ```js
 createCanvas(canvasWidth, canvasHeight, canvasBackground='#000', requestPointerLock=false, container=document.body);
+// if you want a fullscreen canvas in a specific container
+// createCanvas(null, null, '#000', false, documentQuerySelector('mySpecificContainer'));
 ```
 
 This function has to be written in the setup function.
@@ -174,6 +181,15 @@ function setup() {
 
     showGuideLines(true); // by default set to false
 }
+```
+
+## Performances
+
+You can log the performances of your code with the following function.
+It will print every 6 minuts a table with passed performances.
+
+```js
+logPerformances();
 ```
 
 
@@ -244,12 +260,7 @@ translate(x, y); // canvas translate function
 rotate(degree); // canvas rotate function
 clip(); // ctx.clipPath() function
 scale(p); // scale the context. if p < 1, then reduces it, else grows it
-enablePCswipe(boolean); // in the setup function, default is true
 frameRate(number); // set the draw frame rate
-getSwipe(); // returns the last swipe direction done by the user
-mouseDir(); // returns the direction of the mouse's movement
-isKeyDown(keyCode); // returns a boolean
-isKeyUp(keyCode); // returns a boolean
 createLinearGradient(x1, y1, x2, y2); // creates and returns a ctx.createLinearGradient
 makeLinearGradient(x1, y1, x2, y2, ...args); // same as above, but merge it with gradient.addColorStop(offset, color) function
 drawFocusIfNeeded(path|element[, element]);
@@ -277,7 +288,15 @@ updatePixels(); // update the canvas with modified pixels
 ```
 
 
-
+## Keyboard and mouse Functions
+Keyboard functions :
+```js
+enablePCswipe(boolean); // in the setup function, default is true
+getSwipe(); // returns the last swipe direction done by the user
+mouseDir(); // returns the direction of the mouse's movement, null otherwise
+isKeyDown(keyCode); // returns a boolean
+isKeyUp(keyCode); // returns a boolean
+```
 
 
 ## Canvas event handlers
@@ -310,6 +329,11 @@ function onOnline(e) {}
 function onOffline(e) {}
 ```
 
+## Other functions
+
+```js
+generateUUID(); // returns a unique ID
+```
 
 
 
@@ -376,13 +400,21 @@ color.toString(); // "hsl(50, 20%, 70%)"
 color.intVal(); // same as HEX.intVal()
 ```
 
-###
+### Color cast
 
 You can pass a variable that is a class instance of a color and it will takes its value automatically.
 
 ```js
 let color = new HEX('#007fff');
 background(color); // takes color.toString()
+
+// cast every type of color, for fill(), stroke() etc...
+fill('white'); // color name
+fill('#fff'); // hex
+fill(255); // rgb
+fill(255, 255); // rgb, a
+fill(255, 255, 255); // r, g, b
+fill(255, 255, 255, 255); // r, g, b, a
 ```
 
 
@@ -433,7 +465,43 @@ v2.normalize(); // doesn't change the vector direction but brings back in interv
 ```
 
 
+## Matrix class
 
+```js
+// multiple signatures :
+const m = new Matrix(width, height=width, fill=0); // if height isn't precised, square matrix
+const m = new Matrix([0, 0, 0], ...); // raw rows
+const m = new Matrix([ [0, 0, 0], ... ]); // same result, passing a 2D array
+const m = new Matrix(matrixToCopy); // copies an existing matrix
+
+
+m.array; // returns the matrix as 2D array
+m.array1D; // returns the matrix as 1D array. All row items collapsed
+m.width; // matrix's width
+m.height; // matrix's height
+m.dimension; // matrix's dimension
+m.isSymmetrical; // returns either the matrix is symmetrical or not
+m.isSquare; // returns either the matrix is square or not
+m.isIdentity; // returns either the matrix is idendity or not. Requires square matrix
+m.isDiagonal; // returns either the matrix is diagonal or not. Requires square matrix
+m.isTriangular; // returns either the matrix is both lower triangular and upper triangular. Requires square matrix
+m.isLowerTri; // returns either the matrix is lower triangular or not. Requires square matrix
+m.isUpperTri; // returns either the matrix is upper triangular or not. Requires square matrix
+m.diagonal; // returns 1D array of the matrix's diagonal if square matrix, empty array otherwise
+m.det; // returns the matrix's determining : det(M)
+m.toString(); // returns the 2D matrix as a string
+m.at(x, y); // returns the element at position (x,y) in the matrix
+m.set(x, y, value); // set the given value at given position (x,y) in the matrix
+m.equals(matrix); // compares two matrices. Returns a boolean
+m.add(matrix, onACopy=false); // if matrices has same size or matrix is a number, then add all items in the m matrix. If onACopy is true, then doesn't save it on current matrix, just returns the result.
+m.sub(matrix, onACopy=false); // same as m.add, but substracting
+m.mult(matrix, onACopy=false); // same as m.add, but multiplying
+m.transpose(onACopy=false); // transposes the matrix's rows and columns. If onACopy is true, doesn't save it on current matrix, just returns the result.
+m.getColumn(x); // returns a 1D array of the column at index x. If x is out of bounds, returns an empty array.
+m.getRow(y); // returns a 1D array of the row at index y. If y is out of bounds, returns an empty array.
+m.setColumn(x, column); // if x isn't out of bounds, and column's length respects matrix's height, then replaces the matrix's column at index x by given one.
+m.setRow(y, row); // if y isn't out of bounds, and row's length respects matrix's width, then replaces the matrix's row at index y by given one.
+```
 
 
 ## Mathematical functions
@@ -596,125 +664,41 @@ linecap(style); // must be butt, round or square. Default is butt
 
 
 
+## Timed transition functions
 
-## Advanced shapes
-
-To create a new shape, you can use the class `Shape`.
-
-However, this one has all common default parameters for all type of shapes,
-
-so I recommend to not use this class. Use which will follow this one.
-
-### what contains a shape
-
-* a fill color. You can :
-    * access to it by doing `shape.background`
-    * modify it doing `shape.fill = 'red'`
-* a stroke color. You can :
-    * access to / modify it by doing `shape.stroke`
-    * change its weight / get its weight using `shape.strokeWeight`
-* a position (x,y).
-    * You can access to them thanks `shape.x` and `shape.y`.
-    * You can modify the position thanks `shape.setPosition(x, y)` or `shape.setPosition(vector)`
-* a speed (by default 0, it's a static shape). You can access to / modify it using `shape.speed`
-* an acceleration (by default 0).
-    * You can access to / modify it using `shape.acceleration`
-    * In the case of the shape is running, it will move with `this.speed + this.acceleration`, else only `this.speed`
-* to know if the shape is running, use `shape.running` (returns a boolean)
-* to say either the shape is running or not, use `shape.run(bool)`
-* to move a shape thanks its speed, you can do `shape.move(x,y)`. Be careful, this x and y are the vector direction of the move.
-
-For example:
+All of those functions have the same signature :
 ```js
-shape.speed = 5;
-shape.move(1,0); // will move to 5 pixels to the right per frame. Write it on draw() function to move it continually
-// you can also put a vector as parameter
+f(t, b, c, d)
 ```
-
-### The shape origin
-
-The origin of the shape is the (x,y) of this one.
-
-It can be a different one by default for each shape, but you can change it.
-
-You can also choose if you want to show it or not (a small green circle).
+Where :
+* t is the time passed during the beginning of the animation
+* b is the beginning - starting point of the animation - Usually static
+* c is the amount of change during the animation - Usually static
+* d is the duration of the animation - Usually static
+and return a float value.
 
 ```js
-// says if it shows the origin of the shape
-shape.showOrigin(bool);
-
-// set a new origin
-setOrigin(newOrigin);
-/* Possible origins :
-    topLeft    ,  top   , topRight
-      left     , center ,   right
-    bottomLeft , bottom , bottomRight
-*/
+// linear
+easeLinear
+// quad
+easeInQuad, easeOutQuad, easeInOutQuad
+// sine
+easeInSine, easeOutSine, easeInOutSine
+// expo
+easeInExpo, easeOutExpo, easeInOutExpo
+// circ
+easeInCirc, easeOutCirc, easeInOutCirc
+// cubic
+easeInCubic, easeOutCubic, easeInOutCubic
+// quart
+easeInQuart, easeOutQuart, easeInOutQuart
+// quint
+easeInQuint, easeOutQuint, easeInOutQuint
+// back
+easeInBack, easeOutBack, easeInOutBack
+// elastic
+easeInElastic, easeOutElastic, easeInOutElastic
 ```
-
-To draw a shape, use `shape.draw()`
-
-You can also listen if you are hovering the shape:
-
-```js
-if(shape.hover()) {
-    shape.fill = 'red';
-}
-```
-
-### Collisions
-
-To know if two shapes are in collision, use `collision(shape1, shape2)` function.
-
-```js
-if(collision(my_rectangle, my_circle)) {
-    my_circle.fill = 'red';
-    my_rectangle.fill = 'red';
-}
-```
-
-### RectangleShape
-```js
-let rect = new RectangleShape(x, y, width, height, fill='black', stroke='transparent', strokeWeight=1);
-```
-
-* get/set its width with `shape.width`
-* get/set its height with `shape.height`
-* default origin is `topLeft`
-
-### CircleShape
-```js
-let circ = new CircleShape(x, y, r, fill='black', stroke='transparent', strokeWeight=1);
-```
-
-* get/set its radius thanks `shape.r`
-* default origin is `center`
-
-### TriangleShape
-```js
-let tri = new TriangleShape(x, y, baseLength, baseTilt, height, heightPosition, fill='black', stroke='transparent', strokeWeight=1);
-// the baseTilt is in degree
-// the heightPosition is relative to x, so
-//  - heightPosition =  0 = x
-//  - heightPosition = -1 = x-1
-```
-
-* get its points thanks `shape.A`, `shape.B` and `shape.C`. It's vectors. You cannot modify them
-* get/set its base length thanks `shape.baseLength`
-* get/set its base tilt thanks `shape.baseTilt` (in radian)
-* get/set its height thanks `shape.height`
-* get/set its height position thanks `shape.heightPosition`
-
-**For now you cannot change the origin of the triangle (bottomLeft = A point).**
-
-### Triangle
-```js
-let tri = new Triangle(x1,y1, x2,y2, x3,y3, fill='black', stroke='transparent', strokeWeight=1);
-// it's a TriangleShape but with another constructor
-```
-
-same properties as `TriangleShape`.
-
 
 
 
