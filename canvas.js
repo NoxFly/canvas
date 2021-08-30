@@ -3357,7 +3357,7 @@ class Vector {
 	 * const v3 = v.sub(1, 2); // now v{x: 9, y: 8} and v3 is same
 	 * v2.sub(v); // now v2{x: 11, y: 12}
 	 */
-	sub() {
+	sub(x, y = null, z = null) {
 		if (x instanceof Vector) {
 			return this.set(this.x - x.x, this.y - x.y, this.z - x.z);
 		}

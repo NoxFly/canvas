@@ -447,6 +447,7 @@ v2.set(v4); // you can pass vector as parameter
 v2.add(1); // x += 1, y += 1
 v2.add(1, 3); // x += 1, y += 3
 v2.add(v4); // v2 += v4
+// v2.sub() has same signature
 
 v2.mult(); // same as add() but multiply
 v2.div(); // same as add() but divide
@@ -498,7 +499,7 @@ m.setRow(y, row); // if y isn't out of bounds, and row's length respects matrix'
 ```js
 radian(deg); // convert from degree to radian
 degree(rad); // convert from radian to degree
-random(min, max); // random integer from min to max. if no max given, from 0 to min
+random(min, max); // random integer from min to max. if no max given, from 0 to min. If 0 argument is given, float between 0 and 1
 pow(x, p); // power of x, default power beeing 2
 sqrt(x); // sqrt of x
 min(a, b, c, ...); // minimum between all given values
