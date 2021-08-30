@@ -775,7 +775,51 @@ const t2 = new Time(2, 'seconds'); // you can tell which time unit you want
 t.asMilliseconds(); // 2000
 ```
 
+## Quadtree
 
+You can use Quadtrees to manage world's entities with better performances.
+
+```js
+// create quadtree
+const bounds = new Quadtree.Rectangle(0, 0, width, height);
+const rootCapacity = 10;
+const quadtree = new Quadtree(bounds, rootCapacity);
+
+// create entities
+const entities = [];
+
+for(let i=0; i < 1000; i++) {
+    const x = random(width);
+    const y = random(height);
+    entities.push(new MyEntityClass(x, y));
+}
+
+// use quadtree to check collisions
+researchRect = new Quadtree.Rectangle(0, 0, 100, 100); // a square
+
+// looped
+function update() {
+    quadtree.clear(); // reset the quadtree in the case entities moved
+
+    // e is an object so the Quadtree.Point will store a reference to it
+    // not a copy
+    for(const e of entities)
+        quadTree.insert(new Quadtree.Point(e.x, e.y, e));
+
+    // mouse the research rectangle depending on the mouse
+    researchRect.x = mouseX;
+    researchRect.y = mouseY;
+
+    // recover all point that are in this area
+    const queryResult = quadTree.query(researchRect);
+
+    // do stuff with it
+}
+
+function draw() {
+    quadtree.show(); // draws the Quadtree
+}
+```
 
 
 ## License

@@ -1143,7 +1143,12 @@ const angleToVector = angle => new Vector(cos(angle), sin(angle));
 const vectorToAngle = vec => {
 	// horizontal vector - we don't care about its mag, but its orientation
 	const baseVector = new Vector(1, 0);
-	return angleBetweenVectors(baseVector, vec);
+	let angle = angleBetweenVectors(baseVector, vec);
+
+    if(vec.y > 0)
+        angle *= -1;
+
+    return angle%360;
 }
 
 /**
@@ -3564,8 +3569,6 @@ class Vector {
 
 		// calculate the vector's rotation from the horizontal
 		let rotation = degree(vectorToAngle(this));
-		// know if it's pointing to the top or to the bottom
-		if (this.y < 0) rotation *= -1;
 
 		push();
 			// trunk
@@ -4541,6 +4544,232 @@ const initializeCanvasWorld = () => {
 		});
 	}
 };
+
+
+
+
+/**
+ * A 4-children based tree that is used to manage world entities relations
+ * with better performances.
+ */
+class Quadtree {
+    /**
+     * A Quadtree's Point has a position and a pointer to an object
+     */
+    static Point = class {
+        /**
+         * A Quadtree's Point that has a position and a pointer to an object
+         * @param {Number} x Point's X
+         * @param {Number} y Point's Y
+         * @param {Object} dataPtr Object data
+         */
+        constructor(x, y, dataPtr) {
+            this.x = x;
+            this.y = y;
+            this.dataPtr = dataPtr;
+        }
+    }
+    
+    /**
+     * A Quadtree's Rectangle is a basic rectangle that checks<br>
+     * if it contains a given point or intersects with a given Rectangle
+     */
+    static Rectangle = class {
+        /**
+         * Creates a Quadtree's Rectangle.
+         * @param {Number} x Rectangle top-left corner's X
+         * @param {Number} y Rectangle top-left corner's Y
+         * @param {Number} w Rectangle's width
+         * @param {Number} h Rectangle's height
+         */
+        constructor(x, y, w, h) {
+            this.x = x;
+            this.y = y;
+            this.w = w;
+            this.h = h;
+        }
+    
+        /**
+         * Checks if a given Quadtree's Point is in the Rectangle or not.
+         * @param {Quadtree.Point} point A Quadtree's Point
+         * @returns Boolean - either the point is in the Rectangle or not
+         */
+        contains(point) {
+            return (
+                this.x <= point.x && point.x <= this.x + this.w &&
+                this.y <= point.y && point.y <= this.y + this.h
+            );
+        }
+        
+        /**
+         * Checks if 2 Quadtree's Rectangles are intersecting or not.
+         * @param {QuadTree.Rectangle} rectangle A Quadtree's Rectangle
+         * @returns Boolean - either both Rectangles intersect or not
+         */
+        intersects(rectangle) {
+            return !(
+                rectangle.x > this.x + this.w ||
+                rectangle.x + rectangle.w < this.x ||
+                rectangle.y > this.y + this.h ||
+                rectangle.y + rectangle.h < this.y
+            );
+        }
+        
+        /**
+         * Checks if this Quadtree's Rectangle totally wraps the given Rectangle or not.
+         * @param {Quadtree.Rectangle} rectangle A Quadtree's Rectangle
+         * @returns Boolean - either this Rectangle totally wraps the given rectangle or not
+         */
+        wrap(rectangle) {
+            return (
+                this.x <= rectangle.x && rectangle.x + rectangle.w <= this.x + this.w &&
+                this.y <= rectangle.y && rectangle.y + rectangle.h <= this.y + this.h
+            )
+        }
+    }
+
+    /**
+     * Creates a new Quadtree.
+     * @param {Quadtree.Rectangle} boundary The region covered by the Quadtree
+     * @param {Number} capacity The max capacity of Points that can supports this Quadtree
+     */
+    constructor(boundary, capacity=5) {
+        this.boundary = boundary;
+        this.capacity = capacity;
+        this.points = [];
+        this.divided = false;
+    }
+
+    /**
+     * Clears the Quadtree and delete its 4 children if divided.
+     */
+    clear() {
+        this.points = [];
+        this.divided = false;
+        delete this.northeast;
+        delete this.northwest;
+        delete this.southeast;
+        delete this.southwest;
+    }
+
+    /**
+     * Subdivides the Quadtree if it isn't.<br>
+     * Separates itself in 4 regions that fill itself.
+     */
+    subdivide() {
+        if(!this.divided) {
+            const { x, y, w, h } = this.boundary;
+
+            const ne = new Quadtree.Rectangle(x + w/2, y, w/2, h/2);
+            const nw = new Quadtree.Rectangle(x, y, w/2, h/2);
+            const se = new Quadtree.Rectangle(x + w/2, y + h/2, w/2, h/2);
+            const sw = new Quadtree.Rectangle(x, y + h/2, w/2, h/2);
+
+            this.northwest = new Quadtree(nw);
+            this.northeast = new Quadtree(ne);
+            this.southwest = new Quadtree(sw);
+            this.southeast = new Quadtree(se);
+
+            this.divided = true;
+        }
+    }
+
+    /**
+     * Tries to insert a Quadtree's Point in itself.<br>
+     * If the Point is already present in the Quadtree, does nothing.<br>
+     * Two Points cannot have the same position in it.<br>
+     * If the Quadtree has reach its max capacity, then splits / subdivides
+     * itself and tries to insert the Point in one of its child.
+     * @param {Quadtree.Point} point The Point to insert
+     * @returns Either the Point is well inserted or not in the Quadtree
+     */
+    insert(point) {
+        if(!this.boundary.contains(point))
+            return false;
+        
+        if(this.points.length < this.capacity) {
+            this.points.push(point);
+            return true;
+        }
+
+        else {
+            if(!this.divided)
+                this.subdivide();
+
+            return this.northeast.insert(point)
+                || this.northwest.insert(point)
+                || this.southeast.insert(point)
+                || this.southwest.insert(point);
+        }
+    }
+
+    /**
+     * Finds and returns all Quadtree's Points that are in the requested area
+     * @param {Quadtree.Rectangle} range The Rectangle where to find and returns all points
+     * @param {boolean} isWrapped Either this rectangle is wrapped or not. Do not use this parameter
+     * @returns {Array<Quadtree.Point>} Returns an array of all Points that are in the requested area.
+     */
+    query(range, isWrapped=false) {
+        if(isWrapped)
+            return this.points;
+
+        let found = [];
+
+        if(!this.boundary.intersects(range))
+            return found;
+
+        if(!isWrapped)
+            isWrapped = range.wrap(this.boundary);
+        
+        if(isWrapped === true)
+            found.push(...this.points);
+        
+        else {
+            for(const p of this.points) {
+                if(range.contains(p))
+                    found.push(p);
+            }
+        }
+
+        if(this.divided) {
+            found.push(...this.northeast.query(range, isWrapped));
+            found.push(...this.northwest.query(range, isWrapped));
+            found.push(...this.southeast.query(range, isWrapped));
+            found.push(...this.southwest.query(range, isWrapped));
+        }
+
+        return found;
+    }
+
+    /**
+     * Delimits the bounds of the Quadtree and recursivly do it for its children
+     * if it is splitted.<br>
+     * Default stroke color is #141414, but you can change it.
+     * @param {any} color The color of the limits. Default is #141414
+     */
+    show(color=20) {
+        noFill();
+        stroke(color);
+        strokeWeight(1);
+        strokeRect(this.boundary.x, this.boundary.y, this.boundary.w-1, this.boundary.h-1);
+
+        if(this.divided) {
+            this.northeast.show();
+            this.northwest.show();
+            this.southeast.show();
+            this.southwest.show();
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
 
 /**
  * This will tell the library to log in the console the performances about the initialization of the canvas.
