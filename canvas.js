@@ -659,7 +659,7 @@ const pop = () => ctx.restore();
  * @example
  * translate(100, 200)
  */
-const translate = (x, y) => ctx.translate(NOX_PV.centerX + x, NOX_PV.centerY + y);
+const translate = (x, y) => ctx.translate(x, y);
 
 /**
  * Adds a rotation to the transformation matrix.
