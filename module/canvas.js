@@ -1305,15 +1305,17 @@ export const trunc = n => Math.trunc(n);
 
 
 /**
- * Returns a random integer in a given interval. If 1 argument given, minimum is set to 0
+ * Returns a random integer in a given interval. If 1 argument given, minimum is set to 0.<br>
+ * If no argument is given, then just returns a floating value between 0 and 1.
  * @param {number} min minimal value
  * @param {number} max maximal value
  * @example
  * random(100); // a random int between 0 and 100
  * random(20, 25); // a random int between 20 and 25
  * random(-25); // a random between -25 and 0
+ * random(); // a random float between 0 and 1
  */
-export const random = (iMin, iMax = 0) => floor(Math.random() * (max(iMin, iMax) - min(iMin, iMax) + 1)) + min(iMin, iMax);
+export const random = (iMin=null, iMax = 0) => iMin===null? Math.random() : floor(random() * (max(iMin, iMax) - min(iMin, iMax) + 1)) + min(iMin, iMax);
 
 
 /**
@@ -3345,6 +3347,34 @@ export class Vector {
 		}
 
 		return this.set(this.x + x, this.y + y, this.z + z);
+	}
+
+	/**
+	 * Substracts values to the vector and returns it.
+	 * @param {Vector|number} x
+	 * @param {number} y
+	 * @param {number} z
+	 * @return {Vector} modified vector
+	 * @example
+	 * const v = new Vector(10, 10);
+	 * const v2 = new Vector(20, 20);
+	 * const v3 = v.sub(1, 2); // now v{x: 9, y: 8} and v3 is same
+	 * v2.sub(v); // now v2{x: 11, y: 12}
+	 */
+	sub() {
+		if (x instanceof Vector) {
+			return this.set(this.x - x.x, this.y - x.y, this.z - x.z);
+		}
+
+		if (y === null) {
+			y = x;
+		}
+
+		if (z === null) {
+			z = x;
+		}
+
+		return this.set(this.x - x, this.y - y, this.z - z);
 	}
 
 	/**
