@@ -3244,6 +3244,10 @@ export class Vector {
 		}
 	}
 
+    copy() {
+        return new Vector(this);
+    }
+
 	/**
 	 * Adapts the vector on a scale of 1
 	 * @param {boolean} apply either it should apply the changes to the vector or just return it
