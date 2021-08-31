@@ -4463,12 +4463,12 @@ const initializeCanvasWorld = () => {
 				canvas.addEventListener('touchstart', handleTouchStart, false);
 				canvas.addEventListener('touchmove', handleTouchMove, false);
 				canvas.addEventListener('mouseup', e => { NOX_PV.isMouseDown = false; if (typeof mouseUp === "function") mouseUp(e); });
-				canvas.addEventListener('click', e => { if (typeof onClick === "function") onClick(e); });
-				canvas.addEventListener('mouseenter', e => { if (typeof mouseEnter === "function") mouseEnter(e); });
-				canvas.addEventListener('mouseleave', e => { if (typeof mouseLeave === "function") mouseLeave(e); });
-				canvas.addEventListener('wheel', e => { if (typeof mouseWheel === "function") mouseWheel(e); });
-				canvas.addEventListener('contextmenu', e => { if (typeof onContextmenu === "function") onContextmenu(e); });
-				canvas.addEventListener('dblclick', e => { if (typeof onDblClick === "function") onDblClick(e); });
+				if (typeof onClick === "function") canvas.addEventListener('click', onClick);
+				if (typeof mouseEnter === "function") canvas.addEventListener('mouseenter', mouseEnter);
+				if (typeof mouseLeave === "function") canvas.addEventListener('mouseleave', mouseLeave);
+				if (typeof mouseWheel === "function") canvas.addEventListener('wheel', mouseWheel);
+				if (typeof onContextmenu === "function") canvas.addEventListener('contextmenu', onContextmenu);
+				if (typeof onDblClick === "function") canvas.addEventListener('dblclick', onDblClick);
 
 
 				// if the swipe is enable on pc, call event handler
@@ -4521,10 +4521,10 @@ const initializeCanvasWorld = () => {
 				if (typeof onResize === "function") onResize(newWidth, newHeight);
 			});
 
-			window.addEventListener('blur', () => { if (typeof onBlur === "function") onBlur(); });
-			window.addEventListener('focus', () => { if (typeof onFocus === "function") onFocus(); });
-			window.addEventListener('online', e => { if (typeof onOnline === "function") onOnline(e); });
-			window.addEventListener('offline', e => { if (typeof onOffline === "function") onOffline(e); });
+			if (typeof onBlur === "function") window.addEventListener('blur', onBlur);
+			if (typeof onFocus === "function") window.addEventListener('focus', onFocus);
+			if (typeof onOnline === "function") window.addEventListener('online', onOnline);
+			if (typeof onOffline === "function") window.addEventListener('offline', onOffline);
 
 			const t2 = performance.now();
 
