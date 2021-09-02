@@ -6,7 +6,7 @@
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.4.2}
+ * @version		{1.4.3}
  */
 
 
@@ -57,7 +57,7 @@ export const mouseDirection = { x: 0, y: 0 };
  * @example
  * moveTo(0, 0)
  */
-export const moveTo = (x, y) => ctx.moveTo(x, y);
+export const moveTo = (x, y) => ctx.moveTo(x - NOX_PV.cam.x, y - NOX_PV.cam.y);
 
 /**
  * Adds a straight line to the current sub-path by connecting the sub-path's last point to the specified (x, y) coordinates.
@@ -66,7 +66,7 @@ export const moveTo = (x, y) => ctx.moveTo(x, y);
  * @example
  * lineTo(10, 50)
  */
-export const lineTo = (x, y) => ctx.lineTo(x, y);
+export const lineTo = (x, y) => ctx.lineTo(x - NOX_PV.cam.x, y - NOX_PV.cam.y);
 
 /**
  * Adds a circular arc to the current sub-path, using the given control points and radius.
@@ -79,7 +79,7 @@ export const lineTo = (x, y) => ctx.lineTo(x, y);
  * @example
  * arcTo(200, 130, 50, 20, 40)
  */
-export const arcTo = (x1, y1, x2, y2, r) => ctx.arcTo(x1, y1, x2, y2, r);
+export const arcTo = (x1, y1, x2, y2, r) => ctx.arcTo(x1 - NOX_PV.cam.x, y1 - NOX_PV.cam.y, x2 - NOX_PV.cam.x, y2 - NOX_PV.cam.y, r);
 
 
 
@@ -152,7 +152,7 @@ export const polyline = (...values) => {
  */
 export const arc = (x, y, r, start, end, antiClockwise = false) => {
 	beginPath();
-	ctx.arc(x, y, r, start, end, antiClockwise);
+	ctx.arc(x - NOX_PV.cam.x, y - NOX_PV.cam.y, r, start, end, antiClockwise);
 	if (NOX_PV.bStroke) ctx.stroke();
 	if (NOX_PV.bFill) ctx.fill();
 	closePath();
@@ -187,7 +187,7 @@ export const circle = (x, y, r) => {
  * fillRect(0, 0, 100, 150)
  */
 export const fillRect = (x, y, w, h) => {
-	ctx.fillRect(x, y, w, h);
+	ctx.fillRect(x - NOX_PV.cam.x, y - NOX_PV.cam.y, w, h);
 };
 
 
@@ -205,7 +205,7 @@ export const fillRect = (x, y, w, h) => {
  * strokeRect(0, 0, 100, 150)
  */
 export const strokeRect = (x, y, w, h) => {
-	ctx.strokeRect(x, y, w, h);
+	ctx.strokeRect(x - NOX_PV.cam.x, y - NOX_PV.cam.y, w, h);
 };
 
 
@@ -221,7 +221,7 @@ export const strokeRect = (x, y, w, h) => {
  * rect(0, 0, 100, 150)
  */
 export const rect = (x, y, w, h) => {
-	ctx.rect(x, y, w, h);
+	ctx.rect(x - NOX_PV.cam.x, y - NOX_PV.cam.y, w, h);
 	if (NOX_PV.bFill) ctx.fill();
 	if (NOX_PV.bStroke) ctx.stroke();
 };
@@ -331,7 +331,7 @@ export const path = p => {
 
 		A: {
 			n: 6,
-			f: (x, y, r, start, end, antiClockwise) => ctx.arc(x, y, r, radian(start), radian(end), antiClockwise === 1)
+			f: (x, y, r, start, end, antiClockwise) => ctx.arc(x - NOX_PV.cam.x, y - NOX_PV.cam.y, r, radian(start), radian(end), antiClockwise === 1)
 		},
 
 		Z: {
@@ -524,13 +524,13 @@ export const text = (txt, x = 0, y = 0) => {
 		txt = txt.split('\n');
 
 		for (let i = 0; i < txt.length; i++) {
-			ctx.fillText(txt[i], x, y + i * size);
+			ctx.fillText(txt[i], x - NOX_PV.cam.x, y - NOX_PV.cam.y + i * size);
 		}
 	}
 
 	// one line
 	else {
-		ctx.fillText(txt, x, y);
+		ctx.fillText(txt, x - NOX_PV.cam.x, y - NOX_PV.cam.y);
 	}
 };
 
@@ -580,7 +580,7 @@ export const fontFamily = font => {
 
 /**
  * Change the text's alignement
- * @param {String} alignment text's alignment
+ * @param {'left'|'right'|'center'|'start'|'end'} alignment text's alignment
  * @example
  * alignText("center")
  */
@@ -604,7 +604,7 @@ export const alignText = alignment => {
  * bezierCurveTo(230, 30, 150, 80, 250, 100)
  */
 export const bezierCurveTo = (cp1x, cp1y, cp2x, cp2y, x, y) => {
-	ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
+	ctx.bezierCurveTo(cp1x - NOX_PV.cam.x, cp1y - NOX_PV.cam.y, cp2x - NOX_PV.cam.x, cp2y - NOX_PV.cam.y, x - NOX_PV.cam.x, y - NOX_PV.cam.y);
 };
 
 /**
@@ -620,7 +620,7 @@ export const bezierCurveTo = (cp1x, cp1y, cp2x, cp2y, x, y) => {
  * quadraticCurveTo(230, 30, 50, 100)
  */
 export const quadraticCurveTo = (cpx, cpy, x, y) => {
-	ctx.quadraticCurveTo(cpx, cpy, x, y);
+	ctx.quadraticCurveTo(cpx - NOX_PV.cam.x, cpy - NOX_PV.cam.y, x - NOX_PV.cam.x, y - NOX_PV.cam.y);
 };
 
 
@@ -692,8 +692,8 @@ export const clip = (...args) => ctx.clip(...args);
 
 /**
  * Adds a scaling transformation to the canvas units horizontally and/or vertically.
- * @param {*} x Scaling factor in the horizontal direction. A negative value flips pixels across the vertical axis. A value of 1 results in no horizontal scaling.
- * @param {*} y Scaling factor in the vertical direction. A negative value flips pixels across the horizontal axis. A value of 1 results in no vertical scaling.
+ * @param {number} x Scaling factor in the horizontal direction. A negative value flips pixels across the vertical axis. A value of 1 results in no horizontal scaling.
+ * @param {number} y Scaling factor in the vertical direction. A negative value flips pixels across the horizontal axis. A value of 1 results in no vertical scaling.
  */
 export const scale = (x, y) => ctx.scale(x, y);
 
@@ -741,7 +741,7 @@ export const strokeWeight = weight => {
 
 /**
  * Set the linecap style
- * @param {String} style linecap style
+ * @param {'butt'|'round'|'square'} style linecap style
  */
 export const linecap = style => {
 	ctx.lineCap = ['butt', 'round', 'square'].indexOf(style) > -1 ? style : 'butt';
@@ -806,7 +806,7 @@ export const makeLinearGradient = (x1, y1, x2, y2, ...params) => {
  * @example
  * clearRect(0, 0, width, height)
  */
-export const clearRect = (x, y, w, h) => ctx.clearRect(x, y, x + w, y + h);
+export const clearRect = (x, y, w, h) => ctx.clearRect(x - NOX_PV.cam.x, y - NOX_PV.cam.y, w, h);
 
 
 /**
@@ -877,11 +877,11 @@ export const globalAlpha = globalAlpha => {
 
 /**
  * Sets the type of compositing operation to apply when drawing new shapes.
- * @param {String} type a String identifying which of the compositing or blending mode operations to use.
- * Possible types:
- * "source-over", "source-in", "source-out", "source-atop", "destination-over", "destination-in", "destination-out",
- * "destination-atop", "lighter", "copy", "xor", "multiply", "screen", "overlay", "darken", "lighten", "color-dodge",
- * "color-burn", "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity"
+ * @param {'source-over'|'source-in'|'source-out'|'source-atop'
+ * |'destination-over'|'destination-in'|'destination-out'|'destination-atop'
+ * |'lighter'|'copy'|'xor'|'multiply'|'screen'|'overlay'|'darken'|'lighten'
+ * |'color-dodge'|'color-burn'|'hard-light'|'soft-light'|'difference'
+ * |'exclusion'|'hue'|'saturation'|'color'|'luminosity'} type a String identifying which of the compositing or blending mode operations to use.
  * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation for more details
  * @example
  * globalCompositeOperation("soft-light")
@@ -892,21 +892,19 @@ export const globalCompositeOperation = type => {
 
 /**
  * Sets the image smoothing quality
- * @param {String} quality 'low', 'medium', 'high'
+ * @param {'low'|'medium'|'high'} quality smooth quality
  * @example
  * setSmoothingQuality('low')
  */
 export const setSmoothingQuality = quality => {
-	if (!['low', 'medium', 'high'].includes(quality)) return;
 	ctx.imageSmoothingQuality = quality;
 };
-
 
 /**
  * Reports whether or not the specified point is contained in the current path.
  * @param {number|Path2D} x either x point coordinate or path2D. unaffected by the current transformation of the context. If path is unspecified, current path is used.
  * @param {number} y either x or y point coordinate, following the 1st argument's type. unaffected by the current transformation of the context.
- * @param {String} fillRule The algorithm by which to determine if a point is inside or outside the path. "nonzero" (default) or "evenodd"
+ * @param {'nonzero'|'evenodd'} fillRule The algorithm by which to determine if a point is inside or outside the path. "nonzero" (default) or "evenodd"
  * @return {Boolean} A Boolean, which is true if the specified point is contained in the current or specified path, otherwise false.
  * @example
  * if(isPointInPath(30, 20)) {
@@ -947,13 +945,13 @@ export const getTransform = () => ctx.getTransform();
  */
 export const lineDashOffset = (value = 0.0) => {
 	ctx.lineDashOffset = value;
-}
+};
 
 /**
  * Determines the shape used to join two line segments where they meet.
  * This property has no effect wherever two connected segments have the same direction, because no joining area will be added in this case.
  * Degenerate segments with a length of zero (i.e., with all endpoints and control points at the exact same position) are also ignored.
- * @param {String} type "round", "bevel" or "miter"
+ * @param {'round'|'bevel'|'miter'} type "round", "bevel" or "miter"
  * @example
  * lineJoin('round')
  */
@@ -968,9 +966,7 @@ export const lineJoin = type => {
  * @example
  * const textLength = measureText("Hello world")
  */
-export const measureText = text => {
-	return ctx.measureText(text);
-}
+export const measureText = text => ctx.measureText(text);
 
 /**
  * Resets the current transform to the identity matrix.
@@ -998,7 +994,7 @@ export const setTransform = (...transform) => ctx.setTransform(...transform);
  * 	- HTMLCanvasElement (<canvas>)
  * 	- ImageBitmap
  * 	- OffscreenCanvas
- * @param {String} repetition A DOMString indicating how to repeat the pattern's image.
+ * @param {'repeat'|'repeat-x'|'repeat-y'|'no-repeat'} repetition A DOMString indicating how to repeat the pattern's image.
  * Possible values are: 
  * 	- "repeat" (both directions) (default)
  * 	- "repeat-x" (horizontal only)
@@ -1068,9 +1064,7 @@ export const putImageData = (imageData, dx, dy, dirtyX = null, dirtyY = null, di
  * @example
  * const data = getImageData(60, 60, 200, 100);
  */
-export const getImageData = (sx, sy, sw, sh) => {
-	return ctx.getImageData(sx, sy, sw, sh);
-};
+export const getImageData = (sx, sy, sw, sh) => ctx.getImageData(sx, sy, sw, sh);
 
 
 /**
@@ -1603,7 +1597,10 @@ export const easeOutExpo = (t, b, c, d) => (t === d) ? b + c : c * (-pow(2, -10 
  * @param {Number} d The duration of the animation - Usually static
  * @returns {Number} The new position's value
  */
-export const easeInOutExpo = (t, b, c, d) => (t === 0) ? b : (t === d) ? b + c : ((t /= d / 2) < 1) ? c / 2 * pow(2, 10 * (t - 1)) + b : c / 2 * (-pow(2, -10 * --t) + 2) + b;
+export const easeInOutExpo = (t, b, c, d) => (t === 0) ? b :
+    (t === d) ? b + c :
+    ((t /= d / 2) < 1) ? c / 2 * pow(2, 10 * (t - 1)) + b :
+    c / 2 * (-pow(2, -10 * --t) + 2) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
@@ -1733,7 +1730,7 @@ export const easeInOutQuint = (t, b, c, d) => ((t /= d / 2) < 1) ? c / 2 * t * t
  * @param {Number} d The duration of the animation - Usually static
  * @returns {Number} The new position's value
  */
-export const easeInBack = (t, b, c, d) => c * (t /= d) * t * ((1.7 + 1) * t - 1.7) + b;
+export const easeInBack = (t, b, c, d) => c * (t /= d) * t * (2.7 * t - 1.7) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
@@ -1743,7 +1740,7 @@ export const easeInBack = (t, b, c, d) => c * (t /= d) * t * ((1.7 + 1) * t - 1.
  * @param {Number} d The duration of the animation - Usually static
  * @returns {Number} The new position's value
  */
-export const easeOutBack = (t, b, c, d) => c * ((t = t / d - 1) * t * ((1.7 + 1) * t + 1.7) + 1) + b;
+export const easeOutBack = (t, b, c, d) => c * ((t = t / d - 1) * t * (2.7 * t + 1.7) + 1) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
@@ -1753,7 +1750,7 @@ export const easeOutBack = (t, b, c, d) => c * ((t = t / d - 1) * t * ((1.7 + 1)
  * @param {Number} d The duration of the animation - Usually static
  * @returns {Number} The new position's value
  */
-export const easeInOutBack = (t, b, c, d) => ((t /= d / 2) < 1) ? c / 2 * (t * t * ((1.7 * 1.525 + 1) * t - 1.7)) + b : c / 2 * ((t -= 2) * t * ((1.7 * 1.525 + 1) * t + 1.7) + 2) + b;
+export const easeInOutBack = (t, b, c, d) => ((t /= d / 2) < 1) ? c / 2 * (t * t * (3,5925 * t - 1.7)) + b : c / 2 * ((t -= 2) * t * (3,5925 * t + 1.7) + 2) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
@@ -1971,6 +1968,9 @@ export const setCanvasSize = (newWidth, newHeight) => {
 
 		width = newWidth;
 		height = newHeight;
+
+        if(camera.anchorType === Camera.ANCHOR_CENTER)
+            camera.anchorPoint.set(width/2, height/2);
 	}
 
 	else {
@@ -2135,6 +2135,25 @@ const drawLoop = () => {
 	NOX_PV.now = Date.now();
 	NOX_PV.delta = NOX_PV.now - NOX_PV.then;
 
+    if(camera.following) {
+        // console.log(camera.followPoint.object());
+        camera.position.set(camera.followPoint.x, camera.followPoint.y);
+    }
+
+    else if(camera.moving) {
+        const m = NOX_PV.camera.move;
+        const t = m.start.asMilliseconds();
+        const x = easeInOutQuad(t, m.from.x, m.length.x, m.duration);
+        const y = easeInOutQuad(t, m.from.y, m.length.y, m.duration);
+        
+        if(t >= m.duration) {
+            camera.position.set(m.from.x + m.length.x, m.from.y + m.length.y);
+            NOX_PV.camera.move = null;
+        }
+        else
+            camera.position.set(x, y);
+    }
+
 	if (typeof NOX_PV.updateFunc === 'function')
 		NOX_PV.updateFunc(NOX_PV.timer.asMilliseconds()); // user update function
 
@@ -2161,7 +2180,7 @@ const drawLoop = () => {
 			const t = performance.now();
 
 			push();
-				clearRect(0, 0, width, height); // clear the canvas
+                clearRect(NOX_PV.cam.x, NOX_PV.cam.y, width, height);
 
 				NOX_PV.drawFunc(); // user draw function
 
@@ -2242,6 +2261,22 @@ export const disableSmoothing = () => {
 }
 
 
+/**
+ * Enables the camera.
+ */
+ const disableCamera = () => {
+    NOX_PV.camera.enabled = false;
+    NOX_PV.cam = NOX_PV.camera.hud;
+};
+
+/**
+ * Disables the camera.
+ */
+const enableCamera = () => {
+    NOX_PV.camera.enabled = true;
+    NOX_PV.cam = camera;
+};
+
 
 /**
  * Loads an 1D array (imageData) for each pixels of the canvas.
@@ -2290,10 +2325,15 @@ export const updatePixels = () => {
 
 /**
  * Perlin Noise function.
+ * 
  * Code from : http://pub.phyks.me/sdz/sdz/bruit-de-perlin.html
+ * 
  * Returns the perlin noise value between 0 and 1 for a given point (x,y)
+ * 
  * Lazily generates the perlin seed if not existing.
+ * 
  * It's the perlin noise of the page, so seed will always be the same.
+ * 
  * To have multiple custom Perlin noise arrays, create PerlinNoise class instance instead.
  * @param {Number} x X-axis point coordinate
  * @param {Number} y Y-axis point coordinate
@@ -2312,6 +2352,7 @@ export const perlin = (x, y = 0) => {
 
 /**
  * Sets the level of details for the Perlin noise function.
+ * 
  * Default is 10. If given argument isn't a number, does nothing.
  * @param {number} detailLevel level of detail for Perlin noise function
  * @example
@@ -2950,6 +2991,7 @@ export class PerlinNoise {
 
 	/**
 	 * Sets the level of detail for this class instance.
+     * 
 	 * If the lod changed, then it re-calculates the array.
 	 * @param {number} lod level of detail
 	 * @example
@@ -2967,6 +3009,7 @@ export class PerlinNoise {
 
 	/**
 	 * Regenerates the noise's seed.
+     * 
 	 * Then it re-calculates the array.
 	 * @example
 	 * const p = new PerlinNoise();
@@ -2979,7 +3022,9 @@ export class PerlinNoise {
 
 	/**
 	 * Sets the map number of the array.
+     * 
 	 * Default is [-1,1] (0).
+     * 
 	 * You can choose [0,255] (1) or [0,360] (2).
 	 * @param {number} mapNumber map style's index
 	 * @example
@@ -3003,7 +3048,9 @@ export class PerlinNoise {
 
 	/**
 	 * Calculates the noised array.
+     * 
 	 * You normally don't have to call it. It's automatically called if an option is changed through methods.
+     * 
 	 * @example
 	 * const p = new PerlinNoise();
 	 * p.calculate();
@@ -3054,7 +3101,7 @@ export class Time {
 	 * 
 	 * The default time's unity is milliseconds if nothing's precised.
 	 * @param {number} value initial time value (by default in milliseconds).
-	 * @param {string} unity unity of given time (by default milliseconds).
+	 * @param {'nano'|'micro'|'milli'|'seconds'|'minutes'} unity unity of given time (by default milliseconds).
 	 * 
 	 * It can be 'nano', 'micro', 'milli', 'seconds', 'minutes'
 	 */
@@ -4399,6 +4446,216 @@ export class Path {
 
 
 
+class Camera {
+    // CAMERA ANCHOR TYPES. DEFAULT IS TOP-LEFT CORNER
+    static ANCHOR_DEFAULT = 0;
+    static ANCHOR_CENTER = 1;
+
+    uuid = generateUUID();
+    position = new Vector(0, 0);
+    anchorType = Camera.ANCHOR_DEFAULT;
+    anchorPoint = new Vector(0, 0);
+    followPoint = null;
+
+    /**
+     * Creates a Camera which can moves in the canvas.
+     * 
+     * Default position is (0, 0), and default anchor is top-left corner.
+     * 
+     * The camera is by default activated. You can disable and enable it with
+     * `disableCamera()` and `enableCamera()`.
+     * 
+     * <b>The Camera is NOT using the `translate()` function.</b>
+     * 
+     * You can create your own camera, but never replace the one used by the library.
+     * 
+     * Instead, use `camera.set(myCamera)` to copy the position of your camera.
+     * 
+     * You can draw static HUD using the `disableCamera()`. It will stay static in your
+     * screen even if you move your camera.
+     * @see {@link disableCamera}
+     * @see {@link enableCamera}
+     * @param {Vector} position position of the Camera at its creation.
+     */
+    constructor(position=null) {
+        if(position instanceof Vector)
+            this.position = position;
+    }
+
+    /**
+     * Returns the in-world anchor X-axis point of the camera.
+     * @return {Number}
+     */
+    get x() { return this.position.x - this.anchorPoint.x; }
+
+    /**
+     * Returns the in-world anchor Y-axis point of the camera.
+     * @return {Number}
+     */
+    get y() { return this.position.y - this.anchorPoint.y; }
+
+    /**
+     * Returns either the camera is following a point or not.
+     * @return {Boolean}
+     */
+    get following() { return this.followPoint !== null; }
+
+    /**
+     * Returns either the camera is currently moving or not.
+     * @return {Boolean}
+     */
+    get moving() { return NOX_PV.camera.move !== null; }
+
+    /**
+     * Defines either the anchor of the camera is top-left corner or center.<br>
+     * Default is top-left corner.<br>
+     * The method only accepts `Camera.ANCHOR_DEFAULT` and `Camera.ANCHOR_CENTER`.
+     * @param {Camera.ANCHOR_DEFAULT|Camera.ANCHOR_CENTER} anchor 
+     * @return {Camera} this
+     */
+    setAnchor(anchor) {
+        if(anchor === Camera.ANCHOR_DEFAULT) {
+            this.anchorPoint.set(0, 0);
+            this.anchorType = anchor;
+        }
+        else if(anchor === Camera.ANCHOR_CENTER) {
+            this.anchorPoint.set(width/2, height/2);
+            this.anchorType = anchor;
+        }
+
+        return this;
+    }
+
+    /**
+     * Defines the ease movement's type of the camera while its moving.<br>
+     * Default is 'quadInOut'.
+     * @param {'linear'
+     * |'quadIn'|'quadOut'|'quadInOut'
+     * |'sineIn'|'sineOut'|'sineInOut'
+     * |'expoIn'|'expoOut'|'expoInOut'
+     * |'circIn'|'circOut'|'circInOut'
+     * |'cubicIn'|'cubicOut'|'cubicInOut'
+     * |'quartIn'|'quartOut'|'quartInOut'
+     * |'quintIn'|'quintOut'|'quintInOut'
+     * |'backIn'|'backOut'|'backInOut'
+     * |'elasticIn'|'elasticOut'|'elasticInOut'} moveType 
+     * @return {Camera} this
+     */
+    setMoveType(moveType) {
+        if(moveType in Object.keys(NOX_PV.easeFuncMap))
+            this.moveType = moveType;
+
+        return this;
+    }
+
+    /**
+     * Tells the camera to follow a point. This must be a Vector.
+     * 
+     * If you instead give an object than contains a `position` attribute
+     * which is of type Vector, then it will follow its position.
+     * @param {Vector|{position: Vector}} point The point to follow
+     * @returns {Camera} this
+     */
+    follow(point) {
+        if(point instanceof Vector)
+            this.followPoint = point;
+        else if(typeof point === 'object' && point.position instanceof Vector)
+            this.followPoint = point.position;
+        else
+            console.error("[Error] Camera::follow : parameter should be a Vector.");
+
+        return this;
+    }
+
+    /**
+     * Tells the camera to stop follow if it was.
+     * @return {Camera} this
+     */
+    stopFollow() {
+        this.followPoint = null;
+        return this;
+    }
+
+    /**
+     * Moves the camera with the given vector.
+     * 
+     * Default duration of the move is 1000 ms.
+     * 
+     * You can change the ease animation of the move with `Camera.setMoveType()`
+     * @see {@link Camera.setMoveType}
+     * @param {Number|Vector} x A Vector or a X-axis point to move
+     * @param {Number} y The Y-axis point to move - or the duration if the first argument is a Vector
+     * @param {Number} duration The duration of the move
+     * @return {Camera} this
+     */
+    move(x, y, duration=1000) {
+        if(this.moving)
+            return;
+
+        if(this.following)
+            this.stopFollow();
+
+        const length = new Vector(0, 0);
+
+        if(x instanceof Vector) {
+            length.set(x);
+            duration = y || 1000;
+        }
+        else
+            length.set(x, y);
+
+        length.sub(camera.anchorPoint);
+
+        NOX_PV.camera.move = {
+            from: this.position.copy(),
+            length,
+            duration,
+            start: new Time()
+        };
+
+        return this;
+    }
+
+    /**
+     * Moves the camera to the given point.
+     * 
+     * Default duration of the move is 1000 ms.
+     * 
+     * You can change the ease animation of the move with `Camera.setMoveType()`
+     * @see {@link Camera.setMoveType}
+     * @param {Number|Vector} x A Vector or a X-axis point to move
+     * @param {Number} y The Y-axis point to move - or the duration if the first argument is a Vector
+     * @param {Number} duration The duration of the move
+     * @return {Camera} this
+     */
+    moveTo(x, y, duration=1000) {
+        const v = new Vector(0, 0);
+
+        if(x instanceof Vector) {
+            v.set(x.x, x.y);
+            duration = y;
+        }
+        else
+            v.set(x, y);
+
+        v.sub(this.position).add(this.anchorPoint);
+
+        this.move(v.x, v.y, duration);
+
+        return this;
+    }
+
+    /**
+     * Immediatly stops to move the camera.
+     * @returns {Camera} this
+     */
+    stop() {
+        NOX_PV.camera.move = null;
+        return this;
+    }
+}
+
+
 
 /**
  * A 4-children based tree that is used to manage world entities relations
@@ -4826,6 +5083,14 @@ const NOX_PV = {
 		freq: 720
 	},
 
+    camera: {
+        hud: null,
+        enabled: true,
+        move: null
+    },
+
+    cam: null,
+
 	lut: [],
 
 	// either the fill | stroke is enable
@@ -4964,14 +5229,21 @@ const NOX_PV = {
 	easeElastic: (type, t, b, c, d) => {
 		if (t === 0) return b;
 		if ((t /= d) === 1) return b + c;
-		const p = d * .3;
-		const s = p / ((c < 0) ? 4 : (2 * PI) * asin(c / a));
+		const p = d * .45;
+		const s = p / ((c < 0) ? 4 : (2 * PI) * 1.57);
 		const x = sin((t * d - s) * (2 * PI) / p);
-		return (type === 'in') ? -(a * pow(2, 10 * (t -= 1)) * x) + b :
-			(type === 'out') ? a * pow(2, -10 * t) * x + c + b :
-				(t < 1) ?
-					-.5 * (a * pow(2, 10 * (t -= 1)) * x) + b :
-					a * pow(2, -10 * (t -= 1)) * x * .5 + c + b;
+		return (
+            // in
+            (type === 'in') ?
+                -(c * pow(2, 10 * --t) * x) + b :
+            // out
+            (type === 'out') ?
+                c * pow(2, -10 * t) * x + c + b :
+            // in-out
+            (t < 1) ?
+                c * pow(2, 10 * --t) * x * -.5 + b :
+                c * pow(2, -10 * --t) * x * .5 + c + b
+        );
 	},
 
 	callbackListeners: {},
@@ -5006,3 +5278,7 @@ NOX_PV.easeFuncMap = {
 	backIn: easeInBack, backOut: easeOutBack, backInOut: easeInOutBack,
 	elasticIn: easeInElastic, elasticOut: easeOutElastic, elasticInOut: easeInOutElastic,
 };
+
+const camera = new Camera();
+NOX_PV.camera.hud = new Camera();
+NOX_PV.cam = camera;

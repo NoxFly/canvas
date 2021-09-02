@@ -230,6 +230,8 @@ Here are the variables declared in the canvas file, that you can use:
 
 **mouseDirection**: object containing the x and y mouse's direction movement. The faster the mouse goes, the larger will the number be
 
+**camera**: The canvas's camera.
+
 
 
 
@@ -325,6 +327,41 @@ generateUUID(); // returns a unique ID
 ```
 
 
+## Camera
+
+You can at any moment enable or disable it with these two functions :
+```js
+enableCamera();
+disableCamera();
+```
+
+A Camera has 2 anchors : either its top-left corner, or its center. The default is the first one.
+
+The default position of the camera is (0, 0), so you're in a real-default-like canvas.
+
+Here are the Camera's methods :
+```js
+// constructor
+Camera(vectorPosition=null); // default is (0, 0)
+// defines the anchor's type of the camera
+Camera.setAnchor(Camera.ANCHOR_DEFAULT|Camera.ANCHOR_CENTER);
+// defines the ease function to use when moving the camera
+// see ease functions for it
+// The default is 'quadInOut'
+Camera.setMoveType(moveType);
+// tells the camera to follow a given point.
+// if an object is given, and if this object has the property 'position'
+// which is a vector, then it will follow it
+Camera.follow(vector);
+Camera.stopFollow();
+// moves the camera from its position to its position + given x,y
+// default duration of the move is 1s.
+Camera.move(x, y, duration=1000);
+// moves the camera to the given (x,y) point
+Camera.moveTo(x, y, duration=1000);
+// tells the camera to stop its movement
+Camera.stop();
+```
 
 
 
