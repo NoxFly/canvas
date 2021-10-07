@@ -84,7 +84,7 @@ Tested and works on `Firefox`, `Chrome`, `Edge`, `new Edge`, `Opera`.
 
 
 
-## 2 required functions
+## 3 required functions
 You first need to create 2 functions, that are automatically detected by the framework.
 
 ```js
