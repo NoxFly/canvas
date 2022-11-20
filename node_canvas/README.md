@@ -9,39 +9,34 @@
 [![GitHub stars](https://img.shields.io/github/stars/NoxFly/canvas.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/NoxFly/canvas/stargazers/)
 [![Npm Downloads](https://img.shields.io/npm/dt/@noxfly/canvas.svg?maxAge=3600)](https://img.shields.io/npm/dt/@noxfly/canvas.svg?maxAge=3600)
 
-All basics are in [default README](https://github.com/NoxFly/canvas#canvas-framework).
+> ⚠️ This package will no longer be maintained. Look what's planned [here](https://github.com/NoxFly/canvas#readme)
 
+## About
 
+This package is for 2D canvas, on backend, meaning it cannot be animated.<br>
+It is here to simplify the use of the `node-canvas` package, giving additionnal resources, like mathematical functions, perlin noise, vector, matrix, colors quadtree and image cache manager.
 
-## Dependency
-
-It only requires [canvas](https://www.npmjs.com/package/canvas) module.
-
-
-
-
-## about
-
-You don't have to use the framework as the front-end versions.
-
-You have to see this part of the framework as a framework that simplify the node-canvas uses.
-
-That means you don't have a `setup` and a `draw` functions do to.
-
-You also can't create animated / interactive canvas, with mouse or keyboard events.
-
-
+> Note : front-end version is in development, for both JS and TS !
 
 ##  NPM
 
 [https://www.npmjs.com/package/@noxfly/canvas](https://www.npmjs.com/package/@noxfly/canvas)
 
+### CommonJS
 ```js
 const Canvas = require('@noxfly/canvas');
 
 const canvas = Canvas.createCanvas(640, 480);
 
 // ...
+```
+
+### Module
+
+```js
+import * as Canvas from '@noxfly/canvas';
+
+const canvas = Canvas.createCanvas(640, 480);
 ```
 
 
@@ -52,8 +47,9 @@ const canvas = Canvas.createCanvas(640, 480);
 ```js
 const { createCanvas } = require('@noxfly/canvas');
 
-// createCanvas(width, height, context='2d', background=null)
-const canvas = createCanvas(640, 480, '2d', '#000');
+// createCanvas(width, height, background=null, support=null)
+const canvas = createCanvas(640, 480, '#000');
+// support can be null, SVG or PDF (read the node-canvas documentation)
 
 // no context given will by default create a 2d one
 // no background given will result of an empty one
@@ -72,6 +68,7 @@ console.log(canvas._);
 ## Append node canvas to html
 
 ```html
+<!-- Example with EJS file -->
 <img src="<%= canvas.toDataURL() %>">
 ```
 
@@ -110,7 +107,7 @@ canvas.fill(255);
 ```
 
 
-### push, pop, translate, rotate and clip
+### push, pop, translate, rotate, scale and clip
 
 Exactly the same thing, adding `canvas.` before.
 
@@ -118,6 +115,7 @@ Exactly the same thing, adding `canvas.` before.
 canvas.push();
     canvas.translate(x, y);
     canvas.rotate(degrees);
+    canvas.scale(1.2);
     // ...
     canvas.clip(); // ctx.clipPath()
 canvas.pop();
@@ -148,6 +146,10 @@ const { Vector } = require('@noxfly/canvas');
 ```
 
 
+## Matrix
+
+Read the usage of this class [here](https://github.com/NoxFly/canvas#matrix-class).
+
 
 ## Mathematical and statistical functions
 
@@ -165,17 +167,6 @@ Read the usage of this class [here](https://github.com/NoxFly/canvas#path-class)
 
 ```js
 const { Path } = require('@noxfly/canvas');
-```
-
-
-## Load images
-
-```js
-const { loadImage } = require('@noxfly/canvas');
-
-loadImage('images/myImage.png').then(img => {
-    canvas.drawImage(img);
-})
 ```
 
 ## Create image cache system
@@ -196,6 +187,14 @@ canvas.drawImage(img);
 // you can call again the imageManager.load('myImageName', 'my/path/to/image.png')
 // and it will returns you the stored image
 ```
+
+## Quadtree
+
+Read the usage of this class [here](https://github.com/NoxFly/canvas#quadtree).
+
+## Perlin Noise
+
+Read the usage of this class [here](https://github.com/NoxFly/canvas#perlin-noise).
 
 
 ## License

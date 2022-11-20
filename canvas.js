@@ -1,22 +1,37 @@
 /**
- * @copyright   Copyright (C) 2019 - 2021 Dorian Thivolle All rights reserved.
+ * @copyright   Copyright (C) 2019 - 2022 Dorian Thivolle All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  * @author		Dorian Thivolle
  * @name		canvas
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.4.3}
+ * @version		{1.5.0}
  */
 
 
 
 /**
  * @vars CANVAS PUBLIC VARS
+ * read-only, do not modify it
  */
-let ctx = null, canvas = null, width = 0, height = 0, realWidth = 0, realHeight = 0;
-let mouseX = 0, mouseY = 0;
-let fps = 60;
+/** @type {CanvasRenderingContext2D} */
+let ctx = null;
+/** @type {HTMLCanvasElement} */
+let canvas = null;
+
+let width = 0,
+	height = 0,
+	realWidth = 0,
+	realHeight = 0,
+	mouseX = 0,
+	mouseY = 0,
+	fps = 60;
+
+/** @type {{ x: number, y: number }} */
+let dragPoint = null;
+
+/** @type {Uint8ClampedArray} */
 var pixels = undefined;
 
 /**
@@ -39,11 +54,11 @@ const PI = Math.PI;
 
 // object of boolean
 // either it's a mobile or not, in ios or android
-const isDevice = {
+const isDevice = Object.freeze({
 	mobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
 	ios: /iPad|iPhone|iPod/.test(navigator.userAgent),
 	android: /Android/.test(navigator.userAgent)
-};
+});
 
 
 // mouse direction - can't be a vector class instance, just a basic object {x, y}
@@ -96,9 +111,10 @@ const line = (x1, y1, x2, y2) => {
 	beginPath();
 	moveTo(x1, y1);
 	lineTo(x2, y2);
-
-	if (NOX_PV.bStroke) ctx.stroke();
 	closePath();
+
+	if(NOX_PV.bStroke)
+		ctx.stroke();
 };
 
 
@@ -114,25 +130,30 @@ const line = (x1, y1, x2, y2) => {
  */
 const polyline = (...values) => {
 	// got an odd number of argument
-	if (values.length % 2 != 0) {
+	if(values.length % 2 !== 0) {
 		return console.error('The function polyline must take an even number of values');
 	}
 
 	beginPath();
-	if (values.length > 0) {
+
+	if(values.length > 0) {
 		moveTo(values[0], values[1]);
 	}
 
-	for (let i = 2; i < values.length; i += 2) {
+	for(let i=2; i < values.length; i += 2) {
 		const x = values[i],
-			y = values[i + 1];
+			y = values[i+1];
 
 		lineTo(x, y);
 	}
 
-	if (NOX_PV.bStroke) ctx.stroke();
-	if (NOX_PV.bFill) ctx.fill();
 	closePath();
+
+	if(NOX_PV.bStroke)
+		ctx.stroke();
+
+	if(NOX_PV.bFill)
+		ctx.fill();
 };
 
 
@@ -146,16 +167,20 @@ const polyline = (...values) => {
  * @param {number} r The arc's radius. Must be positive.
  * @param {number} start The angle at which the arc starts in radians, measured from the positive x-axis.
  * @param {number} end The angle at which the arc ends in radians, measured from the positive x-axis.
- * @param {boolean} antiClockwise An optional Boolean. If true, draws the arc counter-clockwise between the start and end angles. The default is false (clockwise).
+ * @param {boolean} antiClockwise An optional boolean. If true, draws the arc counter-clockwise between the start and end angles. The default is false (clockwise).
  * @example
  * arc(100, 70, 20)
  */
-const arc = (x, y, r, start, end, antiClockwise = false) => {
+const arc = (x, y, r, start, end, antiClockwise=false) => {
 	beginPath();
 	ctx.arc(x - NOX_PV.cam.x, y - NOX_PV.cam.y, r, start, end, antiClockwise);
-	if (NOX_PV.bStroke) ctx.stroke();
-	if (NOX_PV.bFill) ctx.fill();
 	closePath();
+
+	if(NOX_PV.bStroke)
+		ctx.stroke();
+
+	if(NOX_PV.bFill)
+		ctx.fill();
 };
 
 
@@ -222,29 +247,36 @@ const strokeRect = (x, y, w, h) => {
  */
 const rect = (x, y, w, h) => {
 	ctx.rect(x - NOX_PV.cam.x, y - NOX_PV.cam.y, w, h);
-	if (NOX_PV.bFill) ctx.fill();
-	if (NOX_PV.bStroke) ctx.stroke();
+
+	if(NOX_PV.bFill)
+		ctx.fill();
+
+	if(NOX_PV.bStroke)
+		ctx.stroke();
 };
 
 
 
 /**
  * Draws a rounded rectangle
- * @param {Number} x 
- * @param {Number} y 
- * @param {Number} w 
- * @param {Number} h 
- * @param  {...Number} radius 
+ * @param {number} x The X-Axis rounded rectangle's position
+ * @param {number} y The Y-Axis rounded rectangle's position
+ * @param {number} w The width of the rounded rectangle
+ * @param {number} h The height of the rounded rectangle
+ * @param  {number} radius top-left corner's radius or 4 corners radius if this is the only one passed
+ * @param  {number} radiusTR top-right corner's radius
+ * @param  {number} radiusBR bottom-right corner's radius
+ * @param  {number} radiusBL bottom-left corner's radius
  */
-const roundRect = (x = 0, y = 0, w = 0, h = 0, radius = 0, radiusTR, radiusBR, radiusBL) => {
-	if (radiusTR === undefined) radiusTR = radius;
-	if (radiusBR === undefined) radiusBR = radius;
-	if (radiusBL === undefined) radiusBL = radius;
+const roundRect = (x=0, y=0, w=0, h=0, radius=0, radiusTR, radiusBR, radiusBL) => {
+	if(radiusTR === undefined) radiusTR = radius;
+	if(radiusBR === undefined) radiusBR = radius;
+	if(radiusBL === undefined) radiusBL = radius;
 
-	radius = min(max(0, radius), 50);
-	radiusTR = min(max(0, radiusTR), 50);
-	radiusBR = min(max(0, radiusBR), 50);
-	radiusBL = min(max(0, radiusBL), 50);
+	radius 		= min(max(0, radius), 50);
+	radiusTR 	= min(max(0, radiusTR), 50);
+	radiusBR 	= min(max(0, radiusBR), 50);
+	radiusBL 	= min(max(0, radiusBL), 50);
 
 	const x1 = x + radius,
 		y1 = y;
@@ -271,10 +303,13 @@ const roundRect = (x = 0, y = 0, w = 0, h = 0, radius = 0, radiusTR, radiusBR, r
 	arcTo(x4 - radiusBL, y4, x, y4 - radiusBL, radiusBL);
 	lineTo(x5, y5);
 	arcTo(x5, y5 - radius, x1, y1, radius);
-
-	if (NOX_PV.bStroke) ctx.stroke();
-	if (NOX_PV.bFill) ctx.fill();
 	closePath();
+
+	if(NOX_PV.bStroke)
+		ctx.stroke();
+
+	if(NOX_PV.bFill)
+		ctx.fill();
 };
 
 
@@ -286,7 +321,7 @@ const roundRect = (x = 0, y = 0, w = 0, h = 0, radius = 0, radiusTR, radiusBR, r
  * Instructions : M, L, H, V, A, Z
  * @param {string} p path string that will be converted to d path code
  * @example
- * p("M0 0 L 10 10 A 20 20 H 50 V 50 l 20 20 Z")
+ * p('M0 0 L 10 10 A 20 20 H 50 V 50 l 20 20 Z')
  */
 const path = p => {
 	// instruction: letter (MLHVAZ)
@@ -296,7 +331,7 @@ const path = p => {
 	p = p.trim();
 
 	// a path must start with a moveTo instruction
-	if (!p.startsWith('M')) {
+	if(!p.startsWith('M')) {
 		return;
 	}
 
@@ -345,12 +380,12 @@ const path = p => {
 	const reg = new RegExp(`^[${Object.keys(modes).join('')}]|(\-?\d+(\.\d+)?)$`, 'i');
 
 	// if a point isn't well written, then stop
-	if (p.filter(point => reg.test(point)).length === 0) {
+	if(p.filter(point => reg.test(point)).length === 0) {
 		return;
 	}
 
 	// doesn't need to try to draw something: need at least an instruction M first and 2 parameters x,y
-	if (p.length < 3) {
+	if(p.length < 3) {
 		return;
 	}
 
@@ -361,22 +396,22 @@ const path = p => {
 
 
 	// read arguments - normally starts with x,y of the M instruction
-	for (let i = 0; i < p.length; i++) {
+	for(let i=0; i < p.length; i++) {
 		const point = p[i];
 
 		// is a letter - new instruction
-		if (/[a-z]/i.test(point)) {
+		if(/[a-z]/i.test(point)) {
 			// lowercase - relative
 			// uppercase - absolute
 			// push pile of instructions (only 2 saved)
 			mode = point;
 
 			// if the instruction is Z
-			if (mode === 'Z') {
+			if(mode === 'Z') {
 				// and if it's the last mode
-				if (i === lastIdx) {
+				if(i === lastIdx) {
 					// then close the path
-					d.push("Z");
+					d.push('Z');
 				} else {
 					// cannot use the Z somewhere else than the last point
 					return;
@@ -384,14 +419,14 @@ const path = p => {
 			}
 
 			// lowercase Z isn't recognized
-			if (['z'].includes(mode)) {
+			if(['z'].includes(mode)) {
 				return;
 			}
 
 			const nArg = modes[mode.toUpperCase()].n;
 
 			// depending on the current instruction, there need to have to right number of argument following this instruction
-			if (lastIdx - nArg < i) {
+			if(lastIdx - nArg < i) {
 				return;
 			}
 
@@ -399,21 +434,21 @@ const path = p => {
 			const lastPos = { x: 0, y: 0 };
 
 			// get the last cursor position
-			if (d.length > 0) {
+			if(d.length > 0) {
 				const prev = d[d.length - 1];
 
 				const hv = ['H', 'V'].indexOf(prev[0]);
 
-				if (hv !== -1) {
-					lastPos.x = prev[1 + hv]; // x of the last point
-					lastPos.y = prev[2 - hv]; // y of the last point
+				if(hv !== -1) {
+					lastPos.x = prev[1+hv]; // x of the last point
+					lastPos.y = prev[2-hv]; // y of the last point
 				}
 
 				else {
 					const k = 1;
 
 					lastPos.x = prev[k]; // x of the last point
-					lastPos.y = prev[k + 1]; // y of the last point
+					lastPos.y = prev[k+1]; // y of the last point
 				}
 			}
 
@@ -426,13 +461,13 @@ const path = p => {
 
 
 			// add each argument that are following the instruction
-			for (let j = 0; j < nArg; j++) {
+			for(let j=0; j < nArg; j++) {
 				i++;
 
 				const n = parseFloat(p[i]);
 
 				// it must be a number
-				if (isNaN(n)) {
+				if(isNaN(n)) {
 					return;
 				}
 
@@ -441,22 +476,22 @@ const path = p => {
 			}
 
 
-			// onnly for H or V
-			if (hv !== -1) {
-				arr.push(lastPos[Object.keys(lastPos)[1 - hv]]);
+			// only for H or V
+			if(hv !== -1) {
+				arr.push(lastPos[Object.keys(lastPos)[1-hv]]);
 			}
 
-			if (arr[0] === 'A') {
+			if(arr[0] === 'A') {
 				arr[1] -= arr[3];
 			}
 
 			// lowercase: relative to last point - only for MLHVA
-			if (/[mlhva]/.test(mode)) {
-				if (mode === 'v') {
+			if(/[mlhva]/.test(mode)) {
+				if(mode === 'v') {
 					arr[1] += lastPos.y;
 				}
 
-				else if (mode === 'h') {
+				else if(mode === 'h') {
 					arr[1] += lastPos.x;
 				}
 
@@ -472,7 +507,7 @@ const path = p => {
 
 
 			// draw the arc isn't enough, we have to move the cursor to the end of the arc too
-			if (arr[0] === 'A') {
+			if(arr[0] === 'A') {
 				// arr = ['A', x, y, r, start, end, acw]
 				const angle = radian(arr[5]);
 
@@ -488,9 +523,10 @@ const path = p => {
 
 	// start draw depending on what's written
 	beginPath();
+
 	d.forEach(step => {
 		// surely Z()
-		if (typeof step === 'string') {
+		if(typeof step === 'string') {
 			modes[step].f();
 		}
 
@@ -500,10 +536,11 @@ const path = p => {
 		}
 	});
 
-	if (NOX_PV.bFill) ctx.fill();
-	if (NOX_PV.bStroke) ctx.stroke();
-	closePath();
+	if(NOX_PV.bFill)
+		ctx.fill();
 
+	if(NOX_PV.bStroke)
+		ctx.stroke();
 }
 
 
@@ -511,19 +548,19 @@ const path = p => {
 
 /**
  * Adds a text to the current sub-path
- * @param {String} txt text to be displayed
+ * @param {string} txt text to be displayed
  * @param {number} x text's X position
  * @param {number} y text's Y position
  * @example
- * text("Hello world", 20, 20)
+ * text('Hello world', 20, 20)
  */
-const text = (txt, x = 0, y = 0) => {
+const text = (txt, x=0, y=0) => {
 	// multiple lines
-	if (/\n/.test(txt)) {
+	if(/\n/.test(txt)) {
 		const size = NOX_PV.fontSize.replace(/(\d+)(\w+)?/, '$1');
 		txt = txt.split('\n');
 
-		for (let i = 0; i < txt.length; i++) {
+		for(let i=0; i < txt.length; i++) {
 			ctx.fillText(txt[i], x - NOX_PV.cam.x, y - NOX_PV.cam.y + i * size);
 		}
 	}
@@ -540,9 +577,9 @@ const text = (txt, x = 0, y = 0) => {
 /**
  * Text settings - sets the size and the font-family
  * @param {number} size font size
- * @param {String} font font name
+ * @param {string} font font name
  * @example
- * setFont(15, "Monospace")
+ * setFont(15, 'Monospace')
  */
 const setFont = (size, font) => {
 	ctx.font = `${size}px ${font}`;
@@ -567,9 +604,9 @@ const fontSize = size => {
 
 /**
  * Sets the font-family of the text
- * @param {String} font font-family
+ * @param {string} font font-family
  * @example
- * fontFamily("Monospace")
+ * fontFamily('Monospace')
  */
 const fontFamily = font => {
 	ctx.font = `${NOX_PV.fontSize} ${font}`;
@@ -582,7 +619,7 @@ const fontFamily = font => {
  * Change the text's alignement
  * @param {'left'|'right'|'center'|'start'|'end'} alignment text's alignment
  * @example
- * alignText("center")
+ * alignText('center')
  */
 const alignText = alignment => {
 	ctx.textAlign = (['left', 'right', 'center', 'start', 'end'].indexOf(alignment) > -1) ? alignment : 'left';
@@ -673,9 +710,9 @@ const rotate = degree => ctx.rotate(radian(degree));
  * turns the current or given path into the current clipping region.
  * The previous clipping region, if any, is intersected with the current or given path to create the new clipping region.
  * @param  {Path2D} path A Path2D path to use as the clipping region.
- * @param {String} fillRule The algorithm by which to determine if a point is inside or outside the clipping region. Possible values:
- * - "nonzero": The non-zero winding rule. Default rule.
- * - "evenodd": The even-odd winding rule.
+ * @param {string} fillRule The algorithm by which to determine if a point is inside or outside the clipping region. Possible values:
+ * - 'nonzero': The non-zero winding rule. Default rule.
+ * - 'evenodd': The even-odd winding rule.
  * @example
  * // Create circular clipping region
  * beginPath();
@@ -695,7 +732,7 @@ const clip = (...args) => ctx.clip(...args);
  * @param {number} x Scaling factor in the horizontal direction. A negative value flips pixels across the vertical axis. A value of 1 results in no horizontal scaling.
  * @param {number} y Scaling factor in the vertical direction. A negative value flips pixels across the horizontal axis. A value of 1 results in no vertical scaling.
  */
-const scale = (x, y) => ctx.scale(x, y);
+const scale = (x, y=x) => ctx.scale(x, y);
 
 
 
@@ -774,19 +811,19 @@ const createLinearGradient = (x1, y1, x2, y2) => ctx.createLinearGradient(x1, y1
  * @param {number} y1 The y-axis coordinate of the start point.
  * @param {number} x2 The x-axis coordinate of the end point.
  * @param {number} y2 The y-axis coordinate of the end point.
- * @param  {(offset:number, color:String)} params The color parameters. It has to be as pair : offset (between 0 & 1), and color
+ * @param  {(offset:number, color:string)} params The color parameters. It has to be as pair : offset (between 0 & 1), and color
  * @return {CanvasGradient} A linear CanvasGradient initialized with the specified line and colors.
  * @example
- * makeLinearGradient(0, 0, width, height, 0, "black", 1, "white")
+ * makeLinearGradient(0, 0, width, height, 0, 'black', 1, 'white')
  */
 const makeLinearGradient = (x1, y1, x2, y2, ...params) => {
-	if (params.length % 2 !== 0) {
-		return console.error("you have to tell params by pair (offset, color). Odd number of arguments given.");
+	if(params.length % 2 !== 0) {
+		return console.error('you have to tell params by pair (offset, color). Odd number of arguments given.');
 	}
 
 	const grad = createLinearGradient(x1, y1, x2, y2);
 
-	for (let i = 0; i < params.length; i += 2) {
+	for(let i=0; i < params.length; i += 2) {
 		const offset = params[i];
 		const color = NOX_PV.colorTreatment(params[i + 1]);
 
@@ -833,7 +870,7 @@ const closePath = () => ctx.closePath();
  * drawFocusIfNeeded(button1)
  */
 const drawFocusIfNeeded = (elementOrPath2D, element = null) => {
-	if (element === null && !(elementOrPath2D instanceof Path2D)) {
+	if(element === null && !(elementOrPath2D instanceof Path2D)) {
 		ctx.drawFocusIfNeeded(elementOrPath2D);
 	} else {
 		ctx.drawFocusIfNeeded(elementOrPath2D, element);
@@ -848,12 +885,12 @@ const drawFocusIfNeeded = (elementOrPath2D, element = null) => {
  * setLineDash([5, 15])
  */
 const setLineDash = array => {
-	if (!Array.isArray(array)) {
-		return console.error("Array type expected. Got " + typeof array);
+	if(!Array.isArray(array)) {
+		return console.error('Array type expected. Got ' + typeof array);
 	}
 
 	ctx.setLineDash(array);
-}
+};
 
 /**
  * Returns the ctx.getLineDash() function's value
@@ -881,10 +918,10 @@ const globalAlpha = globalAlpha => {
  * |'destination-over'|'destination-in'|'destination-out'|'destination-atop'
  * |'lighter'|'copy'|'xor'|'multiply'|'screen'|'overlay'|'darken'|'lighten'
  * |'color-dodge'|'color-burn'|'hard-light'|'soft-light'|'difference'
- * |'exclusion'|'hue'|'saturation'|'color'|'luminosity'} type a String identifying which of the compositing or blending mode operations to use.
+ * |'exclusion'|'hue'|'saturation'|'color'|'luminosity'} type a string identifying which of the compositing or blending mode operations to use.
  * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation for more details
  * @example
- * globalCompositeOperation("soft-light")
+ * globalCompositeOperation('soft-light')
  */
 const globalCompositeOperation = type => {
 	ctx.globalCompositeOperation = type;
@@ -904,14 +941,14 @@ const setSmoothingQuality = quality => {
  * Reports whether or not the specified point is contained in the current path.
  * @param {number|Path2D} x either x point coordinate or path2D. unaffected by the current transformation of the context. If path is unspecified, current path is used.
  * @param {number} y either x or y point coordinate, following the 1st argument's type. unaffected by the current transformation of the context.
- * @param {'nonzero'|'evenodd'} fillRule The algorithm by which to determine if a point is inside or outside the path. "nonzero" (default) or "evenodd"
- * @return {Boolean} A Boolean, which is true if the specified point is contained in the current or specified path, otherwise false.
+ * @param {'nonzero'|'evenodd'} fillRule The algorithm by which to determine if a point is inside or outside the path. 'nonzero' (default) or 'evenodd'
+ * @return {boolean} A boolean, which is true if the specified point is contained in the current or specified path, otherwise false.
  * @example
  * if(isPointInPath(30, 20)) {
  * 	// ... do stuff
  * }
  */
-const isPointInPath = function (x, y, fillRule = 'nonzero') {
+const isPointInPath = function(x, y, fillRule='nonzero') {
 	return ctx.isPointInPath(...arguments);
 };
 
@@ -919,13 +956,13 @@ const isPointInPath = function (x, y, fillRule = 'nonzero') {
  * Reports whether or not the specified point is inside the area contained by the stroking of a path.
  * @param {number|Path2D} x The x-axis coordinate of the point to check. (or Path2D)
  * @param {number} y The y-axis coordinate of the point to check.
- * @return {Boolean} A Boolean, which is true if the point is inside the area contained by the stroking of a path, otherwise false.
+ * @return {boolean} A boolean, which is true if the point is inside the area contained by the stroking of a path, otherwise false.
  * @example
  * if(isPointInStroke(30, 40)) {
  * 	// ... do stuff
  * }
  */
-const isPointInStroke = function (x, y) {
+const isPointInStroke = function(x, y) {
 	return ctx.isPointInStroke(...arguments);
 };
 
@@ -943,7 +980,7 @@ const getTransform = () => ctx.getTransform();
  * @example
  * lineDashOffset(1)
  */
-const lineDashOffset = (value = 0.0) => {
+const lineDashOffset = (value=0.0) => {
 	ctx.lineDashOffset = value;
 };
 
@@ -951,7 +988,7 @@ const lineDashOffset = (value = 0.0) => {
  * Determines the shape used to join two line segments where they meet.
  * This property has no effect wherever two connected segments have the same direction, because no joining area will be added in this case.
  * Degenerate segments with a length of zero (i.e., with all endpoints and control points at the exact same position) are also ignored.
- * @param {'round'|'bevel'|'miter'} type "round", "bevel" or "miter"
+ * @param {'round'|'bevel'|'miter'} type 'round', 'bevel' or 'miter'
  * @example
  * lineJoin('round')
  */
@@ -961,10 +998,10 @@ const lineJoin = type => {
 
 /**
  * Returns a TextMetrics object that contains information about the measured text.
- * @param {String} text text string to measure
+ * @param {string} text text string to measure
  * @return {TextMetrics} A TextMetrics object.
  * @example
- * const textLength = measureText("Hello world")
+ * const textLength = measureText('Hello world')
  */
 const measureText = text => ctx.measureText(text);
 
@@ -994,12 +1031,12 @@ const setTransform = (...transform) => ctx.setTransform(...transform);
  * 	- HTMLCanvasElement (<canvas>)
  * 	- ImageBitmap
  * 	- OffscreenCanvas
- * @param {'repeat'|'repeat-x'|'repeat-y'|'no-repeat'} repetition A DOMString indicating how to repeat the pattern's image.
+ * @param {'repeat'|'repeat-x'|'repeat-y'|'no-repeat'} repetition A DOMstring indicating how to repeat the pattern's image.
  * Possible values are: 
- * 	- "repeat" (both directions) (default)
- * 	- "repeat-x" (horizontal only)
- * 	- "repeat-y" (vertical only)
- * 	- "no-repeat" (neither direction)
+ * 	- 'repeat' (both directions) (default)
+ * 	- 'repeat-x' (horizontal only)
+ * 	- 'repeat-y' (vertical only)
+ * 	- 'no-repeat' (neither direction)
  * @example
  * const img = new Image();
  * img.src = 'my/image.png';
@@ -1024,7 +1061,7 @@ const createPattern = (image, repetition='repeat') => {
  * const imageData = createImageData(100, 50);
  * // ImageData { width: 100, height: 50, data: Uint8ClampedArray[20000] }
  */
-const createImageData = function (widthOrImageData, height = null) {
+const createImageData = function(widthOrImageData, height=null) {
 	return ctx.createImageData(...arguments);
 };
 
@@ -1043,8 +1080,8 @@ const createImageData = function (widthOrImageData, height = null) {
  * const imgData = getImageData(0, 0, width, height);
  * putImageData(imgData, 0, 0);
  */
-const putImageData = (imageData, dx, dy, dirtyX = null, dirtyY = null, dirtyWidth = null, dirtyHeight = null) => {
-	if (dirtyX === null) {
+const putImageData = (imageData, dx, dy, dirtyX=null, dirtyY=null, dirtyWidth=null, dirtyHeight=null) => {
+	if(dirtyX === null) {
 		ctx.putImageData(imageData, dx, dy);
 	} else {
 		ctx.putImageData(imageData, dx, dy, dirtyX, dirtyY, dirtyWidth, dirtyHeight);
@@ -1064,7 +1101,7 @@ const putImageData = (imageData, dx, dy, dirtyX = null, dirtyY = null, dirtyWidt
  * @example
  * const data = getImageData(60, 60, 200, 100);
  */
-const getImageData = (sx, sy, sw, sh) =>  ctx.getImageData(sx, sy, sw, sh);
+const getImageData = (sx, sy, sw, sh) => ctx.getImageData(sx, sy, sw, sh);
 
 
 /**
@@ -1087,10 +1124,10 @@ const getImageData = (sx, sy, sw, sh) =>  ctx.getImageData(sx, sy, sw, sh);
  * 	drawImage(image, 33, 71, 104, 124, 21, 20, 87, 104);
  * });
  */
-const drawImage = (image, sx, sy, sWidth = null, sHeight = null, dx = null, dy = null, dWidth = null, dHeight = null) => {
-	if (sWidth === null) {
+const drawImage = (image, sx, sy, sWidth=null, sHeight=null, dx=null, dy=null, dWidth=null, dHeight=null) => {
+	if(sWidth === null) {
 		ctx.drawImage(image, sx - NOX_PV.cam.x, sy - NOX_PV.cam.y);
-	} else if (dx === null) {
+	} else if(dx === null) {
 		ctx.drawImage(image, sx - NOX_PV.cam.x, sy - NOX_PV.cam.y, sWidth, sHeight);
 	} else {
 		ctx.drawImage(image, sx, sy, sWidth, sHeight, dx - NOX_PV.cam.x, dy - NOX_PV.cam.y, dWidth, dHeight);
@@ -1177,23 +1214,31 @@ const angleBetweenVectors = (a, b) => {
 const dist = (a, b) => {
 	let s = 0;
 
-	if (a.x && b.x) {
+	if(a.x && b.x) {
 		const x = b.x - a.x;
 		s += x * x;
 	}
 
-	if (a.y && b.y) {
+	if(a.y && b.y) {
 		const y = b.y - a.y;
 		s += y * y;
 	}
 
-	if (a.z && b.z) {
+	if(a.z && b.z) {
 		const z = b.z - a.z;
 		s += z * z;
 	}
 
 	return sqrt(s);
-}
+};
+
+/**
+ * Returns a new vector, the magnitude of the two given.
+ * @param {Vector} a first point
+ * @param {Vector} b second point
+ * @returns {Vector} The resulting magnitude vector
+ */
+const mag = (a, b) => new Vector(b.x - a.x, b.y - a.y);
 
 /**
  * range mapping of a value
@@ -1213,7 +1258,7 @@ const dist = (a, b) => {
 const map = (arrayOrValue, start1, end1, start2, end2) => {
 	const m = val => (val - start1) * (end2 - start2) / (end1 - start1) + start2;
 
-	if (typeof arrayOrValue === 'number') {
+	if(typeof arrayOrValue === 'number') {
 		return m(arrayOrValue);
 	}
 
@@ -1249,7 +1294,7 @@ const sqrt = n => Math.sqrt(n);
 
 /**
  * Returns the minimum of given values
- * @param  {...Number} values value(s)
+ * @param  {...number} values value(s)
  * @example
  * min(0, 1, 2, 3, -1); // -1
  */
@@ -1257,11 +1302,24 @@ const min = (...values) => Math.min(...values);
 
 /**
  * Returns the maximum of given values
- * @param  {...Number} values value(s)
+ * @param  {...number} values value(s)
  * @example
  * max(0, 1, 2, 3, -1); // 3
  */
 const max = (...values) => Math.max(...values);
+
+/**
+ * Clamps the value b between a and c and returns it.
+ * @param {number} a The bottom value of the interval
+ * @param {number} b The value to clamp between a and c
+ * @param {number} c The top value of the interval
+ * @returns {number} The clamped value
+ * @example
+ * clamp(0, -1, 1); // 0
+ * clamp(0, 2, 1); // 1
+ * clamp(0, 50, 100); // 50
+ */
+const clamp = (a, b, c) => max(a, min(b, c));
 
 /**
  * Returns the rounded value of the given one
@@ -1457,13 +1515,16 @@ const mean = (...values) => sum(...values) / values.length;
  * median(1, 2, 3);
  */
 const median = (...values) => {
-	if (values.length === 0) return 0;
+	if(values.length === 0)
+		return 0;
 
 	values.sort((a, b) => a - b);
 
 	const half = floor(values.length / 2);
 
-	if (values.length % 2) return values[half];
+	if(values.length % 2)
+		return values[half];
+
 	return (values[half - 1] + values[half]) / 2.0;
 };
 
@@ -1501,287 +1562,325 @@ const std = (...values) => sqrt(variance(...values));
 // https://spicyyoghurt.com/tools/easing-functions
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeLinear = (t, b, c, d) => c * t / d + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeInQuad = (t, b, c, d) => c * (t /= d) * t + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeOutQuad = (t, b, c, d) => -c * (t /= d) * (t - 2) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeInOutQuad = (t, b, c, d) => ((t /= d / 2) < 1) ? c / 2 * t * t + b : -c / 2 * ((--t) * (t - 2) - 1) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeInSine = (t, b, c, d) => -c * cos(t / d * (PI / 2)) + c + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeOutSine = (t, b, c, d) => c * sin(t / d * (PI / 2)) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeInOutSine = (t, b, c, d) => -c / 2 * (cos(PI * t / d) - 1) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeInExpo = (t, b, c, d) => (t === 0) ? b : c * pow(2, 10 * (t / d - 1)) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeOutExpo = (t, b, c, d) => (t === d) ? b + c : c * (-pow(2, -10 * t / d) + 1) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeInOutExpo = (t, b, c, d) => (t === 0) ? b :
-    (t === d) ? b + c :
-    ((t /= d / 2) < 1) ? c / 2 * pow(2, 10 * (t - 1)) + b :
-    c / 2 * (-pow(2, -10 * --t) + 2) + b;
+	(t === d)
+		? b + c
+		: ((t /= d / 2) < 1)
+			? c / 2 * pow(2, 10 * (t - 1)) + b
+			: c / 2 * (-pow(2, -10 * --t) + 2) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeInCirc = (t, b, c, d) => -c * (sqrt(1 - (t /= d) * t) - 1) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeOutCirc = (t, b, c, d) => c * sqrt(1 - (t = t / d - 1) * t) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeInOutCirc = (t, b, c, d) => ((t /= d / 2) < 1) ? -c / 2 * (sqrt(1 - t * t) - 1) + b : c / 2 * (sqrt(1 - (t -= 2) * t) + 1) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeInCubic = (t, b, c, d) => c * (t /= d) * t * t + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeOutCubic = (t, b, c, d) => c * ((t = t / d - 1) * t * t + 1) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeInOutCubic = (t, b, c, d) => ((t /= d / 2) < 1) ? c / 2 * t * t * t + b : c / 2 * ((t -= 2) * t * t + 2) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeInQuart = (t, b, c, d) => c * (t /= d) * t * t * t + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeOutQuart = (t, b, c, d) => -c * ((t = t / d - 1) * t * t * t - 1) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeInOutQuart = (t, b, c, d) => ((t /= d / 2) < 1) ? c / 2 * t * t * t * t + b : -c / 2 * ((t -= 2) * t * t * t - 2) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeInQuint = (t, b, c, d) => c * (t /= d) * t * t * t * t + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeOutQuint = (t, b, c, d) => c * ((t = t / d - 1) * t * t * t * t + 1) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeInOutQuint = (t, b, c, d) => ((t /= d / 2) < 1) ? c / 2 * t * t * t * t * t + b : c / 2 * ((t -= 2) * t * t * t * t + 2) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeInBack = (t, b, c, d) => c * (t /= d) * t * (2.7 * t - 1.7) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeOutBack = (t, b, c, d) => c * ((t = t / d - 1) * t * (2.7 * t + 1.7) + 1) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
-const easeInOutBack = (t, b, c, d) => ((t /= d / 2) < 1) ? c / 2 * (t * t * (3,5925 * t - 1.7)) + b : c / 2 * ((t -= 2) * t * (3,5925 * t + 1.7) + 2) + b;
+const easeInOutBack = (t, b, c, d) => ((t /= d / 2) < 1) ? c / 2 * (t * t * (3.5925 * t - 1.7)) + b : c / 2 * ((t -= 2) * t * (3.5925 * t + 1.7) + 2) + b;
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeInElastic = (t, b, c, d) => NOX_PV.easeElastic('in', t, b, c, d);
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeOutElastic = (t, b, c, d) => NOX_PV.easeElastic('out', t, b, c, d);
 
 /**
  * Returns the coordinate of a point on time t, on a trajectory from b to b+c, with a duration of d.
- * @param {Number} t Time passed during the beginning of the animation
- * @param {Number} b Beginning - starting point of the animation - Usually static
- * @param {Number} c The amount of change during the animation - Usually static
- * @param {Number} d The duration of the animation - Usually static
- * @returns {Number} The new position's value
+ * @param {number} t Time passed during the beginning of the animation
+ * @param {number} b Beginning - starting point of the animation - Usually static
+ * @param {number} c The amount of change during the animation - Usually static
+ * @param {number} d The duration of the animation - Usually static
+ * @returns {number} The new position's value
  */
 const easeInOutElastic = (t, b, c, d) => NOX_PV.easeElastic('inout', t, b, c, d);
 
+/**
+ * 
+ * @param {number|Vector} v The source value to move to the given target. It can be a number or a Vector.
+ * @param {number|Vector} t The target coordinate. If v is a number, the target is a number, otherwise it's a Vector.
+ * @param {number} p The percentage of offset to move the value forword
+ * @example
+ * let x = 0;
+ * let target = 100;
+ * 
+ * function update() {
+ *     x = lerp(x, target, 0.2);
+ * }
+ * 
+ * // or
+ * 
+ * let position = new Vector(0, 0);
+ * let target = new Vector(100, 200);
+ * 
+ * function update() {
+ *     // even if it returns the vector
+ *     // it modifies it by reference.
+ *     lerp(position, target, 0.2);
+ * }
+ */
+const lerp = (v, t, p) => {
+	if(v instanceof Vector && t instanceof Vector) {
+		v.x = lerp(v.x, t.x, p);
+		v.y = lerp(v.y, t.y, p);
+		return v;
+	}
+	else if(typeof v === 'number' && typeof t === 'number') {
+		return v + (t - v) * p;
+	}
+
+	return 0;
+};
 
 /**
  * Sets the frame rate of the canvas - only positive number allowed
@@ -1789,7 +1888,7 @@ const easeInOutElastic = (t, b, c, d) => NOX_PV.easeElastic('inout', t, b, c, d)
  * @example
  * frameRate(60)
  */
-const frameRate = f => { if (f >= 0) NOX_PV.interval = 1000 / f };
+const frameRate = f => { if(f >= 0) NOX_PV.interval = 1000 / f; };
 
 
 
@@ -1802,6 +1901,17 @@ const frameRate = f => { if (f >= 0) NOX_PV.interval = 1000 / f };
  */
 const getSwipe = () => NOX_PV.lastSwipe;
 
+/**
+ * Returns the number of seconds passed since the script started to run.
+ * @returns {number}
+ */
+const getSecondsPassed = () => NOX_PV.timer.asSeconds();
+
+/**
+ * Returns the number of milliseconds passed since the script started to run.
+ * @returns {number}
+ */
+const getMSPassed = () => NOX_PV.timer.asMilliseconds();
 
 
 
@@ -1811,7 +1921,7 @@ const getSwipe = () => NOX_PV.lastSwipe;
 /**
  * Returns either the key is currently down or not
  * @param {number} key the key code
- * @return {Boolean}
+ * @return {boolean}
  * @example
  * if(isKeyDown(keyQ)) {
  * 	// ... do stuff
@@ -1822,7 +1932,7 @@ const isKeyDown = key => NOX_PV.keys[key];
 /**
  * Returns either the key is currently up or not (not down)
  * @param {number} key the key code
- * @return {Boolean}
+ * @return {boolean}
  * @example
  * if(isKeyUp(keyQ)) {
  * 	// ... do stuff
@@ -1832,41 +1942,12 @@ const isKeyUp = key => !NOX_PV.keys[key];
 
 
 
-
-// scale for rendering
-
-/**
- * Convert pixel's position from real canvas size to translated canvas size that renders
- * @param {number} x X-axis point
- * @param {number} y Y-axis point
- * @return {number} converted position
- */
-const rendering = (x, y = null) => new Vector(((x instanceof Vector && !y) ? x.x : x) * width / realWidth, ((x instanceof Vector && !y) ? x.y : y) * height / realHeight);
-
-/**
- * Does the rendering(x, y) function only for the X-axis
- * @param {number} x X-axis point
- * @return {number} converted position
- */
-const renderingX = x => x * width / realWidth;
-
-/**
- * Does the rendering(x, y) function only for the Y-axis
- * @param {number} y Y-axis point
- * @return {number} converted position
- */
-const renderingY = y => y * height / realHeight;
-
-
-
-
-
 /**
  * Returns the mouse's direction.
  * If mouse is not moving, returns null.
- * @return {'TOP_LEFT'|'UP'|'TOP_RIGHT'|'LEFT'|'RIGHT'|'BOTTOM_LEFT'|'DOWN'|'BOTTOM_RIGHT'|null} mouse's direction.
+ * @return {{x: number, y: number}|'TOP_LEFT'|'UP'|'TOP_RIGHT'|'LEFT'|'RIGHT'|'BOTTOM_LEFT'|'DOWN'|'BOTTOM_RIGHT'|null} mouse's direction.
  * @example
- * if(mouseDir() === "RIGHT") {
+ * if(mouseDir() === 'RIGHT') {
  * 	// ... do stuff
  * }
  */
@@ -1874,82 +1955,15 @@ const mouseDir = () =>
 	NOX_PV.isPointerLocked ?
 		mouseDirection
 		:
-		(mouseX > NOX_PV.oldMouseX && mouseY > NOX_PV.oldMouseY) ? "BOTTOM_RIGHT" :
-		(mouseX > NOX_PV.oldMouseX && mouseY < NOX_PV.oldMouseY) ? "TOP_RIGHT" :
-		(mouseX < NOX_PV.oldMouseX && mouseY < NOX_PV.oldMouseY) ? "TOP_LEFT" :
-		(mouseX < NOX_PV.oldMouseX && mouseY > NOX_PV.oldMouseY) ? "BOTTOM_LEFT" :
-		(mouseX > NOX_PV.oldMouseX && mouseY === NOX_PV.oldMouseY) ? "RIGHT" :
-		(mouseX === NOX_PV.oldMouseX && mouseY > NOX_PV.oldMouseY) ? "DOWN" :
-		(mouseX === NOX_PV.oldMouseX && mouseY < NOX_PV.oldMouseY) ? "UP" :
-		(mouseX < NOX_PV.oldMouseX && mouseY === NOX_PV.oldMouseY) ? "LEFT" :
+		(mouseX > NOX_PV.oldMouseX && mouseY > NOX_PV.oldMouseY) 	? 'BOTTOM_RIGHT' :
+		(mouseX > NOX_PV.oldMouseX && mouseY < NOX_PV.oldMouseY) 	? 'TOP_RIGHT' :
+		(mouseX < NOX_PV.oldMouseX && mouseY < NOX_PV.oldMouseY) 	? 'TOP_LEFT' :
+		(mouseX < NOX_PV.oldMouseX && mouseY > NOX_PV.oldMouseY) 	? 'BOTTOM_LEFT' :
+		(mouseX > NOX_PV.oldMouseX && mouseY === NOX_PV.oldMouseY) 	? 'RIGHT' :
+		(mouseX === NOX_PV.oldMouseX && mouseY > NOX_PV.oldMouseY) 	? 'DOWN' :
+		(mouseX === NOX_PV.oldMouseX && mouseY < NOX_PV.oldMouseY) 	? 'UP' :
+		(mouseX < NOX_PV.oldMouseX && mouseY === NOX_PV.oldMouseY) 	? 'LEFT' :
 		null;
-
-
-
-
-
-
-
-
-/**
- * Allows or disallows the swipe feature on pc
- * The swipe is by default enabled
- * @param {Boolean} bool either it enables or disables the swipe on PC
- * @example
- * enablePCswip(false); // disable
- * enablePCswip(true); // enable
- */
-const enablePCswipe = bool => {
-	NOX_PV.swipePCEnable = typeof bool === "boolean" ? bool : true;
-
-	if (NOX_PV.swipePCEnable) {
-		document.addEventListener('mousedown', handleTouchStart, false);
-		document.addEventListener('mousemove', handleTouchMove, false);
-	} else {
-		document.removeEventListener('mousedown', handleTouchStart, true);
-		document.removeEventListener('mousemove', handleTouchMove, true);
-	}
-};
-
-
-
-
-
-
-
-
-
-/**
- * Sets the html view rendering (canvas html element size & canvas view inside it)
- * @param {number} w width
- * @param {number} h height
- * @example
- * createCanvas(500, 500);
- * setPixelResolution(1000, 1000);
- * // now, HTML canvas element's size will do 500x500 pixels,
- * // but inside it, the pixel's resolution will be 1000x1000 pixels
- */
-const setPixelResolution = (w, h) => {
-	if (w <= 0 || h <= 0) return;
-
-	if (canvas && ctx) {
-		realWidth = w;
-		realHeight = h;
-
-		canvas.width = realWidth;
-		canvas.height = realHeight;
-
-		canvas.style.width = width + 'px';
-		canvas.style.height = height + 'px';
-	}
-
-	else {
-		console.warn("No canvas created yet, so cannot apply changes for its size.");
-	}
-};
-
-
-
 
 
 
@@ -1959,7 +1973,7 @@ const setPixelResolution = (w, h) => {
  * @param {number} newHeight canvas height
  */
 const setCanvasSize = (newWidth, newHeight) => {
-	if (canvas && ctx) {
+	if(canvas && ctx) {
 		canvas.style.width = newWidth + 'px';
 		canvas.style.height = newHeight + 'px';
 
@@ -1974,11 +1988,18 @@ const setCanvasSize = (newWidth, newHeight) => {
 	}
 
 	else {
-		console.warn("No canvas created yet, so cannot apply changes for its size.");
+		console.warn('No canvas created yet, so cannot apply changes for its size.');
 	}
 };
 
-
+/**
+ * Either enables or disables the automatic canvas resizing.
+ * @param {boolean} enable Either it has to enable or not this feature.
+ * @param {boolean} onceDone Either it has to resize when the user stopped resize the page or at any resize moment.
+ */
+const setAutoResize = (enable, onceDone=true) => {
+	NOX_PV.autoResize = enable? (onceDone? 2 : 1) : 0;
+};
 
 
 
@@ -1994,34 +2015,34 @@ const setCanvasSize = (newWidth, newHeight) => {
  * @param {number} w width of the canvas
  * @param {number} h height of the canvas
  * @param {Color} bg canvas background color
- * @param {Boolean} requestPointerLock request or not the pointer lock
+ * @param {boolean} requestPointerLock request or not the pointer lock
  * @param {HTMLElement} container the html element the canvas will be in. Default is document.body
- * @return {HTMLCanvasElement} created canvas. this created canvas is stored in a global variable named "canvas"
- * and its context named "ctx"
+ * @return {HTMLCanvasElement} created canvas. this created canvas is stored in a global variable named 'canvas'
+ * and its context named 'ctx'
  * @example
  * createCanvas(); // fullscreen canvas
  * createCanvas(500, 250); // 500x250 canvas size
  * createCanvas(MIN_DOC_SIZE, MIN_DOC_SIZE); // create a square canvas, depending on screen's size
- * createCanvas(200, 200, "#fff"); // create 200x200 canvas with white background
+ * createCanvas(200, 200, '#fff'); // create 200x200 canvas with white background
  * createCanvas(200, 200, 0, true); // create 200x200 canvas with black background, and enable requestPointerLock feature
  */
-const createCanvas = (w = null, h = null, bg = "#000", requestPointerLock = false, container = document.body) => {
-	if (!('inSetup') in NOX_PV)
-		return console.warn("[Warning] createCanvas : usable only setup() function.");
+const createCanvas = (w=null, h=null, bg='#000', requestPointerLock=false, container=document.body) => {
+	if(!('inSetup' in NOX_PV))
+		return console.warn('[Warning] createCanvas : usable only setup() function.');
 
-	if (w == null && h == null) {
+	if(w == null && h == null) {
 		w = documentWidth();
 		h = documentHeight();
 	}
 
-	if (w <= 0 || h <= 0) {
+	if(w <= 0 || h <= 0) {
 		console.warn('Canvas size must be higher than 0');
 		return;
 	}
 
 	// if canvas already created, then remove it and recreate it
-	if (canvas != null) {
-		document.querySelector("#" + canvas.id).remove();
+	if(canvas != null) {
+		canvas.remove();
 		canvas = null;
 		ctx = null;
 	}
@@ -2033,29 +2054,26 @@ const createCanvas = (w = null, h = null, bg = "#000", requestPointerLock = fals
 
 	canvas.width = width;
 	canvas.height = height;
-	canvas.style.width = width;
-	canvas.style.height = height;
+	canvas.style.width = width + 'px';
+	canvas.style.height = height + 'px';
 
 	realWidth = width;
 	realHeight = height;
 
-	canvas.id = "dynamic-canvas";
+	canvas.id = 'nox-canvas';
 	canvas.style.background = NOX_PV.colorTreatment(bg);
 
 	container.appendChild(canvas);
 
-	if (requestPointerLock) {
-		canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock;
-		document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
-
+	if(requestPointerLock) {
 		document.addEventListener('pointerlockchange', () => {
-			if (!document.pointerLockElement || document.pointerLockElement.id != 'dynamic-canvas') {
+			if(!document.pointerLockElement || document.pointerLockElement.id != 'nox-canvas') {
 				NOX_PV.isPointerLocked = false;
 			}
 		}, false);
 
 		canvas.addEventListener('click', () => {
-			if (!NOX_PV.isPointerLocked) {
+			if(!NOX_PV.isPointerLocked) {
 				NOX_PV.isPointerLocked = true;
 				canvas.requestPointerLock();
 			}
@@ -2074,12 +2092,12 @@ const createCanvas = (w = null, h = null, bg = "#000", requestPointerLock = fals
 /**
  * Shows cyan guidelines that are following the mouse on the canvas, telling the pixels x,y
  * It's mostly a dev feature
- * @param {Boolean} bool either it shows or not
+ * @param {boolean} bool either it shows or not
  * @example
  * showGuideLines(true)
  */
 const showGuideLines = bool => {
-	NOX_PV.bGuideLines = typeof bool === 'boolean' && bool;
+	NOX_PV.bGuideLines = `${bool}` === 'true';
 };
 
 
@@ -2089,19 +2107,15 @@ const showGuideLines = bool => {
 
 
 /**
- * Default draw condition - run in every cases
- * Do not use it. Use setDrawCondition instead.
- */
-let drawCond = () => true;
-
-/**
  * Sets the condition on when the draw function has to be executed (pause it if not)
  * @param {Function} condition condition in function
  * @example
  * setDrawCondition(() => x < 10);
  */
 const setDrawCondition = (condition = null) => {
-	if (condition) drawCond = condition;
+	if(condition) {
+		NOX_PV.drawCond = condition;
+	}
 };
 
 
@@ -2119,21 +2133,24 @@ const setDrawCondition = (condition = null) => {
  * Do not Call it.
  */
 const drawLoop = () => {
-	if (NOX_PV.loop === true)
+	if(NOX_PV.loop === true)
 		requestAnimationFrame(drawLoop);
 
+	// Perfs
 	const t0 = performance.now();
 
-	if (NOX_PV.logPerfs && NOX_PV.drawLoopInfo.it === 0) {
+	if(NOX_PV.logPerfs && NOX_PV.drawLoopInfo.it === 0) {
 		NOX_PV.drawLoopInfo.start = t0;
 	}
+	//
 
-
+	// FPS
 	NOX_PV.now = Date.now();
 	NOX_PV.delta = NOX_PV.now - NOX_PV.then;
 
+
+	// Camera
     if(camera.following) {
-        // console.log(camera.followPoint.object());
         camera.position.set(camera.followPoint.x, camera.followPoint.y);
     }
 
@@ -2150,13 +2167,20 @@ const drawLoop = () => {
         else
             camera.position.set(x, y);
     }
+	//
 
-	NOX_PV.updateFunc(NOX_PV.timer.asMilliseconds()); // user update function
+	// UPDATE
+	for(const module of NOX_PV.updateModules)
+		module.update();
+	NOX_PV.updateFunc(); // user update function
+	//
 
-	if (NOX_PV.logPerfs)
+	// Perfs
+	if(NOX_PV.logPerfs)
 		NOX_PV.drawLoopInfo.t1 += performance.now() - t0;
 
-	if (NOX_PV.delta > NOX_PV.interval) {
+	// FPS -> Draw
+	if(NOX_PV.delta > NOX_PV.interval) {
 		NOX_PV.then = NOX_PV.now - (NOX_PV.delta % NOX_PV.interval);
 
 		if(NOX_PV.then - NOX_PV.firstThen > 99999) {
@@ -2172,16 +2196,22 @@ const drawLoop = () => {
 		fps = round(NOX_PV.counter / NOX_PV.time_el);
 
 		// if canvas created & drawCond returns true
-		if (ctx && drawCond()) {
+		if(ctx && NOX_PV.drawCond()) {
 			const t = performance.now();
 
 			push();
 				clearRect(NOX_PV.cam.x, NOX_PV.cam.y, width, height); // clear the canvas
 
-				NOX_PV.drawFunc(); // user draw function
+				// draw extra before the basic drawing
+				for(const module of NOX_PV.renderingModules) {
+					module.render();
+				}
+				
+				// user draw function
+				NOX_PV.drawFunc();
 
 				// if guidelines enabled
-				if (NOX_PV.bGuideLines) {
+				if(NOX_PV.bGuideLines) {
 					push();
 						fill('#46eaea'); stroke('#46eaea');
 						strokeWeight(1);
@@ -2192,15 +2222,16 @@ const drawLoop = () => {
 				}
 			pop();
 
+			// Perfs
 			NOX_PV.drawLoopInfo.t2 += performance.now() - t;
 		}
 	}
 
-
-	if (NOX_PV.logPerfs) {
+	// Perfs
+	if(NOX_PV.logPerfs) {
 		NOX_PV.drawLoopInfo.it = (NOX_PV.drawLoopInfo.it + 1) % NOX_PV.drawLoopInfo.freq;
 
-		if (NOX_PV.drawLoopInfo.it === 0) {
+		if(NOX_PV.drawLoopInfo.it === 0) {
 			NOX_PV.drawLoopInfo.t1 /= NOX_PV.drawLoopInfo.freq;
 			NOX_PV.drawLoopInfo.t2 /= NOX_PV.drawLoopInfo.freq;
 
@@ -2243,7 +2274,7 @@ const noLoop = () => {
  * enableSmoothing();
  */
 const enableSmoothing = () => {
-	if (ctx) ctx.imageSmoothingEnabled = true;
+	if(ctx) ctx.imageSmoothingEnabled = true;
 }
 
 /**
@@ -2253,7 +2284,7 @@ const enableSmoothing = () => {
  * disableSmoothing();
  */
 const disableSmoothing = () => {
-	if (ctx) ctx.imageSmoothingEnabled = false;
+	if(ctx) ctx.imageSmoothingEnabled = false;
 }
 
 
@@ -2277,7 +2308,7 @@ const enableCamera = () => {
 
 /**
  * Loads an 1D array (imageData) for each pixels of the canvas.
- * Enable variable named "pixels" which are the data of loaded pixels.
+ * Enable variable named 'pixels' which are the data of loaded pixels.
  * Each pixel has 4 values, rgba.
  * So pixels[0], pixels[1], pixels[2] and pixels[3] are the value of the first pixel.
  * @example
@@ -2285,17 +2316,17 @@ const enableCamera = () => {
  * pixels[0] = 255; // first pixel is now red
  */
 const loadPixels = () => {
-	if (ctx instanceof CanvasRenderingContext2D && canvas instanceof HTMLCanvasElement) {
+	if(ctx instanceof CanvasRenderingContext2D && canvas instanceof HTMLCanvasElement) {
 		NOX_PV.pixels = ctx.createImageData(canvas.width, canvas.height);
 		pixels = NOX_PV.pixels.data;
 
-		for (let i = 0; i < width * height; i++) {
+		for(let i=0; i < width * height; i++) {
 			pixels[i * 4 + 3] = 255; // enable max opacity (to see each pixels)
 		}
 	}
 
 	else {
-		console.warn("Can't load canvas's pixels : no existing context found.");
+		console.warn('Can\'t load canvas\'s pixels : no existing context found.');
 	}
 };
 
@@ -2307,7 +2338,7 @@ const loadPixels = () => {
  * updatePixels();
  */
 const updatePixels = () => {
-	if (typeof pixels !== 'undefined' && ctx instanceof CanvasRenderingContext2D) {
+	if(typeof pixels !== 'undefined' && ctx instanceof CanvasRenderingContext2D) {
 		NOX_PV.pixels.data = pixels;
 		ctx.putImageData(NOX_PV.pixels, 0, 0);
 	}
@@ -2332,15 +2363,15 @@ const updatePixels = () => {
  * It's the perlin noise of the page, so seed will always be the same.
  * 
  * To have multiple custom Perlin noise arrays, create PerlinNoise class instance instead.
- * @param {Number} x X-axis point coordinate
- * @param {Number} y Y-axis point coordinate
- * @return {Number} floating point between 0 and 1
+ * @param {number} x X-axis point coordinate
+ * @param {number} y Y-axis point coordinate
+ * @return {number} floating point between 0 and 1
  * @example
  * const value = perlin(0, 0); // value between -1 and 1.
  */
-const perlin = (x, y = 0) => {
+const perlin = (x, y=0) => {
 	// create seed if never used perlin noise previously
-	if (!NOX_PV.perlin.seed || NOX_PV.perlin.seed.length === 0) {
+	if(!NOX_PV.perlin.seed || NOX_PV.perlin.seed.length === 0) {
 		NOX_PV.perlin.seed = NOX_PV.perlin.generateSeed();
 	}
 
@@ -2356,7 +2387,7 @@ const perlin = (x, y = 0) => {
  * noiseDetails(200);
  */
 const noiseDetails = detailLevel => {
-	if (typeof detailLevel === 'number') {
+	if(typeof detailLevel === 'number') {
 		NOX_PV.perlin.lod = detailLevel;
 	}
 };
@@ -2364,7 +2395,7 @@ const noiseDetails = detailLevel => {
 
 /**
  * Generates a random UUID
- * @returns {String} the generated UUID
+ * @returns {string} the generated UUID
  * @see https://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid#answer-21963136
  */
 const generateUUID = () => {
@@ -2377,80 +2408,6 @@ const generateUUID = () => {
 		NOX_PV.lut[d2 & 0x3f | 0x80] + NOX_PV.lut[d2 >> 8 & 0xff] + '-' + NOX_PV.lut[d2 >> 16 & 0xff] + NOX_PV.lut[d2 >> 24 & 0xff] +
 		NOX_PV.lut[d3 & 0xff] + NOX_PV.lut[d3 >> 8 & 0xff] + NOX_PV.lut[d3 >> 16 & 0xff] + NOX_PV.lut[d3 >> 24 & 0xff];
 };
-
-
-
-/**
- * Handled when the user starts to press screen with his finger / mouse
- * @param {Object} e event default object
- */
-const handleTouchStart = e => {
-	NOX_PV.isMouseDown = true;
-
-	if (typeof mouseDown === "function")
-		mouseDown(e);
-
-	const getTouches = e2 => e2.touches || [{ clientX: e.clientX, clientY: e.clientY }, null];
-
-	const firstTouch = getTouches(e)[0];
-
-	NOX_PV.swipexDown = firstTouch.clientX;
-	NOX_PV.swipeyDown = firstTouch.clientY;
-};
-
-/**
- * Handled when the user moves his finger / mouse on the screen, while he is pressing it
- * @param {Object} e event default object
- */
-const handleTouchMove = e => {
-	if (typeof mouseMove === "function" && NOX_PV.isMouseDown)
-		mouseMove(e);
-
-	if (!NOX_PV.swipexDown || !NOX_PV.swipeyDown) {
-		return;
-	}
-
-	let xUp, yUp;
-
-	if (e.touches) {
-		xUp = e.touches[0].clientX;
-		yUp = e.touches[0].clientY;
-	}
-
-	else {
-		xUp = e.clientX;
-		yUp = e.clientY;
-	}
-
-	const xDiff = NOX_PV.swipexDown - xUp;
-	const yDiff = NOX_PV.swipeyDown - yUp;
-
-	let event, swipeDir;
-
-
-	if (abs(xDiff) > abs(yDiff)) {
-		if (xDiff > 0) (swipeDir = 'left') && (event = new CustomEvent('swipeleft', { detail: { swipe: 'left' } }));
-		else (swipeDir = 'right') && (event = new CustomEvent('swiperight', { detail: { swipe: 'right' } }));
-	}
-
-	else {
-		if (yDiff > 0) (swipeDir = 'up') && (event = new CustomEvent('swipeup', { detail: { swipe: 'up' } }));
-		else (swipeDir = 'down') && (event = new CustomEvent('swipedown', { detail: { swipe: 'down' } }));
-	}
-
-	canvas.dispatchEvent(event);
-
-	NOX_PV.lastSwipe = swipeDir;
-	NOX_PV.swipexDown = null;
-	NOX_PV.swipeyDown = null;
-};
-
-
-
-
-
-
-
 
 
 
@@ -2470,20 +2427,20 @@ class RGB {
 	 * @param {number} b blue value [0 - 255]
 	 * @param {number} a alpha (opacity) value [0 - 255]
 	 */
-	constructor(r, g = null, b = null, a = 255) {
+	constructor(r, g=null, b=null, a=255) {
 		this.color = { r: 0, g: 0, b: 0 };
 
-		if (r === undefined) {
+		if(r === undefined) {
 			r = 0;
 		}
 
-		if (g !== null && b === null) {
+		if(g !== null && b === null) {
 			a = g;
 			g = b = r;
 		}
 
 		// only one argument given: 3 are same (do grey)
-		if (g === null) {
+		if(g === null) {
 			g = r;
 			b = r;
 		}
@@ -2499,7 +2456,7 @@ class RGB {
 	 * @param {number} val A number
 	 */
 	valueInInterval(val) {
-		if (val < 0 || val > 255) {
+		if(val < 0 || val > 255) {
 			console.error(`Color interval [0 - 255] no repespected (${val} given)`);
 			return min(max(val, 0), 255);
 		}
@@ -2588,25 +2545,25 @@ class RGB {
 	 * const color = new Color(0, 0, 0);
 	 * color.set(10, 20, 30); // now color.r = 10, color.g = 20 and color.b = 30
 	 */
-	set(r, g, b, a = null) {
+	set(r, g, b, a=null) {
 		this.r = r;
 		this.g = g;
 		this.b = b;
-		if (a !== null) this.a = a;
+		if(a !== null) this.a = a;
 	}
 
 	/**
 	 * Returns the color value as a string
-	 * @return {String}
+	 * @return {string}
 	 * @example
 	 * const color = new RGB(10, 20, 30);
 	 * console.info(color); // rgb(10, 20, 30)
-	 * console.info(color.toString()); // is equivalent
+	 * console.info(color.tostring()); // is equivalent
 	 * 
 	 * color.a = 100;
 	 * console.info(color); // rgba(10, 20, 30, 0.3)
 	 */
-	toString() {
+	tostring() {
 		return `rgb${this.a != 255 ? 'a' : ''}(${this.r}, ${this.g}, ${this.b}${this.a != 255 ? `, ${round(this.a / 255 * 10) / 10}` : ''})`;
 	}
 
@@ -2626,12 +2583,12 @@ class RGB {
 	 * @return {HEX} converted hex color
 	 * @example
 	 * const color new RGB(255, 0, 0);
-	 * console.info(color.toHEX()); // "#F00"
+	 * console.info(color.toHEX()); // '#F00'
 	 */
 	toHEX() {
-		const r = Number(this.r).toString(16); if (r.length < 2) r = "0" + r;
-		const g = Number(this.g).toString(16); if (g.length < 2) g = "0" + g;
-		const b = Number(this.b).toString(16); if (b.length < 2) b = "0" + b;
+		const r = number(this.r).tostring(16); if(r.length < 2) r = '0' + r;
+		const g = number(this.g).tostring(16); if(g.length < 2) g = '0' + g;
+		const b = number(this.b).tostring(16); if(b.length < 2) b = '0' + b;
 		const rgb = '#' + r + g + b;
 
 		return new HEX(rgb);
@@ -2642,7 +2599,7 @@ class RGB {
 	 * @return {HSL} converted HSL color
 	 * @example
 	 * const color = new RGB(255, 0, 0);
-	 * console.info(color.toHSL()); // "hsl(0, 50%, 50%)"
+	 * console.info(color.toHSL()); // 'hsl(0, 50%, 50%)'
 	 */
 	toHSL() {
 		const r = this.r / 255,
@@ -2654,7 +2611,7 @@ class RGB {
 
 		let h, s, l = (imax + imin) / 2;
 
-		if (imax === imin) {
+		if(imax === imin) {
 			h = s = 0;
 		}
 
@@ -2692,13 +2649,13 @@ class HEX {
 
 	/**
 	 * Returns the color as string
-	 * @return {String} color value as string
+	 * @return {string} color value as string
 	 * @example
-	 * const color = new HEX("#fff");
-	 * console.info(color); // "#FFF"
-	 * console.info(color.toString()); // is equivalent
+	 * const color = new HEX('#fff');
+	 * console.info(color); // '#FFF'
+	 * console.info(color.tostring()); // is equivalent
 	 */
-	toString() { return this.color.str; }
+	tostring() { return this.color.str; }
 
 	/**
 	 * Returns the int value of the color
@@ -2708,21 +2665,21 @@ class HEX {
 
 	/**
 	 * Sets the new value of the color
-	 * @param {String|number} hexaColor A string or a number as hexadecimal form
+	 * @param {string|number} hexaColor A string or a number as hexadecimal form
 	 * @example
-	 * const color = new HEX("#fff"); // white
-	 * color.set("#f00"); // red
+	 * const color = new HEX('#fff'); // white
+	 * color.set('#f00'); // red
 	 */
 	set(hexaColor) {
-		if (typeof hexaColor === 'number') {
+		if(typeof hexaColor === 'number') {
 			this.color.int = hexaColor;
-			const h = hexaColor.toString(16) + '';
+			const h = hexaColor.tostring(16) + '';
 			this.color.str = '#' + (h.length === 4 ? '00' : '') + h;
 		}
 
-		else if (typeof hexaColor === 'string' && /^#?([0-9a-f]{3}){1,2}$/i.test(hexaColor)) {
+		else if(typeof hexaColor === 'string' && /^#?([0-9a-f]{3}){1,2}$/i.test(hexaColor)) {
 			hexaColor = hexaColor.replace('#', '');
-			if (hexaColor.length === 3) hexaColor = hexaColor[0].repeat(2) + hexaColor[1].repeat(2) + hexaColor[2].repeat(2);
+			if(hexaColor.length === 3) hexaColor = hexaColor[0].repeat(2) + hexaColor[1].repeat(2) + hexaColor[2].repeat(2);
 			this.color.str = '#' + hexaColor;
 			this.color.int = parseInt(hexaColor, 16);
 		}
@@ -2736,8 +2693,8 @@ class HEX {
 	 * Returns a class instance of RGB, converting its color
 	 * @return {RGB} converted color to RGB
 	 * @example
-	 * const color = new HEX("#fff");
-	 * console.info(color.toRGB()); // "rgb(255, 255, 255)"
+	 * const color = new HEX('#fff');
+	 * console.info(color.toRGB()); // 'rgb(255, 255, 255)'
 	 */
 	toRGB() {
 		const r = (this.intVal() & 0xFF0000) >>> 16;
@@ -2751,8 +2708,8 @@ class HEX {
 	 * Returns a class instance of HSL, converting its color
 	 * @return {HSL} converted color to HSL
 	 * @example
-	 * const color = new HEX("#f00");
-	 * console.info(color.toHSL()); // "hsl(0, 50%, 50%)"
+	 * const color = new HEX('#f00');
+	 * console.info(color.toHSL()); // 'hsl(0, 50%, 50%)'
 	 */
 	toHSL() {
 		return this.toRGB().toHSL();
@@ -2766,10 +2723,10 @@ class HSL {
 	 * @param {number} saturation saturation value [0 - 1]
 	 * @param {number} light brightness value [0 - 1]
 	 */
-	constructor(hue, saturation = 0.5, light = 0.5) {
+	constructor(hue, saturation=0.5, light=0.5) {
 		this.color = { h: 0, s: 0, l: 0 };
 
-		if (typeof hue !== 'number') {
+		if(typeof hue !== 'number') {
 			console.error(`Hue given parameter isn't a recognized number value: ${hue}`);
 			hue = 0;
 		}
@@ -2898,13 +2855,13 @@ class HSL {
 
 	/**
 	 * Returns the color's value as string
-	 * @return {String} value
+	 * @return {string} value
 	 * @example
 	 * const color = new HSL(0);
-	 * console.info(color); // "hsl(0, 50%, 50%)"
-	 * console.info(color.toString()); // is equivalent
+	 * console.info(color); // 'hsl(0, 50%, 50%)'
+	 * console.info(color.tostring()); // is equivalent
 	 */
-	toString() {
+	tostring() {
 		return `hsl(${this.h}, ${this.s * 100}%, ${this.l * 100}%)`;
 	}
 
@@ -2925,7 +2882,7 @@ class HSL {
 	 * @return {HEX} converted color to HEX
 	 * @example
 	 * const color = new HSL(0);
-	 * console.info(color.toHEX()); // "#f00"
+	 * console.info(color.toHEX()); // '#f00'
 	 */
 	toHEX() {
 		return this.toRGB().toHEX();
@@ -2936,7 +2893,7 @@ class HSL {
 	 * @return {RGB} converted color to RGB
 	 * @example
 	 * const color = new HSL(0);
-	 * console.info(color.toRGB()); // "rgb(255, 0, 0)"
+	 * console.info(color.toRGB()); // 'rgb(255, 0, 0)'
 	 */
 	toRGB() {
 		const C = (1 - abs(2 * this.l - 1)) * this.s;
@@ -2946,11 +2903,11 @@ class HSL {
 
 		r = g = b = 0;
 
-		if (hh >= 0 && hh < 1) [r, g] = [C, X];
-		else if (hh >= 1 && hh < 2) [r, g] = [X, C];
-		else if (hh >= 2 && hh < 3) [g, b] = [C, X];
-		else if (hh >= 3 && hh < 4) [g, b] = [X, C];
-		else if (hh >= 4 && hh < 5) [r, b] = [X, C];
+		if(hh >= 0 && hh < 1) [r, g] = [C, X];
+		else if(hh >= 1 && hh < 2) [r, g] = [X, C];
+		else if(hh >= 2 && hh < 3) [g, b] = [C, X];
+		else if(hh >= 3 && hh < 4) [g, b] = [X, C];
+		else if(hh >= 4 && hh < 5) [r, b] = [X, C];
 		else[r, b] = [C, X];
 
 		const m = this.l - C / 2;
@@ -2965,8 +2922,8 @@ class HSL {
 
 
 class PerlinNoise {
-	static mapNumberTypes = ['default', 'rgb', 'hsl'];
-	static getMapNumberTypeIndex = typeStr => PerlinNoise.mapNumberTypes.indexOf(typeStr.toLowerCase())
+	static mapnumberTypes = ['default', 'rgb', 'hsl'];
+	static getMapnumberTypeIndex = typeStr => PerlinNoise.mapnumberTypes.indexOf(typeStr.toLowerCase())
 	/**
 	 * 
 	 * @param {number} lod level of details
@@ -2974,15 +2931,15 @@ class PerlinNoise {
 	 * @param {number} y start y of the array
 	 * @param {number} w width of the array
 	 * @param {number} h height of the array
-	 * @param {string} mapNumber map values to [auto: (-1,1)], [rgb: (0,255)], [hsl: (0, 360)]
+	 * @param {string} mapnumber map values to [auto: (-1,1)], [rgb: (0,255)], [hsl: (0, 360)]
 	 */
-	constructor(lod = 10, x = 0, y = 0, w = width, h = height, mapNumber = 'default') {
+	constructor(lod=10, x=0, y=0, w=width, h=height, mapnumber='default') {
 		this.lod = lod;
 		this.seed = NOX_PV.perlin.generateSeed();
 		this.start = { x, y };
 		this.size = { width: w, height: h };
 		this.array = [];
-		this.numberMapStyle = PerlinNoise.getMapNumberTypeIndex(mapNumber);
+		this.numberMapStyle = PerlinNoise.getMapnumberTypeIndex(mapnumber);
 		this.calculate();
 	}
 
@@ -2999,7 +2956,7 @@ class PerlinNoise {
 		const tmp = this.lod;
 		this.lod = lod;
 
-		if (tmp !== lod) {
+		if(tmp !== lod) {
 			this.calculate();
 		}
 	}
@@ -3023,20 +2980,20 @@ class PerlinNoise {
 	 * Default is [-1,1] (0).
      * 
 	 * You can choose [0,255] (1) or [0,360] (2).
-	 * @param {0|1|2} mapNumber map style's index
+	 * @param {0|1|2} mapnumber map style's index
 	 * @example
 	 * const p = new PerlinNoise();
-	 * p.setMapNumber(1); // sets values between 0 and 255.
+	 * p.setMapnumber(1); // sets values between 0 and 255.
 	 */
-	setMapNumber(mapNumber) {
-		mapNumber = PerlinNoise.getMapNumberTypeIndex(mapNumber);
-		if (this.numberMapStyle === mapNumber) return;
+	setMapnumber(mapnumber) {
+		mapnumber = PerlinNoise.getMapnumberTypeIndex(mapnumber);
+		if(this.numberMapStyle === mapnumber) return;
 
 		let Lmin = 0, Lmax = NOX_PV.perlin.unit, Rmin = 0, Rmax = NOX_PV.perlin.unit;
 
-		if (this.numberMapStyle > 0) [Lmin, Lmax] = [0, (this.numberMapStyle === 1) ? 255 : 360];
-		this.numberMapStyle = mapNumber;
-		if (this.numberMapStyle > 0) [Rmin, Rmax] = [0, (this.numberMapStyle === 1) ? 255 : 360];
+		if(this.numberMapStyle > 0) [Lmin, Lmax] = [0, (this.numberMapStyle === 1) ? 255 : 360];
+		this.numberMapStyle = mapnumber;
+		if(this.numberMapStyle > 0) [Rmin, Rmax] = [0, (this.numberMapStyle === 1) ? 255 : 360];
 
 		this.array.forEach((row, i) => {
 			this.array[i] = map(this.array[i], Lmin, Lmax, Rmin, Rmax);
@@ -3056,18 +3013,18 @@ class PerlinNoise {
 	calculate() {
 		this.array = [];
 
-		for (const y = this.start.y; y < this.start.y + this.size.height; y++) {
+		for(let y = this.start.y; y < this.start.y + this.size.height; y++) {
 			const row = [];
 
-			for (const x = this.start.x; x < this.start.x + this.size.width; x++) {
+			for(let x = this.start.x; x < this.start.x + this.size.width; x++) {
 				row.push(NOX_PV.perlin.get(x, y, this.lod, this.seed));
 			}
 
 			this.array.push(row);
 		}
 
-		if (this.numberMapStyle > 0) {
-			this.setMapNumber(PerlinNoise.mapNumberTypes[this.numberMapStyle]);
+		if(this.numberMapStyle > 0) {
+			this.setMapnumber(PerlinNoise.mapnumberTypes[this.numberMapStyle]);
 		}
 	}
 }
@@ -3103,8 +3060,8 @@ class Time {
 	 * 
 	 * It can be 'nano', 'micro', 'milli', 'seconds', 'minutes'
 	 */
-	constructor(startingTime = undefined, unity = 'milli') {
-		if (typeof startingTime === 'undefined' || !Object.keys(Time.units).includes(unity)) {
+	constructor(startingTime=undefined, unity='milli') {
+		if(typeof startingTime === 'undefined' || !Object.keys(Time.units).includes(unity)) {
 			this.reset();
 			this.staticTime = false;
 		} else {
@@ -3134,7 +3091,7 @@ class Time {
 	 * @return {number}
 	 */
 	asMilliseconds() {
-		return Time.units.milli(this.staticTime ? this.start : (Date.now() - this.start));
+		return Time.units.milli(this.staticTime? this.start : (Date.now() - this.start));
 	}
 
 	/**
@@ -3171,7 +3128,7 @@ class Vector {
 	 * @param {number} y y vector's coordinate
 	 * @param {number} z z vector's coordinate
 	 */
-	constructor(x, y = null, z = null) {
+	constructor(x, y=null, z=null) {
 		let dimension = 1;
 
 		this.coords = {
@@ -3183,7 +3140,7 @@ class Vector {
 		const tmp = { x: 0, y: 0, z: 0 };
 
 		// import from another vector
-		if (x instanceof Vector) {
+		if(x instanceof Vector) {
 			// same dimension
 			dimension = x.dimension;
 			tmp.x = x.x;
@@ -3260,7 +3217,7 @@ class Vector {
 	 * v.y = 10;
 	 */
 	set y(y) {
-		if (this.dimension > 1) {
+		if(this.dimension > 1) {
 			this.coords.y = y;
 		} else {
 			console.error('Cannot modify the Y of a 1D vector');
@@ -3276,7 +3233,7 @@ class Vector {
 	 * v.z = 10;
 	 */
 	set z(z) {
-		if (this.dimension > 2) {
+		if(this.dimension > 2) {
 			this.coords.z = z;
 		} else {
 			console.error(`Cannot modify the Y of a ${this.dimension}D vector`);
@@ -3290,7 +3247,7 @@ class Vector {
 	/**
 	 * Adapts the vector on a scale of 1
 	 * @param {boolean} apply either it should apply the changes to the vector or just return it
-	 * @return {Vector} the vector (modified or not following "apply" argument (by default false)).
+	 * @return {Vector} the vector (modified or not following 'apply' argument (by default false)).
 	 * @example
 	 * const v = new Vector(10);
 	 * v.normalize(true); // now v.x = 1;
@@ -3298,21 +3255,21 @@ class Vector {
 	 * v.set(20);
 	 * const v2 = v.normalize(); // v.x = 20, v2.x = 1
 	 */
-	normalize(apply = false) {
+	normalize(apply=false) {
 		// does not care about vector dimension
 		const norm = Math.hypot(this.x, this.y, this.z);
 
-		if (!apply) {
+		if(!apply) {
 			return new Vector(this).normalize(true);
 		}
 
-		if (norm != 0) {
+		if(norm !== 0) {
 			this.x = this.x / norm;
 
-			if (this.dimension > 1) {
+			if(this.dimension > 1) {
 				this.y = this.y / norm;
 
-				if (this.dimension === 3) {
+				if(this.dimension === 3) {
 					this.z = this.z / norm;
 				}
 			}
@@ -3331,36 +3288,36 @@ class Vector {
 	 * const v = new Vector(10, 20, 30);
 	 * v.set(30, 20, 10);
 	 */
-	set(x, y = null, z = null) {
-		if (x instanceof Vector) {
+	set(x, y=null, z=null) {
+		if(x instanceof Vector) {
 			this.x = x.x;
-			if (this.dimension === 2) this.y = x.y;
-			if (this.dimension === 3) this.z = x.z;
+			if(this.dimension === 2) this.y = x.y;
+			if(this.dimension === 3) this.z = x.z;
 		}
 
-		else if (typeof x !== 'number') {
-			return console.error("[Error] Vector::set : x parameter must be a number or a Vector");
+		else if(typeof x !== 'number') {
+			return console.error('[Error] Vector::set : x parameter must be a number or a Vector');
 		}
 
 		else {
-			if (this.dimension > 1) {
-				if (y !== null && typeof y !== 'number') {
-					return console.error("[Error] Vector::set : y parameter must be a number");
+			if(this.dimension > 1) {
+				if(y !== null && typeof y !== 'number') {
+					return console.error('[Error] Vector::set : y parameter must be a number');
 				}
 
-				if (z !== null && this.dimension > 2 && typeof z !== 'number') {
-					return console.error("[Error] Vector::set : z parameter must be a number");
+				if(z !== null && this.dimension > 2 && typeof z !== 'number') {
+					return console.error('[Error] Vector::set : z parameter must be a number');
 				}
 			}
 
 			this.x = x;
 
-			if (this.dimension > 1) {
-				if (y !== null) {
+			if(this.dimension > 1) {
+				if(y !== null) {
 					this.y = y;
 				}
 
-				if (this.dimension === 3 && z != null) {
+				if(this.dimension === 3 && z != null) {
 					this.z = z;
 				}
 			}
@@ -3381,16 +3338,16 @@ class Vector {
 	 * const v3 = v.add(1, 2); // now v{x: 11, y: 12} and v3 is same
 	 * v2.add(v); // now v2{x: 31, y: 32}
 	 */
-	add(x, y = null, z = null) {
-		if (x instanceof Vector) {
+	add(x, y=null, z=null) {
+		if(x instanceof Vector) {
 			return this.set(this.x + x.x, this.y + x.y, this.z + x.z);
 		}
 
-		if (y === null) {
+		if(y === null) {
 			y = x;
 		}
 
-		if (z === null) {
+		if(z === null) {
 			z = x;
 		}
 
@@ -3409,16 +3366,16 @@ class Vector {
 	 * const v3 = v.sub(1, 2); // now v{x: 9, y: 8} and v3 is same
 	 * v2.sub(v); // now v2{x: 11, y: 12}
 	 */
-	sub(x, y = null, z = null) {
-		if (x instanceof Vector) {
+	sub(x, y=null, z=null) {
+		if(x instanceof Vector) {
 			return this.set(this.x - x.x, this.y - x.y, this.z - x.z);
 		}
 
-		if (y === null) {
+		if(y === null) {
 			y = x;
 		}
 
-		if (z === null) {
+		if(z === null) {
 			z = x;
 		}
 
@@ -3439,16 +3396,16 @@ class Vector {
 	 * const v3 = v.mult(1, 2); // now v{x: 20, y: 40} and v3 is same
 	 * v2.mult(v); // now v2{x: 400, y: 800}
 	 */
-	mult(x, y = null, z = null) {
-		if (x instanceof Vector) {
+	mult(x, y=null, z=null) {
+		if(x instanceof Vector) {
 			return this.set(this.x * x.x, this.y * x.y, this.z * x.z);
 		}
 
-		if (y === null) {
+		if(y === null) {
 			y = x;
 		}
 
-		if (z === null) {
+		if(z === null) {
 			z = x;
 		}
 
@@ -3467,16 +3424,16 @@ class Vector {
 	 * const v3 = v.div(2); // now v{x: 5, 5} and v3 is same
 	 * v2.div(v); // now v2{x: 4, y: 4}
 	 */
-	div(x, y = null, z = null) {
-		if (x instanceof Vector) {
+	div(x, y=null, z=null) {
+		if(x instanceof Vector) {
 			return this.set(this.x / x.x, this.y / x.y, this.z / x.z);
 		}
 
-		if (y === null) {
+		if(y === null) {
 			y = x;
 		}
 
-		if (z === null) {
+		if(z === null) {
 			z = x;
 		}
 
@@ -3495,18 +3452,17 @@ class Vector {
 	 * v2.invert(); // now v2{x: 3, y: 1, z: 2}
 	 * v2.invert(true); // now v2{x: 1, y:2, z: 3}
 	 */
-	invert(antiClockwise = false) {
+	invert(antiClockwise=false) {
 		// not 1D, else we just have to do x = x
-		if (this.dimension > 1) {
-
+		if(this.dimension > 1) {
 			// 2D
-			if (this.dimension === 2) {
+			if(this.dimension === 2) {
 				[this.x, this.y] = [this.y, this.x];
 			}
 
 			// 3D
 			else {
-				if (antiClockwise) {
+				if(antiClockwise) {
 					[this.x, this.y, this.z] = [this.y, this.z, this.x];
 				} else {
 					[this.x, this.y, this.z] = [this.z, this.x, this.y];
@@ -3539,21 +3495,21 @@ class Vector {
 	 */
 	setMag(newMag) {
 		this.x = this.x * newMag / this.mag;
-		if (this.dimension > 1) this.y = this.y * newMag / this.mag;
-		if (this.dimension > 2) this.z = this.z * newMag / this.mag;
+		if(this.dimension > 1) this.y = this.y * newMag / this.mag;
+		if(this.dimension > 2) this.z = this.z * newMag / this.mag;
 
 		return this;
 	}
 
 	/**
 	 * Returns the vector's object as a string
-	 * @returns {String}
+	 * @returns {string}
 	 * @example
 	 * const v = new Vector(1, 2);
 	 * console.info(v); // {x: 1, y: 2}
-	 * console.info(v.toString()); // is equivalent
+	 * console.info(v.tostring()); // is equivalent
 	 */
-	toString() {
+	tostring() {
 		return `{ x: ${this.x}${(this.dimension > 1) ? `, y: ${this.y}` : ''}${(this.dimension > 2) ? `, z: ${this.z}` : ''} }`;
 	}
 
@@ -3566,8 +3522,8 @@ class Vector {
 	 */
 	array() {
 		const arr = [this.x];
-		if (this.dimension > 1) arr.push(this.y);
-		if (this.dimension > 2) arr.push(this.z);
+		if(this.dimension > 1) arr.push(this.y);
+		if(this.dimension > 2) arr.push(this.z);
 
 		return arr;
 	}
@@ -3583,7 +3539,7 @@ class Vector {
      * @return {Object}
      */
     object() {
-        let o = { x: this.x };
+        const o = { x: this.x };
 
         if(this.dimension > 1) {
             o.y = this.y;
@@ -3602,20 +3558,21 @@ class Vector {
 	 * @param {number} y vector's position on the canvas
 	 * @param {Object (strokeWeight: number, stroke: any)} style bow's fill & stroke style
 	 */
-	bow(x, y, style = {}) {
+	bow(x, y, style={}) {
 		// not implemented for the 3rd dimension yet
-		if (this.dimension === 3) return;
+		if(this.dimension === 3)
+			return;
 
 		// arrow's style
-		if (style.strokeWeight) strokeWeight(style.strokeWeight);
+		if(style.strokeWeight) strokeWeight(style.strokeWeight);
 		else strokeWeight(1);
 
-		if (style.stroke) stroke(style.stroke);
+		if(style.stroke) stroke(style.stroke);
 		else stroke('#fff');
 
 
 		// calculate the vector's rotation from the horizontal
-		let rotation = degree(vectorToAngle(this));
+		const rotation = degree(vectorToAngle(this));
 
 		push();
 			// trunk
@@ -3663,9 +3620,9 @@ class Matrix {
 	 * 4. from another Matrix
 	 * 
 	 * @signature new Matrix(width, height, fill)
-	 * @param {Number} width size X of the matrix
-	 * @param {Number} height size Y of the matrix. If not precised, a square matrix is created
-	 * @param {Number} fill fill value in the matrix (default is 0)
+	 * @param {number} width size X of the matrix
+	 * @param {number} height size Y of the matrix. If not precised, a square matrix is created
+	 * @param {number} fill fill value in the matrix (default is 0)
 	 * @example
 	 * // [ [0, 0, 0], [0, 0, 0], [0, 0, 0] ]
 	 * const m1 = new Matrix(3);
@@ -3675,13 +3632,13 @@ class Matrix {
 	 * const m3 = new Matrix(2, 2, 1);
 	 * 
 	 * @signature new Matrix([0, 0, 0], ...)
-	 * @param {...Array<Number>} args multiple arrays of numbers
+	 * @param {...Array<number>} args multiple arrays of numbers
 	 * @example
 	 * // [ [0, 0, 0], [0, 0, 0] ]
 	 * const m1 = new Matrix([0, 0, 0], [0, 0, 0]);
 	 * 
 	 * @signature new Matrix([[0, 0, 0], ...])
-	 * @param {Array<Number[]>} args 2D array of numbers
+	 * @param {Array<number[]>} args 2D array of numbers
 	 * @example
 	 * // [ [0, 0, 0], [0, 0, 0] ]
 	 * const m1 = new Matrix([[0, 0, 0], [0, 0, 0]]);
@@ -3693,14 +3650,14 @@ class Matrix {
 	 * const m2 = new Matrix(m1); // creates a copy of m1
 	 */
 	constructor(...args) {
-		if (args.length > 0) {
-			if (args[0] instanceof Matrix) {
+		if(args.length > 0) {
+			if(args[0] instanceof Matrix) {
 				this.properties.width = args[0].width;
 				this.properties.height = args[0].height;
 
-				for (let i = 0; i < args[0].height; i++) {
+				for(let i=0; i < args[0].height; i++) {
 					const row = [];
-					for (let j = 0; j < args[0].width; j++) {
+					for(let j=0; j < args[0].width; j++) {
 						row.push(args[0].at(j, i));
 					}
 					this.properties.array.push(row);
@@ -3708,22 +3665,22 @@ class Matrix {
 			}
 
 			// [width, height, fill?]
-			else if (typeof args[0] === 'number') {
+			else if(typeof args[0] === 'number') {
 				let fill = 0;
 				const w = args[0];
 				let h = w;
 
-				if (args.length > 1 && typeof args[1] === 'number') {
+				if(args.length > 1 && typeof args[1] === 'number') {
 					h = args[1];
 
-					if (args.length > 2 && typeof args[2] === 'number') {
+					if(args.length > 2 && typeof args[2] === 'number') {
 						fill = args[2];
 					}
 				} // else square matrix if only 1 number given
 
-				for (let i = 0; i < h; i++) {
+				for(let i=0; i < h; i++) {
 					const row = [];
-					for (let j = 0; j < w; j++) {
+					for(let j=0; j < w; j++) {
 						row.push(fill);
 					}
 					this.properties.array.push(row);
@@ -3734,26 +3691,26 @@ class Matrix {
 			}
 
 			// argument is an array (of arrays ?)
-			else if (args.length === 1 && Array.isArray(args[0]) && args[0].every(a => Array.isArray(a) && a.length === args[0][0].length && a.every(e => typeof e === 'number'))) {
+			else if(args.length === 1 && Array.isArray(args[0]) && args[0].every(a => Array.isArray(a) && a.length === args[0][0].length && a.every(e => typeof e === 'number'))) {
 				// all elements of parent array are arrays
 				// form of argument :
 				// [[0, 0, 0],[0, 0, 0]] : 2D array
 				this.properties.array = args[0];
-				if (args[0].length > 0) this.properties.width = args[0][0].length;
+				if(args[0].length > 0) this.properties.width = args[0][0].length;
 				this.properties.height = args[0].length;
 			}
 
 			// all elements of parent array are numbers
 			// form of argument :
 			// [0, 0, 0], [0, 0, 0] : multiple arguments which are arrays of numbers
-			else if (args.every(a => Array.isArray(a) && a.length === args[0].length && a.every(e => typeof e === 'number'))) {
+			else if(args.every(a => Array.isArray(a) && a.length === args[0].length && a.every(e => typeof e === 'number'))) {
 				this.properties.array = args;
 				this.properties.width = args[0].length;
 				this.properties.height = args.length;
 			}
 
 			else {
-				console.error("[Error] Matrix constructor : Unrecognized parameters.");
+				console.error('[Error] Matrix constructor : Unrecognized parameters.');
 			}
 		}
 
@@ -3768,7 +3725,7 @@ class Matrix {
 
 	/**
 	 * Returns the matrix as 2D array.
-	 * @returns {Array<Number[]>} The matrix
+	 * @returns {Array<number[]>} The matrix
 	 */
 	get array() {
 		return this.properties.array;
@@ -3776,7 +3733,7 @@ class Matrix {
 
 	/**
 	 * Returns the matrix's values in an 1D array
-	 * @returns {Array<Number>} The matrix as 1D array
+	 * @returns {Array<number>} The matrix as 1D array
 	 */
 	get array1D() {
 		return this.array.reduce((a, b) => [...a, ...b], []);
@@ -3784,7 +3741,7 @@ class Matrix {
 
 	/**
 	 * Returns the matrix's width.
-	 * @returns {Number} The matrix's width
+	 * @returns {number} The matrix's width
 	 */
 	get width() {
 		return this.properties.size.x;
@@ -3792,7 +3749,7 @@ class Matrix {
 
 	/**
 	 * Returns the matrix's height.
-	 * @returns {Number} The matrix's height
+	 * @returns {number} The matrix's height
 	 */
 	get height() {
 		return this.properties.size.y;
@@ -3808,19 +3765,19 @@ class Matrix {
 
 	/**
 	 * Returns the matrix as a string
-	 * @returns {String} The matrix as string
+	 * @returns {string} The matrix as string
 	 */
-	toString(uncluttered = false) {
+	tostring(uncluttered = false) {
 		const sep = this.height > 0 ? '\n' : '';
 		const brackets = {
 			open: uncluttered ? '' : '[',
 			close: uncluttered ? '' : ']'
 		};
-		const m = uncluttered ? max(...this.array.map(a => max(...a.map(e => e.toString().length)))) : 0;
+		const m = uncluttered ? max(...this.array.map(a => max(...a.map(e => e.tostring().length)))) : 0;
 
 		const _format = uncluttered ?
 			arr => {
-				return arr.map(e => ' '.repeat(6 + m - e.toString().length * 2) + e).join(' ');
+				return arr.map(e => ' '.repeat(6 + m - e.tostring().length * 2) + e).join(' ');
 			} :
 			arr => arr.join(', ');
 
@@ -3831,15 +3788,15 @@ class Matrix {
 
 	/**
 	 * Returns the value of an element at given indexes
-	 * @param {Number} x X-Axis index of the element
-	 * @param {Number} y Y-Axis index of the element
-	 * @returns {Number|null} The value of the element - null if wrong indexes given
+	 * @param {number} x X-Axis index of the element
+	 * @param {number} y Y-Axis index of the element
+	 * @returns {number|null} The value of the element - null if wrong indexes given
 	 * @example
 	 * const m1 = new Matrix(3);
 	 * m1.at(0, 0); // first element of first row - 0
 	 */
 	at(x, y) {
-		if (typeof x === 'number' && typeof y === 'number' && x > -1 && y > -1 && x < this.width && y < this.height) {
+		if(typeof x === 'number' && typeof y === 'number' && x > -1 && y > -1 && x < this.width && y < this.height) {
 			return this.array[y][x];
 		}
 
@@ -3848,15 +3805,15 @@ class Matrix {
 
 	/**
 	 * Set the given value at the given indexes in the matrix
-	 * @param {Number} x X-Axis index in the matrix
-	 * @param {Number} y Y-Axis index in the matrix
-	 * @param {Number} value Value to set at the given indexes in the matrix
+	 * @param {number} x X-Axis index in the matrix
+	 * @param {number} y Y-Axis index in the matrix
+	 * @param {number} value Value to set at the given indexes in the matrix
 	 * @example
 	 * const m1 = new Matrix(3);
 	 * m1.set(0, 0, 1); // m1[0][0] = 1
 	 */
 	set(x, y, value) {
-		if (this.at(x, y) !== null && typeof value === 'number') {
+		if(this.at(x, y) !== null && typeof value === 'number') {
 			this.array[y][x] = value;
 		}
 	}
@@ -3864,7 +3821,7 @@ class Matrix {
 	/**
 	 * Compares the two matrices and returns either these have the same matrix or not
 	 * @param {Matrix} matrix the matrix to compare with
-	 * @returns {Boolean} Either the 2 matrices are equals or not
+	 * @returns {boolean} Either the 2 matrices are equals or not
 	 * @example
 	 * const m1 = new Matrix(3);
 	 * const m2 = new Matrix(3);
@@ -3873,12 +3830,12 @@ class Matrix {
 	 * m1.equals(m2); // false
 	 */
 	equals(matrix) {
-		if (matrix.width !== this.width || matrix.height !== this.height)
+		if(matrix.width !== this.width || matrix.height !== this.height)
 			return false;
 
-		for (let i = 0; i < this.height; i++) {
-			for (let j = 0; j < this.width; j++) {
-				if (matrix.at(j, i) !== this.at(j, i))
+		for(let i=0; i < this.height; i++) {
+			for(let j=0; j < this.width; j++) {
+				if(matrix.at(j, i) !== this.at(j, i))
 					return false;
 			}
 		}
@@ -3888,12 +3845,12 @@ class Matrix {
 
 	/**
 	 * Returns either the matrix is symmetrical or not
-	 * @returns {Boolean} Either the matrix is symmetrical or not
+	 * @returns {boolean} Either the matrix is symmetrical or not
 	 */
 	get isSymmetrical() {
-		for (let i = 0; i < this.width; i++) {
-			for (let j = 0; j < this.height; j++) {
-				if (this.at(i, j) !== this.at(j, i))
+		for(let i=0; i < this.width; i++) {
+			for(let j=0; j < this.height; j++) {
+				if(this.at(i, j) !== this.at(j, i))
 					return false;
 			}
 		}
@@ -3905,7 +3862,7 @@ class Matrix {
 	 * Returns either the matrix is a square matrix or not.
 	 * 
 	 * A square matrix has its width equals to its height.
-	 * @returns {Boolean} Either it's a square matrix or not
+	 * @returns {boolean} Either it's a square matrix or not
 	 */
 	get isSquare() {
 		return this.width === this.height;
@@ -3915,7 +3872,7 @@ class Matrix {
 	 * Returns either the matrix is idendity/unity matrix.
 	 * 
 	 * An idendity/unity matrix has its diagonal filled by 1, all other elements are 0
-	 * @returns {Boolean} Either the matrix is an identity/unity matrix or not
+	 * @returns {boolean} Either the matrix is an identity/unity matrix or not
 	 */
 	get isIdentity() {
 		return this.isSquare && this.array.every((arr, i) => arr.every((e, j) => (i === j && e === 1) || (i !== j && e === 0)));
@@ -3925,7 +3882,7 @@ class Matrix {
 	 * Returns either the matrix has is a diagonal matrix or not.
 	 * 
 	 * A diagonal matrix is a matrix with a diagonal filled by values different from 0, all other elements are 0
-	 * @returns {Boolean} Either the matrix is a diagonal matrix or not
+	 * @returns {boolean} Either the matrix is a diagonal matrix or not
 	 */
 	get isDiagonal() {
 		return this.isSquare && this.array.every((arr, i) => arr.every((e, j) => (i === j && e !== 0) || (i !== j && e === 0)));
@@ -3933,7 +3890,7 @@ class Matrix {
 
 	/**
 	 * Returns either the matrix is triangular or not. (lower triangular or upper triangular)
-	 * @returns {Boolean} Either the matrix is triangular or not
+	 * @returns {boolean} Either the matrix is triangular or not
 	 */
 	get isTriangular() {
 		const a = this.isLowerTri;
@@ -3945,16 +3902,16 @@ class Matrix {
 	 * Returns either the matrix is lower triangular or not.
 	 * 
 	 * A lower triangular matrix is a matrix with all the entries above the main diagonal equals to zero
-	 * @returns {Boolean} Either the matrix is lower triangular or not
+	 * @returns {boolean} Either the matrix is lower triangular or not
 	 */
 	get isLowerTri() {
-		if (!this.isSquare)
+		if(!this.isSquare)
 			return false;
 
-		for (let i = 0; i < this.height; i++) {
-			for (let j = 0; j < this.width; j++) {
+		for(let i=0; i < this.height; i++) {
+			for(let j=0; j < this.width; j++) {
 				const e = this.at(j, i);
-				if (j >= i && e !== 0)
+				if(j >= i && e !== 0)
 					return false;
 			}
 		}
@@ -3966,16 +3923,16 @@ class Matrix {
 	 * Returns either the matrix is upper triangular or not.
 	 * 
 	 * An upper triangular matrix is a matrix with all the entries below the main diagonal equals to zero
-	 * @returns {Boolean} Either the matrix is upper triangular or not
+	 * @returns {boolean} Either the matrix is upper triangular or not
 	 */
 	get isUpperTri() {
-		if (!this.isSquare)
+		if(!this.isSquare)
 			return false;
 
-		for (let i = 0; i < this.height; i++) {
-			for (let j = 0; j < this.width; j++) {
+		for(let i=0; i < this.height; i++) {
+			for(let j=0; j < this.width; j++) {
 				const e = this.at(j, i);
-				if (j <= i && e !== 0)
+				if(j <= i && e !== 0)
 					return false;
 			}
 		}
@@ -3987,10 +3944,10 @@ class Matrix {
 	 * Returns a 1D array with the diagonal of the matrix if the matrix is a square matrix.
 	 * 
 	 * If the matrix is not a square matrix, then it returns an empty array.
-	 * @returns {Number[]} The diagonal values
+	 * @returns {number[]} The diagonal values
 	 */
 	get diagonal() {
-		if (this.isSquare)
+		if(this.isSquare)
 			return this.array.map((arr, i) => arr[i]);
 
 		return [];
@@ -3998,25 +3955,25 @@ class Matrix {
 
 	/**
 	 * Returns the matrix determining. det(M).
-	 * @returns {Number} The determining of the matrix
+	 * @returns {number} The determining of the matrix
 	 */
 	get det() {
-		if (!this.isSquare)
+		if(!this.isSquare)
 			return 0;
 
-		if (this.isIdendity)
+		if(this.isIdendity)
 			return 1;
 
-		if (this.isDiagonal || this.isTriangular) {
+		if(this.isDiagonal || this.isTriangular) {
 			const diag = this.diagonal;
 			return diag.reduce((acc, curr) => acc * curr, 1);
 		}
 
-		if (this.width === 2) {
+		if(this.width === 2) {
 			return this.at(0, 0) * this.at(1, 1) - this.at(1, 0) * this.at(0, 1);
 		}
 
-		else if (this.width === 3) {
+		else if(this.width === 3) {
 			const [a, b, c, d, e, f, g, h, i] = this.array1D;
 			return a * e * i + d * h * c + b * f * g - (g * e * c + d * b * i + a * h * f);
 		}
@@ -4032,8 +3989,8 @@ class Matrix {
 
 	/**
 	 * Operates an addition between 2 matrices. Matrices must have the same dimension
-	 * @param {Matrix|Number} matrix The matrix to addition with, or a number to apply the operation on each element of the matrix
-	 * @param {Boolean} onACopy Either it has to store the result in the current matrix or just return the result
+	 * @param {Matrix|number} matrix The matrix to addition with, or a number to apply the operation on each element of the matrix
+	 * @param {boolean} onACopy Either it has to store the result in the current matrix or just return the result
 	 * @returns {Matrix} Either 'this' or a newly created matrix, the result of the operation
 	 * @example
 	 * const m1 = new Matrix(3, 2, 1);
@@ -4044,18 +4001,18 @@ class Matrix {
 	 * // m4 = m1 = [ [2, 2, 2], [2, 2, 2]]
 	 */
 	add(matrix, onACopy = false) {
-		if (!('op' in this))
+		if(!('op' in this))
 			this.op = (a, b) => a + b;
 
-		if (!(matrix instanceof Matrix) && typeof matrix !== 'number') {
+		if(!(matrix instanceof Matrix) && typeof matrix !== 'number') {
 			console.error(`[Error] Matrix::add : Matrix expected, ${typeof matrix} given`);
 			delete this.op;
 			return this;
 		}
 
-		if (matrix instanceof Matrix) {
-			if (matrix.width !== this.width || matrix.height !== this.height) {
-				console.error("[Error] Matrix::add : Cannot operate an addition between 2 matrices with different dimensions.");
+		if(matrix instanceof Matrix) {
+			if(matrix.width !== this.width || matrix.height !== this.height) {
+				console.error('[Error] Matrix::add : Cannot operate an addition between 2 matrices with different dimensions.');
 				delete this.op;
 				return this;
 			}
@@ -4065,8 +4022,8 @@ class Matrix {
 		const b = matrix instanceof Matrix;
 
 		// operate
-		for (let i = 0; i < result.height; i++) {
-			for (let j = 0; j < result.width; j++) {
+		for(let i=0; i < result.height; i++) {
+			for(let j=0; j < result.width; j++) {
 				result.set(j, i, this.op(result.at(j, i), (b ? matrix.at(j, i) : matrix)));
 			}
 		}
@@ -4077,8 +4034,8 @@ class Matrix {
 
 	/**
 	 * Operates a substraction between 2 matrices. Matrices must have the same dimension
-	 * @param {Matrix|Number} matrix The matrix to substract, or a number to apply the operation on each element of the matrix
-	 * @param {Boolean} onACopy Either it has to store the result in the current matrix or just return the result
+	 * @param {Matrix|number} matrix The matrix to substract, or a number to apply the operation on each element of the matrix
+	 * @param {boolean} onACopy Either it has to store the result in the current matrix or just return the result
 	 * @returns {Matrix} Either 'this' or a newly created matrix, the result of the operation
 	 * @example
 	 * const m1 = new Matrix(3, 2, 1);
@@ -4095,36 +4052,36 @@ class Matrix {
 
 	/**
 	 * Multiplies the matrix by a number (scalar) or another matrix.
-	 * @param {Matrix|Number} matrixOrNumber Either a matrix or a number
-	 * @param {Boolean} onACopy Either it has to operate on a copy or on the matrix itself. If it's a matrix product, it's on another matrix
+	 * @param {Matrix|number} matrixOrnumber Either a matrix or a number
+	 * @param {boolean} onACopy Either it has to operate on a copy or on the matrix itself. If it's a matrix product, it's on another matrix
 	 * @return {Matrix} Either 'this' or a copy, depending of the parameter 'save'
 	 */
-	mult(matrixOrNumber, onACopy = false) {
-		const m = matrixOrNumber;
+	mult(matrixOrnumber, onACopy = false) {
+		const m = matrixOrnumber;
 		const result = onACopy ? new Matrix(this) : this;
 
 		// scalar product
-		if (typeof m === 'number') {
-			for (let i = 0; i < result.height; i++) {
-				for (let j = 0; j < result.width; j++) {
+		if(typeof m === 'number') {
+			for(let i=0; i < result.height; i++) {
+				for(let j=0; j < result.width; j++) {
 					result.set(j, i, result.at(j, i) * m);
 				}
 			}
 		}
 
 		// matrices multiplication
-		else if (m instanceof Matrix) {
-			if (m.height !== this.width || m.width !== this.height) {
-				console.error("[Error] Matrix::mult : matrices must have same transposed size.");
+		else if(m instanceof Matrix) {
+			if(m.height !== this.width || m.width !== this.height) {
+				console.error('[Error] Matrix::mult : matrices must have same transposed size.');
 			}
 
 			else {
 				result = new Matrix(this.height);
 
-				for (let i = 0; i < this.height; i++) {
-					for (let j = 0; j < this.height; j++) {
+				for(let i=0; i < this.height; i++) {
+					for(let j=0; j < this.height; j++) {
 						let s = 0;
-						for (let k = 0; k < this.width; k++) {
+						for(let k=0; k < this.width; k++) {
 							s += this.at(k, i) * m.at(j, k);
 						}
 						result.set(j, i, s);
@@ -4134,7 +4091,7 @@ class Matrix {
 		}
 
 		else {
-			console.error(`[Error] Matrix::mult : Matrix or number expected, got ${typeof matrixOrNumber}`);
+			console.error(`[Error] Matrix::mult : Matrix or number expected, got ${typeof matrixOrnumber}`);
 		}
 
 		return result;
@@ -4142,14 +4099,14 @@ class Matrix {
 
 	/**
 	 * Transposes the rows and columns of the matrix
-	 * @param {Boolean} onACopy Either it has to operate on the matrix itself or on a copy. By default false
+	 * @param {boolean} onACopy Either it has to operate on the matrix itself or on a copy. By default false
 	 * @returns {Matrix} The transformed matrix
 	 */
 	transpose(onACopy = false) {
 		const copy = new Matrix(this);
 		const me = this;
 
-		if (onACopy)
+		if(onACopy)
 			[copy, me] = [me, copy];
 
 		me.properties.size = Object.freeze({
@@ -4159,16 +4116,16 @@ class Matrix {
 
 		me.properties.array = [];
 
-		for (let i = 0; i < copy.width; i++) {
+		for(let i=0; i < copy.width; i++) {
 			const row = [];
-			for (let j = 0; j < copy.height; j++) {
+			for(let j=0; j < copy.height; j++) {
 				row.push(0);
 			}
 			me.properties.array.push(row);
 		}
 
-		for (let i = 0; i < copy.height; i++) {
-			for (let j = 0; j < copy.width; j++) {
+		for(let i=0; i < copy.height; i++) {
+			for(let j=0; j < copy.width; j++) {
 				me.set(i, j, copy.at(j, i));
 			}
 		}
@@ -4180,15 +4137,15 @@ class Matrix {
 	 * Returns the column at given index.
 	 * 
 	 * If wrong index given returns an empty array.
-	 * @param {Number} x The index of the column to get
-	 * @returns {Number[]} The column
+	 * @param {number} x The index of the column to get
+	 * @returns {number[]} The column
 	 */
 	getColumn(x) {
-		if (x < 0 || x > this.width)
+		if(x < 0 || x > this.width)
 			return [];
 
 		const column = [];
-		for (let i = 0; i < this.height; i++)
+		for(let i=0; i < this.height; i++)
 			column.push(this.at(x, i));
 		return column;
 	}
@@ -4197,11 +4154,11 @@ class Matrix {
 	 * Returns the column at given idnex.
 	 * 
 	 * If wrong idnex given, returns an empty array.
-	 * @param {Number} y The index of the row to get
-	 * @returns {Number[]} The row
+	 * @param {number} y The index of the row to get
+	 * @returns {number[]} The row
 	 */
 	getRow(y) {
-		if (y < 0 || y > this.height)
+		if(y < 0 || y > this.height)
 			return [];
 
 		return this.properties.array[y];
@@ -4209,18 +4166,18 @@ class Matrix {
 
 	/**
 	 * Updates a column in the matrix.
-	 * @param {Number} x The index of the column
-	 * @param {Number[]} column The column of values to set
+	 * @param {number} x The index of the column
+	 * @param {number[]} column The column of values to set
 	 * @returns {Matrix} 'this'
 	 */
 	setColumn(x, column) {
-		if (x < 0 || x > this.width)
-			return console.error("[Error] Matrix::setColumn : wrong index given.");
+		if(x < 0 || x > this.width)
+			return console.error('[Error] Matrix::setColumn : wrong index given.');
 
-		if (column.length !== this.height)
-			return console.error("[Error] Matrix::setColumn : column must have the same length as the matrix's height.");
+		if(column.length !== this.height)
+			return console.error('[Error] Matrix::setColumn : column must have the same length as the matrix\'s height.');
 
-		for (let i = 0; i < this.height; i++)
+		for(let i=0; i < this.height; i++)
 			this.set(x, i, column[i]);
 
 		return this;
@@ -4228,16 +4185,16 @@ class Matrix {
 
 	/**
 	 * Updates a row in the matrix.
-	 * @param {Number} y The index of the row
-	 * @param {Number[]} row The row of values to set
+	 * @param {number} y The index of the row
+	 * @param {number[]} row The row of values to set
 	 * @returns {Matrix} 'this'
 	 */
 	setRow(y, row) {
-		if (y < 0 || y > this.height)
-			return console.error("[Error] Matrix::setRow : wrong index given.");
+		if(y < 0 || y > this.height)
+			return console.error('[Error] Matrix::setRow : wrong index given.');
 
-		if (row.length !== this.height)
-			return console.error("[Error] Matrix::setRow : row must have the same length as the matrix's width.");
+		if(row.length !== this.height)
+			return console.error('[Error] Matrix::setRow : row must have the same length as the matrix\'s width.');
 
 		this.properties.array[y] = row;
 
@@ -4285,27 +4242,41 @@ class Camera {
 
     /**
      * Returns the in-world anchor X-axis point of the camera.
-     * @return {Number}
+     * @return {number}
      */
     get x() { return this.position.x - this.anchorPoint.x; }
 
     /**
      * Returns the in-world anchor Y-axis point of the camera.
-     * @return {Number}
+     * @return {number}
      */
     get y() { return this.position.y - this.anchorPoint.y; }
 
     /**
      * Returns either the camera is following a point or not.
-     * @return {Boolean}
+     * @return {boolean}
      */
     get following() { return this.followPoint !== null; }
 
     /**
      * Returns either the camera is currently moving or not.
-     * @return {Boolean}
+     * @return {boolean}
      */
     get moving() { return NOX_PV.camera.move !== null; }
+
+	/**
+	 * Returns the bounds of the camera.
+     * Be careful, it returns the real-x and real-y, not
+     * its in-world-x and in-world-y.
+     * Use camera.position instead.
+	 * @returns {Object} The bounds of the camera (x, y, width, height)
+	 */
+	getBounds() {
+		const x = this.x;
+		const y = this.y;
+
+		return { x, y, width, height };
+	}
 
     /**
      * Defines either the anchor of the camera is top-left corner or center.<br>
@@ -4363,7 +4334,7 @@ class Camera {
         else if(typeof point === 'object' && point.position instanceof Vector)
             this.followPoint = point.position;
         else
-            console.error("[Error] Camera::follow : parameter should be a Vector.");
+            console.error('[Error] Camera::follow : parameter should be a Vector.');
 
         return this;
     }
@@ -4384,9 +4355,9 @@ class Camera {
      * 
      * You can change the ease animation of the move with `Camera.setMoveType()`
      * @see {@link Camera.setMoveType}
-     * @param {Number|Vector} x A Vector or a X-axis point to move
-     * @param {Number} y The Y-axis point to move - or the duration if the first argument is a Vector
-     * @param {Number} duration The duration of the move
+     * @param {number|Vector} x A Vector or a X-axis point to move
+     * @param {number} y The Y-axis point to move - or the duration if the first argument is a Vector
+     * @param {number} duration The duration of the move
      * @return {Camera} this
      */
     move(x, y, duration=1000) {
@@ -4424,9 +4395,9 @@ class Camera {
      * 
      * You can change the ease animation of the move with `Camera.setMoveType()`
      * @see {@link Camera.setMoveType}
-     * @param {Number|Vector} x A Vector or a X-axis point to move
-     * @param {Number} y The Y-axis point to move - or the duration if the first argument is a Vector
-     * @param {Number} duration The duration of the move
+     * @param {number|Vector} x A Vector or a X-axis point to move
+     * @param {number} y The Y-axis point to move - or the duration if the first argument is a Vector
+     * @param {number} duration The duration of the move
      * @return {Camera} this
      */
     moveTo(x, y, duration=1000) {
@@ -4470,7 +4441,7 @@ class Path {
 		this.d = null;
 		this.isClosed = false;
 
-		if (x && y) {
+		if(x && y) {
 			this.MoveTo(x, y);
 		}
 	}
@@ -4486,12 +4457,12 @@ class Path {
 	 * Draws the path
 	 */
 	draw() {
-		if (this.d !== null) {
+		if(this.d !== null) {
 			path(this.d + (this.isClosed ? ' Z' : ''));
 		}
 
 		else {
-			console.error("Cannot draw it because you didn't make a path");
+			console.error('Cannot draw it because you didn\'t make a path');
 		}
 	}
 
@@ -4501,7 +4472,7 @@ class Path {
 	 * @param {number} y Y-axis coordinate
 	 */
 	MoveTo(x, y) {
-		if (this.d === null) {
+		if(this.d === null) {
 			this.d = `M ${x} ${y}`;
 		}
 
@@ -4516,7 +4487,7 @@ class Path {
 	 * @param {number} y Y-axis coordinate
 	 */
 	moveTo(x, y) {
-		if (this.d === null) return console.error("You have to initialize the fist path's position");
+		if(this.d === null) return console.error('You have to initialize the fist path\'s position');
 		this.d += ` m ${x} ${y}`;
 	}
 
@@ -4527,7 +4498,7 @@ class Path {
 	 * @param {number} y y-axis coordinate
 	 */
 	LineTo(x, y) {
-		if (this.d === null) return console.error("You have to initialize the first path's position");
+		if(this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.d += ` L ${x} ${y}`;
 	}
 
@@ -4537,7 +4508,7 @@ class Path {
 	 * @param {number} y y-axis coordinate
 	 */
 	lineTo(x, y) {
-		if (this.d === null) return console.error("You have to initialize the first path's position");
+		if(this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.d += ` l ${x} ${y}`;
 
 	}
@@ -4548,7 +4519,7 @@ class Path {
 	 * @param {number} x X-axis coordinate
 	 */
 	Horizontal(x) {
-		if (this.d === null) return console.error("You have to initialize the first path's position");
+		if(this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.d += ` H ${x}`;
 	}
 
@@ -4557,7 +4528,7 @@ class Path {
 	 * @param {number} x X-axis coordinate
 	 */
 	horizontal(x) {
-		if (this.d === null) return console.error("You have to initialize the first path's position");
+		if(this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.d += ` h ${x}`;
 	}
 
@@ -4567,7 +4538,7 @@ class Path {
 	 * @param {number} y Y-axis coordinate
 	 */
 	Vertical(y) {
-		if (this.d === null) return console.error("You have to initialize the first path's position");
+		if(this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.d += ` V ${y}`;
 	}
 
@@ -4576,7 +4547,7 @@ class Path {
 	 * @param {number} y Y-axis coordinate
 	 */
 	vertical(y) {
-		if (this.d === null) return console.error("You have to initialize the first path's position");
+		if(this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.d += ` v ${y}`;
 	}
 
@@ -4588,10 +4559,10 @@ class Path {
 	 * @param {number} r radius. Must be positive
 	 * @param {number} start start angle
 	 * @param {number} end end angle
-	 * @param {Boolean} antiClockwise either it has to draw it anti-clockwisly or not
+	 * @param {boolean} antiClockwise either it has to draw it anti-clockwisly or not
 	 */
 	Arc(x, y, r, start, end, antiClockwise = false) {
-		if (this.d === null) return console.error("You have to initialize the first path's position");
+		if(this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.d += ` A ${x} ${y} ${r} ${start} ${end} ${(antiClockwise === true) ? 1 : 0}`;
 	}
 
@@ -4602,10 +4573,10 @@ class Path {
 	 * @param {number} r radius. Must be positive
 	 * @param {number} start start angle
 	 * @param {number} end end angle
-	 * @param {Boolean} antiClockwise either it has to draw it anti-clockwisly or not
+	 * @param {boolean} antiClockwise either it has to draw it anti-clockwisly or not
 	 */
 	arc(x, y, r, start, end, antiClockwise = false) {
-		if (this.d === null) return console.error("You have to initialize the first path's position");
+		if(this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.d += ` a ${x} ${y} ${r} ${start} ${end} ${(antiClockwise === true) ? 1 : 0}`;
 	}
 
@@ -4614,7 +4585,7 @@ class Path {
 	 * Close path
 	 */
 	close() {
-		if (this.d === null) return console.error("You have to initialize the first path's position");
+		if(this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.isClosed = true;
 	}
 
@@ -4622,7 +4593,7 @@ class Path {
 	 * Removes the instruction that close the path if it was.
 	 */
 	open() {
-		if (this.d === null) return console.error("You have to initialize the first path's position");
+		if(this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.isClosed = false;
 	}
 
@@ -4633,174 +4604,21 @@ class Path {
 	 */
 	move(x, y = null) {
 		// 1 argument and it's a vector
-		if (y === null && x instanceof Vector) {
+		if(y === null && x instanceof Vector) {
 			[x, y] = [x.x, x.y];
 		}
 
-		if (this.d === null) return;
+		if(this.d === null) return;
 
 		this.d = this.d.replace(/([MLHVA])\s([\d\.]+)(\s([\d\.]+))?/g, (c, p1, p2, p3) => {
-			if (p1 === 'H') return `${p1} ${parseFloat(p2) + x}`;
+			if(p1 === 'H') return `${p1} ${parseFloat(p2) + x}`;
 
-			if (p1 === 'V') return `${p1} ${parseFloat(p2) + y}`;
+			if(p1 === 'V') return `${p1} ${parseFloat(p2) + y}`;
 
 			return `${p1} ${parseFloat(p2) + x} ${parseFloat(p3) + y}`;
 		});
 	}
 }
-
-
-
-
-
-// initialize all the canvas's environment, when window is ready
-const initializeCanvasWorld = () => {
-	if (window) {
-		window.addEventListener('load', () => {
-			const t0 = performance.now();
-
-			// the minimum between document width | height
-			MIN_DOC_SIZE = min(documentWidth(), documentHeight());
-
-			// if user created a setup function
-			if (typeof setup === "function") {
-				NOX_PV.inSetup = true;
-				setup();
-				delete NOX_PV.notSetup;
-
-				if (pixels === undefined) {
-					delete pixels;
-				}
-			}
-
-			const t1 = performance.now();
-
-			if (typeof draw === 'function') {
-				NOX_PV.drawFunc = draw;
-			}
-
-			if (typeof update === 'function') {
-				NOX_PV.updateFunc = update;
-			}
-
-			/**
-			 * Calculate the {top, left} offset of a DOM element
-			 * @param {DOMElement} elt the dom Element
-			 */
-			const offset = elt => {
-				const rect = elt.getBoundingClientRect();
-
-				return {
-					top: rect.top + document.body.scrollTop,
-					left: rect.left + document.body.scrollLeft
-				};
-			};
-
-
-			// if the user created the canvas on the setup function
-			if (canvas) {
-
-				// event mouse move
-				canvas.addEventListener('mousemove', e => {
-					NOX_PV.oldMouseX = mouseX;
-					NOX_PV.oldMouseY = mouseY;
-
-					mouseX = e.clientX - offset(canvas).left;
-					mouseY = e.clientY - offset(canvas).top;
-
-					//if(NOX_PV.isPointerLocked) {
-					mouseDirection.x = e.movementX;
-					mouseDirection.y = e.movementY;
-					//}
-
-					if (typeof mouseMove === "function") mouseMove(e);
-				});
-
-				canvas.addEventListener('touchstart', handleTouchStart, false);
-				canvas.addEventListener('touchmove', handleTouchMove, false);
-				canvas.addEventListener('mouseup', e => { NOX_PV.isMouseDown = false; if (typeof mouseUp === "function") mouseUp(e); });
-				if (typeof onClick === "function") canvas.addEventListener('click', onClick);
-				if (typeof mouseEnter === "function") canvas.addEventListener('mouseenter', mouseEnter);
-				if (typeof mouseLeave === "function") canvas.addEventListener('mouseleave', mouseLeave);
-				if (typeof mouseWheel === "function") canvas.addEventListener('wheel', mouseWheel);
-				if (typeof onContextmenu === "function") canvas.addEventListener('contextmenu', onContextmenu);
-				if (typeof onDblClick === "function") canvas.addEventListener('dblclick', onDblClick);
-
-
-				// if the swipe is enable on pc, call event handler
-				if (NOX_PV.swipePCEnable) {
-					canvas.addEventListener('mousedown', handleTouchStart, false);
-					canvas.addEventListener('mousemove', handleTouchMove, false);
-				}
-
-
-				// if the user has created a function onSwipe() {} then call it if it's swiping
-				if (typeof onSwipe === "function") {
-					canvas.addEventListener('swipeleft', () => { onSwipe('left'); }, false);
-					canvas.addEventListener('swiperight', () => { onSwipe('right'); }, false);
-					canvas.addEventListener('swipeup', () => { onSwipe('up'); }, false);
-					canvas.addEventListener('swipedown', () => { onSwipe('down'); }, false);
-				}
-
-			}
-
-
-			// keyboard events
-
-			// key pressed
-			window.addEventListener('keypress', e => {
-				NOX_PV.keys[e.code] = true;
-				if (typeof keyPress === "function") keyPress(e);
-			});
-
-
-			// key downed
-			window.addEventListener('keydown', e => {
-				NOX_PV.keys[e.code] = true;
-				if (typeof keyDown === "function") keyDown(e);
-			});
-
-
-			// key upped
-			window.addEventListener('keyup', e => {
-				NOX_PV.keys[e.code] = false;
-				if (typeof keyUp === "function") keyUp(e);
-			});
-
-			// when user resize window or document
-			window.addEventListener('resize', () => {
-				const newWidth = document.documentElement.clientWidth,
-					newHeight = document.documentElement.clientHeight;
-
-				MIN_DOC_SIZE = min(newWidth, newHeight);
-
-				if (typeof onResize === "function") onResize(newWidth, newHeight);
-			});
-
-			if (typeof onBlur === "function") window.addEventListener('blur', onBlur);
-			if (typeof onFocus === "function") window.addEventListener('focus', onFocus);
-			if (typeof onOnline === "function") window.addEventListener('online', onOnline);
-			if (typeof onOffline === "function") window.addEventListener('offline', onOffline);
-
-			const t2 = performance.now();
-
-			if (NOX_PV.logPerfs) {
-				const perfData = {
-					setup: { ms: (t1 - t0) },
-					InitWorld: { ms: (t2 - t1) }
-				};
-
-				console.info('Performances while initializing the canvas environment :');
-				console.table(perfData);
-			}
-
-			NOX_PV.timer = new Time();
-
-			drawLoop();
-		});
-	}
-};
-
 
 
 
@@ -4812,11 +4630,11 @@ class Quadtree {
     /**
      * A Quadtree's Point has a position and a pointer to an object
      */
-    static Point = class {
+    static Point = class Point {
         /**
          * A Quadtree's Point that has a position and a pointer to an object
-         * @param {Number} x Point's X
-         * @param {Number} y Point's Y
+         * @param {number} x Point's X
+         * @param {number} y Point's Y
          * @param {Object} dataPtr Object data
          */
         constructor(x, y, dataPtr) {
@@ -4830,13 +4648,13 @@ class Quadtree {
      * A Quadtree's Rectangle is a basic rectangle that checks<br>
      * if it contains a given point or intersects with a given Rectangle
      */
-    static Rectangle = class {
+    static Rectangle = class Rectangle {
         /**
          * Creates a Quadtree's Rectangle.
-         * @param {Number} x Rectangle top-left corner's X
-         * @param {Number} y Rectangle top-left corner's Y
-         * @param {Number} w Rectangle's width
-         * @param {Number} h Rectangle's height
+         * @param {number} x Rectangle top-left corner's X
+         * @param {number} y Rectangle top-left corner's Y
+         * @param {number} w Rectangle's width
+         * @param {number} h Rectangle's height
          */
         constructor(x, y, w, h) {
             this.x = x;
@@ -4848,7 +4666,7 @@ class Quadtree {
         /**
          * Checks if a given Quadtree's Point is in the Rectangle or not.
          * @param {Quadtree.Point} point A Quadtree's Point
-         * @returns Boolean - either the point is in the Rectangle or not
+         * @returns boolean - either the point is in the Rectangle or not
          */
         contains(point) {
             return (
@@ -4860,9 +4678,9 @@ class Quadtree {
         /**
          * Checks if 2 Quadtree's Rectangles are intersecting or not.
          * @param {QuadTree.Rectangle} rectangle A Quadtree's Rectangle
-         * @returns Boolean - either both Rectangles intersect or not
+         * @returns boolean - either both Rectangles intersect or not
          */
-        intersects(rectangle) {
+        intersect(rectangle) {
             return !(
                 rectangle.x > this.x + this.w ||
                 rectangle.x + rectangle.w < this.x ||
@@ -4874,7 +4692,7 @@ class Quadtree {
         /**
          * Checks if this Quadtree's Rectangle totally wraps the given Rectangle or not.
          * @param {Quadtree.Rectangle} rectangle A Quadtree's Rectangle
-         * @returns Boolean - either this Rectangle totally wraps the given rectangle or not
+         * @returns boolean - either this Rectangle totally wraps the given rectangle or not
          */
         wrap(rectangle) {
             return (
@@ -4887,7 +4705,7 @@ class Quadtree {
     /**
      * Creates a new Quadtree.
      * @param {Quadtree.Rectangle} boundary The region covered by the Quadtree
-     * @param {Number} capacity The max capacity of Points that can supports this Quadtree
+     * @param {number} capacity The max capacity of Points that can supports this Quadtree
      */
     constructor(boundary, capacity=5) {
         this.boundary = boundary;
@@ -4909,6 +4727,14 @@ class Quadtree {
     }
 
     /**
+     * Returns an array containing the tree's children.
+     * @returns {Array<Quadtree>} All tree's children
+     */
+	get children() {
+		return this.divided? [this.northwest, this.northeast, this.southwest, this.southeast] : [];
+	}
+
+    /**
      * Subdivides the Quadtree if it isn't.<br>
      * Separates itself in 4 regions that fill itself.
      */
@@ -4927,6 +4753,12 @@ class Quadtree {
             this.southeast = new Quadtree(se);
 
             this.divided = true;
+
+			for(const p in this.points) {
+				this.insert(p);
+			}
+
+			this.points = [];
         }
     }
 
@@ -4942,59 +4774,63 @@ class Quadtree {
     insert(point) {
         if(!this.boundary.contains(point))
             return false;
-        
-        if(this.points.length < this.capacity) {
-            this.points.push(point);
-            return true;
-        }
 
-        else {
-            if(!this.divided)
-                this.subdivide();
-
-            return this.northeast.insert(point)
-                || this.northwest.insert(point)
-                || this.southeast.insert(point)
-                || this.southwest.insert(point);
-        }
+		if(this.divided) {
+			return this.northeast.insert(point)
+				|| this.northwest.insert(point)
+				|| this.southeast.insert(point)
+				|| this.southwest.insert(point);
+		}
+		else if(this.points.length < this.capacity) {
+			this.points.push(point);
+			return true;
+		}
+		else {
+			this.subdivide();
+			this.insert(point);
+		}
     }
 
     /**
      * Finds and returns all Quadtree's Points that are in the requested area
      * @param {Quadtree.Rectangle} range The Rectangle where to find and returns all points
-     * @param {boolean} isWrapped Either this rectangle is wrapped or not. Do not use this parameter
      * @returns {Array<Quadtree.Point>} Returns an array of all Points that are in the requested area.
      */
-    query(range, isWrapped=false) {
-        if(isWrapped)
-            return this.points;
+    query(range) {
+		// leaf
+		if(!this.divided) {
+			if(range.wrap(this.boundary)) {
+				return this.points;
+			}
+			else if(range.intersect(this.boundary)) {
+				const found = [];
 
-        let found = [];
+				for(const p of this.points) {
+					if(range.contains(p))
+						found.push(p);
+				}
 
-        if(!this.boundary.intersects(range))
-            return found;
+				return found;
+			}
 
-        if(!isWrapped)
-            isWrapped = range.wrap(this.boundary);
-        
-        if(isWrapped === true)
-            found.push(...this.points);
-        
-        else {
-            for(const p of this.points) {
-                if(range.contains(p))
-                    found.push(p);
-            }
-        }
+			return [];
+		}
 
-        if(this.divided) {
-            found.push(...this.northeast.query(range, isWrapped));
-            found.push(...this.northwest.query(range, isWrapped));
-            found.push(...this.southeast.query(range, isWrapped));
-            found.push(...this.southwest.query(range, isWrapped));
-        }
+		// node
+		// totally wraps the boundary : add all leafs
+		if(range.wrap(this.boundary)) {
+			return this.getAllPoints();
+		}
 
-        return found;
+		// partially or does not collides the range
+		const found = [];
+
+		found.push(...this.northeast.query(range, _isWrapped));
+		found.push(...this.northwest.query(range, _isWrapped));
+		found.push(...this.southeast.query(range, _isWrapped));
+		found.push(...this.southwest.query(range, _isWrapped));
+
+		return found;
     }
 
     /**
@@ -5016,16 +4852,62 @@ class Quadtree {
             this.southwest.show();
         }
     }
+
+	/**
+	 * Returns all the children of this tree and its regions.
+	 * @returns {Array<Quadtree.Point>} A list of all children and subchildren of this tree
+	 */
+	getAllPoints() {
+		if(!this.divided)
+			return this.points;
+		
+		const points = [];
+
+		for(const region of this.children)
+			points.push(...region.getAllPoints());
+
+		return points;
+	}
+
+    /**
+     * Returns the total size of the tree, containing its point and the points of its children.
+     * @returns {number} The total size of the tree (number of points contained inside it)
+     */
+    size() {
+        let n = this.points.length;
+
+        for(const region of this.children)
+            n += region.size();
+
+        return n;
+    }
 }
 
 
 
 
 
+class NoxCanvasModule {
+	constructor() {
+		if(this.constructor === NoxCanvasModule) {
+			throw new Error("[NoxCanvasModule] Object of Abstract Class cannot be created");
+		}
+	}
+}
 
+const addModule =  module => {
+	if(!(module instanceof NoxCanvasModule)) {
+		throw new Error("[addModule] given module does not extends NoxCanvasModule.");
+	}
 
+	if(typeof module.update === 'function')
+		NOX_PV.updateModules.push(module);
 
+	if(typeof module.render === 'function')
+		NOX_PV.renderingModules.push(module);
 
+	NOX_PV.modules.push(module);
+};
 
 /**
  * This will tell the library to log in the console the performances about the initialization of the canvas.
@@ -5037,8 +4919,12 @@ const logPerformances = () => {
 
 // private vars
 const NOX_PV = {
-	updateFunc: () => { },
-	drawFunc: () => { },
+	updateFunc: () => {},
+	drawFunc: () => {},
+
+	modules: [],
+	updateModules: [],
+	renderingModules: [],
 
 	notSetup: true,
 	logPerfs: false,
@@ -5049,6 +4935,11 @@ const NOX_PV = {
 		t2: 0, // draw time
 		freq: 720
 	},
+	/**
+	 * Default draw condition - run in every cases
+	 * Do not use it. Use setDrawCondition instead.
+	 */
+	drawCond: () => true,
 
     camera: {
         hud: null,
@@ -5075,8 +4966,8 @@ const NOX_PV = {
 
 	// swipe direction
 	swipexDown: null, swipeyDown: null,
-	// boolean swipe enabled on pc
-	swipePCEnable: true,
+	// automatic canvas resizing
+	autoResize: 0,
 	// swipe direction
 	lastSwipe: null,
 
@@ -5084,8 +4975,8 @@ const NOX_PV = {
 	bGuideLines: false,
 
 	// default text size & font-family
-	fontSize: "12px",
-	fontFamily: "Monospace",
+	fontSize: '12px',
+	fontFamily: 'Monospace',
 
 	loop: true,
 
@@ -5096,32 +4987,32 @@ const NOX_PV = {
 	colorTreatment: (...oColor) => {
 		const n = oColor.length;
 
-		if (n > 0 && (oColor[0] instanceof CanvasGradient || oColor[0] instanceof CanvasPattern)) return oColor[0];
+		if(n > 0 && (oColor[0] instanceof CanvasGradient || oColor[0] instanceof CanvasPattern)) return oColor[0];
 
 
 		// number - only rgb value accepted
-		if (n === 1 && typeof oColor[0] === 'number') {
+		if(n === 1 && typeof oColor[0] === 'number') {
 			oColor = oColor[0];
 
-			if (0 <= oColor && oColor <= 255) {
+			if(0 <= oColor && oColor <= 255) {
 				return `rgb(${oColor}, ${oColor}, ${oColor})`;
 			}
 		}
 
 		// rgb are the same value + alpha
-		else if (n === 2 && oColor.every((c, i) => typeof c === 'number' && (0 <= c && c <= 255) || (i === 4 && 0 <= c && c <= 1))) {
+		else if(n === 2 && oColor.every((c, i) => typeof c === 'number' && (0 <= c && c <= 255) || (i === 4 && 0 <= c && c <= 1))) {
 			return `rgba(${oColor[0]}, ${oColor[0]}, ${oColor[0]}, ${oColor[1] > 1 ? oColor[1] / 255 : oColor[1]})`;
 		}
 
 		// rgb or rgba integers
-		else if ([3, 4].includes(n) && oColor.every(c => typeof c === 'number')) {
-			if (oColor.every((c, i) => (0 <= c && c <= 255) || (i === 4 && 0 <= c && c <= 1))) {
+		else if([3, 4].includes(n) && oColor.every(c => typeof c === 'number')) {
+			if(oColor.every((c, i) => (0 <= c && c <= 255) || (i === 4 && 0 <= c && c <= 1))) {
 				return `rgb${n === 4 ? 'a' : ''}(${oColor[0]}, ${oColor[1]}, ${oColor[2]}${n === 4 ? `, ${oColor[3] > 1 ? oColor[3] / 255 : oColor[3]}` : ''})`;
 			}
 		}
 
 		// hex, hsl, rgb[a], color name
-		else if (n === 1 && typeof oColor[0] === 'string') {
+		else if(n === 1 && typeof oColor[0] === 'string') {
 			oColor = oColor[0];
 
 			const color = oColor.replace(/\s/gi, '');
@@ -5133,19 +5024,19 @@ const NOX_PV = {
 				name: /^\w{3,30}$/
 			};
 
-			for (let regex in reg) {
-				if (reg[regex].test(color)) {
+			for(let regex in reg) {
+				if(reg[regex].test(color)) {
 					return oColor;
 				}
 			}
 		}
 
 		// color class instance
-		else if (oColor[0] instanceof HEX || oColor[0] instanceof RGB || oColor[0] instanceof HSL) {
-			return oColor[0].toString();
+		else if(oColor[0] instanceof HEX || oColor[0] instanceof RGB || oColor[0] instanceof HSL) {
+			return oColor[0].tostring();
 		}
 
-		if (canvas) {
+		if(canvas) {
 			return window.getComputedStyle(canvas).backgroundColor;
 		}
 
@@ -5161,7 +5052,7 @@ const NOX_PV = {
 		generateSeed: () => {
 			return Array(255).fill(0).map((i, j) => j).sort(() => Math.random() - 0.5);
 		},
-		get: (x, y, lod = NOX_PV.perlin.lod, seed = NOX_PV.perlin.seed) => {
+		get: (x, y, lod=NOX_PV.perlin.lod, seed=NOX_PV.perlin.seed) => {
 			// adapt the resolution
 			x /= lod;
 			y /= lod;
@@ -5174,11 +5065,11 @@ const NOX_PV = {
 
 			// recover vectors
 			const stuv = [];
-			for (let i = 0; i < 4; i++) {
+			for(let i=0; i < 4; i++) {
 				try {
 					const v = seed[(ii + i % 2 + seed[jj + floor(i / 2)]) % 255] % NOX_PV.perlin.gradient.length;
 					stuv.push(NOX_PV.perlin.gradient[v][0] * (dx - i % 2) + NOX_PV.perlin.gradient[v][1] * (dy - floor(i / 2)));
-				} catch (e) {
+				} catch(e) {
 					stuv.push(0);
 				}
 			}
@@ -5192,8 +5083,8 @@ const NOX_PV = {
 	},
 
 	easeElastic: (type, t, b, c, d) => {
-		if (t === 0) return b;
-		if ((t /= d) === 1) return b + c;
+		if(t === 0) return b;
+		if((t /= d) === 1) return b + c;
 		const p = d * .45;
 		const s = p / ((c < 0) ? 4 : (2 * PI) * 1.57);
 		const x = sin((t * d - s) * (2 * PI) / p);
@@ -5219,7 +5110,7 @@ NOX_PV.perlin.gradient = [
 	[-NOX_PV.perlin.unit, -NOX_PV.perlin.unit]
 ];
 
-for (let i = 0; i < 256; i++) {
+for(let i=0; i < 256; i++) {
 	NOX_PV.lut[i] = (i < 16 ? '0' : '') + (i).toString(16);
 }
 
@@ -5233,7 +5124,7 @@ NOX_PV.easeFuncMap = {
 	quartIn: easeInQuart, quartOut: easeOutQuart, quartInOut: easeInOutQuart,
 	quintIn: easeInQuint, quintOut: easeOutQuint, quintInOut: easeInOutQuint,
 	backIn: easeInBack, backOut: easeOutBack, backInOut: easeInOutBack,
-	elasticIn: easeInElastic, elasticOut: easeOutElastic, elasticInOut: easeInOutElastic,
+	elasticIn: easeInElastic, elasticOut: easeOutElastic, elasticInOut: easeInOutElastic
 };
 
 
@@ -5246,4 +5137,199 @@ NOX_PV.cam = camera;
  * initialize everything from here
  * When the page has loaded
  */
-initializeCanvasWorld();
+// initialize all the canvas's environment, when window is ready
+(() => {
+	window && window.addEventListener('load', () => {
+		const t0 = performance.now();
+
+		// the minimum between document width | height
+		MIN_DOC_SIZE = min(documentWidth(), documentHeight());
+
+		// if user created a setup function
+		if(typeof setup === 'function') {
+			NOX_PV.inSetup = true;
+			setup();
+			delete NOX_PV.notSetup;
+
+			if(pixels === undefined) {
+				delete pixels;
+			}
+		}
+
+		const t1 = performance.now();
+
+		if(typeof draw === 'function') {
+			NOX_PV.drawFunc = draw;
+		}
+
+		if(typeof update === 'function') {
+			NOX_PV.updateFunc = update;
+		}
+
+		/**
+		 * Calculate the {top, left} offset of a DOM element
+		 * @param {Element} elt the dom Element
+		 */
+		const offset = (elt) => {
+			const rect = elt.getBoundingClientRect();
+
+			return {
+				top: rect.top + document.body.scrollTop,
+				left: rect.left + document.body.scrollLeft
+			};
+		};
+
+		// if the user created the canvas on the setup function
+		if(canvas) {
+			canvas.addEventListener('pointerdown', e => {
+				canvas.setPointerCapture(e.pointerId);
+
+				NOX_PV.isMouseDown = true;
+
+				dragPoint = {
+					x: e.clientX - offset(canvas).left,
+					y: e.clientY - offset(canvas).top
+				};
+
+				mouseDirection.x = e.movementX;
+				mouseDirection.y = e.movementY;
+
+				if(typeof mouseDown === 'function')
+					mouseDown(e);
+
+				canvas.addEventListener('pointerup', () => {
+					try {
+						canvas.releasePointerCapture(e.pointerId);
+					} catch(e) {}
+
+					dragPoint = null;
+
+					NOX_PV.isMouseDown = false;
+
+					if(typeof mouseUp === 'function')
+						mouseUp(e);
+				}, { once: true });
+			});
+
+			canvas.addEventListener('pointermove', e => {
+				mouseX = e.clientX;
+				mouseY = e.clientY;
+
+				if(NOX_PV.isMouseDown) {
+					const xUp = e.clientX;
+					const yUp = e.clientY;
+
+					const xDiff = dragPoint.x - xUp;
+					const yDiff = dragPoint.y - yUp;
+
+					let swipeDir;
+
+					if(abs(xDiff) > abs(yDiff))
+						swipeDir = (xDiff > 0)? 'left' : 'right';
+					else
+						swipeDir = (yDiff > 0)? 'up' : 'down';
+
+					NOX_PV.lastSwipe = swipeDir;
+
+					if(typeof onSwipe === 'function') {
+						onSwipe(swipeDir);
+					}
+
+					if(typeof onDrag === 'function') {
+						onDrag(e);
+					}
+				}
+				else if(typeof mouseMove === 'function') {
+					mouseMove(e);
+				}
+			});
+
+
+			if(typeof onClick === 'function') canvas.addEventListener('click', onClick);
+			if(typeof mouseEnter === 'function') canvas.addEventListener('mouseenter', mouseEnter);
+			if(typeof mouseLeave === 'function') canvas.addEventListener('mouseleave', mouseLeave);
+			if(typeof mouseWheel === 'function') canvas.addEventListener('wheel', mouseWheel);
+			if(typeof onContextmenu === 'function') canvas.addEventListener('contextmenu', onContextmenu);
+			if(typeof onDblClick === 'function') canvas.addEventListener('dblclick', onDblClick);
+		}
+
+
+		// keyboard events
+
+		// key pressed
+		window.addEventListener('keypress', e => {
+			NOX_PV.keys[e.code] = true;
+
+			if(typeof keyPress === 'function')
+				keyPress(e);
+		});
+
+
+		// key downed
+		window.addEventListener('keydown', e => {
+			NOX_PV.keys[e.code] = true;
+
+			if(typeof keyDown === 'function')
+				keyDown(e);
+		});
+
+
+		// key upped
+		window.addEventListener('keyup', e => {
+			NOX_PV.keys[e.code] = false;
+
+			if(typeof keyUp === 'function')
+				keyUp(e);
+		});
+
+		// when user resize window or document
+		window.addEventListener('resize', () => {
+			const newWidth = document.documentElement.clientWidth,
+				newHeight = document.documentElement.clientHeight;
+			
+			// avoids performance's hit if the user plays to resize a lot
+			// if never defined before, it does not throw an error
+			clearTimeout(NOX_PV.resizeEndedCallback);
+
+			NOX_PV.resizeEndedCallback = setTimeout(() => {
+				MIN_DOC_SIZE = min(newWidth, newHeight);
+				NOX_PV.loop = true;
+
+				if(NOX_PV.autoResize === 2) {
+					setCanvasSize(newWidth, newHeight);
+				}
+
+				if(typeof onResizeEnded === 'function')
+					onResizeEnd(newWidth, newHeight);
+			}, 100);
+
+			if(NOX_PV.autoResize === 1) {
+				setCanvasSize(newWidth, newHeight);
+			}
+
+			if(typeof onResize === 'function')
+				onResize(newWidth, newHeight);
+		});
+
+		if(typeof onBlur === 'function') window.addEventListener('blur', onBlur);
+		if(typeof onFocus === 'function') window.addEventListener('focus', onFocus);
+		if(typeof onOnline === 'function') window.addEventListener('online', onOnline);
+		if(typeof onOffline === 'function') window.addEventListener('offline', onOffline);
+
+		const t2 = performance.now();
+
+		if(NOX_PV.logPerfs) {
+			const perfData = {
+				setup: { ms: (t1 - t0) },
+				InitWorld: { ms: (t2 - t1) }
+			};
+
+			console.info('Performances while initializing the canvas environment :');
+			console.table(perfData);
+		}
+
+		NOX_PV.timer = new Time();
+
+		drawLoop();
+	});
+})();

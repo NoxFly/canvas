@@ -1,10 +1,8 @@
 # Canvas Framework
-### A canvas framework which simplify all uses 
+### A canvas framework which simplify all uses
 
 [![GitHub contributors](https://img.shields.io/github/contributors/NoxFly/canvas.svg)](https://GitHub.com/NoxFly/canvas/graphs/contributors/)
-[![Hits](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https://github.com/NoxFly/canvas)](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https://github.com/NoxFly/canvas)
 [![GitHub issues](https://img.shields.io/github/issues/NoxFly/canvas.svg)](https://GitHub.com/NoxFly/canvas/issues/)
-[![npm version](https://badge.fury.io/js/%40noxfly%2Fcanvas.svg)](https://badge.fury.io/js/%40noxfly%2Fcanvas)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Paypal Donate](https://img.shields.io/badge/paypal-donate-red.svg)](https://paypal.me/noxfly)
 [![GitHub stars](https://img.shields.io/github/stars/NoxFly/canvas.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/NoxFly/canvas/stargazers/)
@@ -12,14 +10,24 @@
 
 
 
-This canvas framework is only creating 2D context, but provides 3D vectors. 
+This canvas framework is only for 2D purposes.<br>
+You can use it for simulations or games.
 
-You can help me to maintain this framework with small donation on my Paypal, or with pull requests.
+You can help me to maintain this framework with small donation on my Paypal, opening issues, or with pull requests.
 
-You also can star it, open issues if needed, and join the official Discord server for asking help or making some suggestions:
+<hr>
 
-**Official Discord Server**: https://discord.gg/j5SarbC
+## IMPORTANT NOTES - What's next
 
+Future releases will be breaking changes and totally transform the project.
+* First, it will be now developped under typescript.
+* The JS vanilla version for web browser will no longer be maintained (but will still exist).
+* The `@noxfly/canvas` package will no longer be maintained (but will still exist).
+* Then, There will be a new module that will graft to the core module if imported too. This new module will be a basic engine for entities, some really basic collision stuff etc... to improve game development.
+
+Only the JS module and the TS will see new releases.
+
+<hr>
 
 **For module scripts :** [module README](https://github.com/NoxFly/canvas/tree/master/module#readme).
 
@@ -29,23 +37,10 @@ You also can star it, open issues if needed, and join the official Discord serve
 
 ## CDN include links
 
-**/!\\** these links refers to the latest version.
-
-// You may have some issues if a new version is released in the future.
-
-### By the github way
-
 ```html
 <script src='https://cdn.jsdelivr.net/gh/NoxFly/canvas/canvas.js'></script>
 <!-- minified version -->
 <script src='https://cdn.jsdelivr.net/gh/NoxFly/canvas/canvas.min.js'></script>
-```
-
-### By the npm way
-
-```html
-<!-- minified version -->
-<script src='https://cdn.jsdelivr.net/npm/@noxfly/canvas'></script>
 ```
 
 
@@ -57,16 +52,18 @@ You also can star it, open issues if needed, and join the official Discord serve
 [![npm](https://nodei.co/npm/@noxfly/canvas.png?mini=true)](https://www.npmjs.com/package/@noxfly/canvas)
 
 
+<hr>
+
 ## About
 Some variables of the framework are public, but some others are private.
 Please, do not use variables and functions that aren't provided for you, or you will incur some issues.
 
 
-The `setup` and `draw` structure, but also the `color managment` and the `pixel managment` (last feature) ideas come from [p5.js](https://p5js.org).
+The `setup` and `draw` structure, but also the `color managment` and the `pixel managment` ideas come from [p5.js](https://p5js.org).
 
 Most of shortcut functions for native canvas functions have their JSDOC that come from [MDN](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D).
 
-I've start this little framework just to simplify myself in a little project.
+I've start this little framework just to simplify my work in for personal projects.
 
 As things progress, The little code grew up, and it's why I've finally though about make it public on Github.
 
@@ -74,12 +71,14 @@ As things progress, The little code grew up, and it's why I've finally though ab
 
 **If you're interested, you can contribute doing pull requests, and starring this repo.**
 
+<hr>
 
 ## Browser compatibility
 Tested and works on `Firefox`, `Chrome`, `Edge`, `new Edge`, `Opera`.
 
+### Remarks
 
-
+The `pointers` event is not supported by Opera Mini.
 
 
 
@@ -134,30 +133,21 @@ If you don't set a canvas width and height, the document's size will be set.
 
 
 
-## Resize the canvas and canvas resolution
+## Resize the canvas
 
 You can change the canvas size by doing the following function:
 ```js
 setCanvasSize(newWidth, newHeight);
 ```
 
-and its resolution (so it will keep its size, but the pixel resolution inside it will change) doing this:
-```js
-setPixelResolution(resolutionX, resolutionY);
-```
-
-Then, for example, you can have a canvas of 500x500, and a resolution of 2000x2000.
-
-You can convert the pixel's resolution to real HTML canvas size and inversely with this functions:
+You also can choose to enable or disable the auto-resize feature:
 
 ```js
-rendering(vector); // 2D vector
-rendering(x, y); // two numbers instead of a vector
-
-renderingX(x);
-renderingY(y);
+setAutoResize(enable, onceDone=true);
 ```
 
+`enable` is a boolean.<br>
+`onceDone` specifies if it has to resize once the user has finished to resize or at any time during the resize event.
 
 
 ## Guidelines
@@ -226,6 +216,8 @@ Here are the variables declared in the canvas file, that you can use:
 
 **mouseX** and **mouseY**: the mouse current position
 
+**dragPoint** : the point where the mouse / finger pressed on the canvas. Can be associated with mouseX/Y for some applications
+
 **fps**: the frame per seconds of the draw function (by default 60)
 
 **mouseDirection**: object containing the x and y mouse's direction movement. The faster the mouse goes, the larger will the number be
@@ -282,7 +274,6 @@ updatePixels(); // update the canvas with modified pixels
 ## Keyboard and mouse Functions
 Keyboard functions :
 ```js
-enablePCswipe(boolean); // in the setup function, default is true
 getSwipe(); // returns the last swipe direction done by the user
 mouseDir(); // returns the direction of the mouse's movement, null otherwise
 isKeyDown(keyCode); // returns a boolean
@@ -314,6 +305,7 @@ function keyUp(e) {}
 
 // global events
 function onResize(docWidth, docHeight) {}
+function onResizeEnd(docWidth, docHeight) {}
 function onFocus() {}
 function onBlur() {}
 function onOnline(e) {}
@@ -566,7 +558,7 @@ dist(v1, v2); // returns the distance between 2 vectors
 angleBetweenVectors(v1, v2); // in radian
 angleToVector(rad); // from angle to 2D vector
 vectorToAngle(v); // from a vector to angle in radian, comparing to horizontal line (vector(1, 0))
-
+mag(v1, v2); // magnitude between 2 vectors
 ```
 
 
@@ -610,7 +602,8 @@ Doing this:
 path('M 10 10 L 20 20 A 50 0 90 0');
 ```
 
-It's exactly the same way as doing a SVG `<path>` tag.
+It's exactly the same way as doing a SVG `<path>` tag.<br>
+However, the code is not optimized and you should see some down performances.
 
 #### Path properties
 Path contains instructions and arguments.
@@ -728,7 +721,18 @@ easeInBack, easeOutBack, easeInOutBack
 easeInElastic, easeOutElastic, easeInOutElastic
 ```
 
+You also can use the lerp function:
 
+```js
+// for a single value like "10", or "1.83"
+val = lerp(val, target, p);
+// for a vector
+// in this case, it modifies the vector,
+// meaning you don't need to re-assign it.
+vec = lerp(vec, targetVec, p);
+
+// p between 0 and 1
+```
 
 
 
@@ -812,6 +816,13 @@ const t2 = new Time(2, 'seconds'); // you can tell which time unit you want
 t.asMilliseconds(); // 2000
 ```
 
+You also have access to a function that returns you the ellapsed time since the script has started running :
+
+```js
+getSecondsPassed(); // in seconds
+getMSPassed(); // in milliseconds
+```
+
 ## Quadtree
 
 You can use Quadtrees to manage world's entities with better performances.
@@ -854,10 +865,28 @@ function update() {
 }
 
 function draw() {
-    quadtree.show(); // draws the Quadtree
+    quadtree.show(); // draws the Quadtree for visual interpretation
 }
 ```
 
+```js
+Quadtree.children(); // returns an array of its children, empty if it's a leaf.
+Quadtree.getAllPoints(); // returns recursivly all the points that are contained in its area. If it's a node, then recover the points on its leaf.
+Quadtree.size(); // returns the amount of points that live in this quadtree, recursivly.
+```
+
+```js
+Quadtree.Rectangle(x, y, w, h);
+    .contains(Quadtree.Point)
+    .intersect(Quadtree.Rectangle)
+    .wrap(Quadtree.Rectangle)
+
+Quadtree.Point(x, y, dataPtr);
+// note, the dataPtr should be a reference to the data if points to.
+// The Point is only to serve the quadtree for a given position of the entity, which is referenced through the dataPtr.
+```
+
+<hr>
 
 ## License
 
