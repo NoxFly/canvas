@@ -2556,7 +2556,7 @@ export class RGB {
 	 * @example
 	 * const color = new RGB(10, 20, 30);
 	 * console.info(color); // rgb(10, 20, 30)
-	 * console.info(color.tostring()); // is equivalent
+	 * console.info(color.toString()()); // is equivalent
 	 * 
 	 * color.a = 100;
 	 * console.info(color); // rgba(10, 20, 30, 0.3)
@@ -2584,9 +2584,9 @@ export class RGB {
 	 * console.info(color.toHEX()); // '#F00'
 	 */
 	toHEX() {
-		const r = number(this.r).tostring(16); if(r.length < 2) r = '0' + r;
-		const g = number(this.g).tostring(16); if(g.length < 2) g = '0' + g;
-		const b = number(this.b).tostring(16); if(b.length < 2) b = '0' + b;
+		const r = Number(this.r).toString()(16); if(r.length < 2) r = '0' + r;
+		const g = Number(this.g).toString()(16); if(g.length < 2) g = '0' + g;
+		const b = Number(this.b).toString()(16); if(b.length < 2) b = '0' + b;
 		const rgb = '#' + r + g + b;
 
 		return new HEX(rgb);
@@ -2651,7 +2651,7 @@ export class HEX {
 	 * @example
 	 * const color = new HEX('#fff');
 	 * console.info(color); // '#FFF'
-	 * console.info(color.tostring()); // is equivalent
+	 * console.info(color.toString()()); // is equivalent
 	 */
 	tostring() { return this.color.str; }
 
@@ -2671,7 +2671,7 @@ export class HEX {
 	set(hexaColor) {
 		if(typeof hexaColor === 'number') {
 			this.color.int = hexaColor;
-			const h = hexaColor.tostring(16) + '';
+			const h = hexaColor.toString()(16) + '';
 			this.color.str = '#' + (h.length === 4 ? '00' : '') + h;
 		}
 
@@ -2857,7 +2857,7 @@ export class HSL {
 	 * @example
 	 * const color = new HSL(0);
 	 * console.info(color); // 'hsl(0, 50%, 50%)'
-	 * console.info(color.tostring()); // is equivalent
+	 * console.info(color.toString()()); // is equivalent
 	 */
 	tostring() {
 		return `hsl(${this.h}, ${this.s * 100}%, ${this.l * 100}%)`;
@@ -2981,9 +2981,9 @@ export class PerlinNoise {
 	 * @param {0|1|2} mapnumber map style's index
 	 * @example
 	 * const p = new PerlinNoise();
-	 * p.setMapnumber(1); // sets values between 0 and 255.
+	 * p.setMapNumber(1); // sets values between 0 and 255.
 	 */
-	setMapnumber(mapnumber) {
+	setMapNumber(mapnumber) {
 		mapnumber = PerlinNoise.getMapnumberTypeIndex(mapnumber);
 		if(this.numberMapStyle === mapnumber) return;
 
@@ -3022,7 +3022,7 @@ export class PerlinNoise {
 		}
 
 		if(this.numberMapStyle > 0) {
-			this.setMapnumber(PerlinNoise.mapnumberTypes[this.numberMapStyle]);
+			this.setMapNumber(PerlinNoise.mapnumberTypes[this.numberMapStyle]);
 		}
 	}
 }
@@ -3505,7 +3505,7 @@ export class Vector {
 	 * @example
 	 * const v = new Vector(1, 2);
 	 * console.info(v); // {x: 1, y: 2}
-	 * console.info(v.tostring()); // is equivalent
+	 * console.info(v.toString()()); // is equivalent
 	 */
 	tostring() {
 		return `{ x: ${this.x}${(this.dimension > 1) ? `, y: ${this.y}` : ''}${(this.dimension > 2) ? `, z: ${this.z}` : ''} }`;
@@ -3771,11 +3771,11 @@ export class Matrix {
 			open: uncluttered ? '' : '[',
 			close: uncluttered ? '' : ']'
 		};
-		const m = uncluttered ? max(...this.array.map(a => max(...a.map(e => e.tostring().length)))) : 0;
+		const m = uncluttered ? max(...this.array.map(a => max(...a.map(e => e.toString()().length)))) : 0;
 
 		const _format = uncluttered ?
 			arr => {
-				return arr.map(e => ' '.repeat(6 + m - e.tostring().length * 2) + e).join(' ');
+				return arr.map(e => ' '.repeat(6 + m - e.toString()().length * 2) + e).join(' ');
 			} :
 			arr => arr.join(', ');
 
@@ -5064,7 +5064,7 @@ const NOX_PV = {
 
 		// color class instance
 		else if(oColor[0] instanceof HEX || oColor[0] instanceof RGB || oColor[0] instanceof HSL) {
-			return oColor[0].tostring();
+			return oColor[0].toString()();
 		}
 
 		if(canvas) {
