@@ -2405,7 +2405,7 @@ class Vector {
 	 * console.info(v); // {x: 1, y: 2}
 	 * console.info(v.toString()); // is equivalent
 	 */
-	tostring() {
+	toString() {
 		return `{ x: ${this.x}${(this.dimension > 1) ? `, y: ${this.y}` : ''}${(this.dimension > 2) ? `, z: ${this.z}` : ''} }`;
 	}
 
@@ -2618,7 +2618,7 @@ class Matrix {
 	 * Returns the matrix as a string
 	 * @returns {string} The matrix as string
 	 */
-	tostring(uncluttered = false) {
+	toString(uncluttered = false) {
 		const sep = this.height > 0 ? '\n' : '';
 		const brackets = {
 			open: uncluttered ? '' : '[',

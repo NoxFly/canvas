@@ -69,7 +69,7 @@ const colorTreatment = (...oColor) => {
 
 	// color class instance
 	else if(oColor[0] instanceof HEX || oColor[0] instanceof RGB || oColor[0] instanceof HSL) {
-		return oColor[0].tostring();
+		return oColor[0].toString();
 	}
 
 	if(canvas) {
@@ -1650,9 +1650,9 @@ class PerlinNoise {
 	 * @param {0|1|2} mapnumber map style's index
 	 * @example
 	 * const p = new PerlinNoise();
-	 * p.setMapnumber(1); // sets values between 0 and 255.
+	 * p.setMapNumber(1); // sets values between 0 and 255.
 	 */
-	setMapnumber(mapnumber) {
+	setMapNumber(mapnumber) {
 		mapnumber = PerlinNoise.getMapnumberTypeIndex(mapnumber);
 		if(this.numberMapStyle === mapnumber) return;
 
@@ -1691,7 +1691,7 @@ class PerlinNoise {
 		}
 
 		if(this.numberMapStyle > 0) {
-			this.setMapnumber(PerlinNoise.mapnumberTypes[this.numberMapStyle]);
+			this.setMapNumber(PerlinNoise.mapnumberTypes[this.numberMapStyle]);
 		}
 	}
 }
@@ -2403,9 +2403,9 @@ class Vector {
 	 * @example
 	 * const v = new Vector(1, 2);
 	 * console.info(v); // {x: 1, y: 2}
-	 * console.info(v.tostring()); // is equivalent
+	 * console.info(v.toString()); // is equivalent
 	 */
-	tostring() {
+	toString() {
 		return `{ x: ${this.x}${(this.dimension > 1) ? `, y: ${this.y}` : ''}${(this.dimension > 2) ? `, z: ${this.z}` : ''} }`;
 	}
 
@@ -2618,17 +2618,17 @@ class Matrix {
 	 * Returns the matrix as a string
 	 * @returns {string} The matrix as string
 	 */
-	tostring(uncluttered = false) {
+	toString(uncluttered = false) {
 		const sep = this.height > 0 ? '\n' : '';
 		const brackets = {
 			open: uncluttered ? '' : '[',
 			close: uncluttered ? '' : ']'
 		};
-		const m = uncluttered ? max(...this.array.map(a => max(...a.map(e => e.tostring().length)))) : 0;
+		const m = uncluttered ? max(...this.array.map(a => max(...a.map(e => e.toString().length)))) : 0;
 
 		const _format = uncluttered ?
 			arr => {
-				return arr.map(e => ' '.repeat(6 + m - e.tostring().length * 2) + e).join(' ');
+				return arr.map(e => ' '.repeat(6 + m - e.toString().length * 2) + e).join(' ');
 			} :
 			arr => arr.join(', ');
 
