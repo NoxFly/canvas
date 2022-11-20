@@ -83,7 +83,7 @@ The `pointers` event is not supported by Opera Mini.
 
 
 
-## 2 required functions
+## 3 required functions
 You first need to create 2 functions, that are automatically detected by the framework.
 
 ```js
