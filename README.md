@@ -9,6 +9,7 @@
 [![Npm Downloads](https://img.shields.io/npm/dt/@noxfly/canvas.svg?maxAge=3600)](https://img.shields.io/npm/dt/@noxfly/canvas.svg?maxAge=3600)
 
 
+> JS vanilla version (old)
 
 This canvas framework is only for 2D purposes.<br>
 You can use it for simulations or games.
