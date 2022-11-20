@@ -2586,9 +2586,9 @@ class RGB {
 	 * console.info(color.toHEX()); // '#F00'
 	 */
 	toHEX() {
-		const r = Number(this.r).toString()(16); if(r.length < 2) r = '0' + r;
-		const g = Number(this.g).toString()(16); if(g.length < 2) g = '0' + g;
-		const b = Number(this.b).toString()(16); if(b.length < 2) b = '0' + b;
+		let r = Number(this.r).toString()(16); if(r.length < 2) r = '0' + r;
+		let g = Number(this.g).toString()(16); if(g.length < 2) g = '0' + g;
+		let b = Number(this.b).toString()(16); if(b.length < 2) b = '0' + b;
 		const rgb = '#' + r + g + b;
 
 		return new HEX(rgb);
