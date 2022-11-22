@@ -275,7 +275,7 @@ class Canvas {
 
 	/**
 	 * Draw a polyline with given arguments
-	 * @argument {Array<number>} values Array of point's positions. Need to be even number
+	 * @argument {number[]} values Array of point's positions. Need to be even number
 	 */
 	polyline(...values) {
 		// got an odd number of argument
@@ -653,7 +653,7 @@ class Canvas {
 		// multiple lines
 		if (/\n/.test(txt)) {
 
-			const size = this.sFontSize.replace(/(\d+)(\w+)?/, '$1');
+			const size = parseInt(this.sFontSize.replace(/(\d+)(\w+)?/, '$1'));
 			txt = txt.split('\n');
 
 			for (let i = 0; i < txt.length; i++) {
@@ -707,7 +707,7 @@ class Canvas {
 
 	/**
 	 * Change the text's alignement
-	 * @param {String} alignment text's alignment
+	 * @param {CanvasTextAlign} alignment text's alignment
 	 */
 	alignText(alignment) {
 		this.ctx.textAlign = ['left', 'right', 'center', 'start', 'end'].indexOf(alignment) > -1 ? alignment : 'left';
@@ -791,7 +791,7 @@ class Canvas {
 
 	/**
 	 * Set the linecap style
-	 * @param {String} style linecap style
+	 * @param {CanvasLineCap} style linecap style
 	 */
 	linecap(style) {
 		this.ctx.lineCap = ['butt', 'round', 'square'].indexOf(style) > -1 ? style : 'butt';
@@ -949,11 +949,7 @@ class Canvas {
 
 	/**
 	 * Sets the type of compositing operation to apply when drawing new shapes.
-	 * @param {'source-over'|'source-in'|'source-out'|'source-atop'
-	 * |'destination-over'|'destination-in'|'destination-out'|'destination-atop'
-	 * |'lighter'|'copy'|'xor'|'multiply'|'screen'|'overlay'|'darken'|'lighten'
-	 * |'color-dodge'|'color-burn'|'hard-light'|'soft-light'|'difference'
-	 * |'exclusion'|'hue'|'saturation'|'color'|'luminosity'} type a string identifying which of the compositing or blending mode operations to use.
+	 * @param {GlobalCompositeOperation} type a string identifying which of the compositing or blending mode operations to use.
 	 * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation for more details
 	 * @example
 	 * globalCompositeOperation('soft-light')
@@ -964,7 +960,7 @@ class Canvas {
 
 	/**
 	 * Sets the image smoothing quality
-	 * @param {'low'|'medium'|'high'} quality smooth quality
+	 * @param {ImageSmoothingQuality} quality smooth quality
 	 * @example
 	 * setSmoothingQuality('low')
 	 */
@@ -996,7 +992,7 @@ class Canvas {
 	 * Determines the shape used to join two line segments where they meet.
 	 * This property has no effect wherever two connected segments have the same direction, because no joining area will be added in this case.
 	 * Degenerate segments with a length of zero (i.e., with all endpoints and control points at the exact same position) are also ignored.
-	 * @param {'round'|'bevel'|'miter'} type 'round', 'bevel' or 'miter'
+	 * @param {CanvasLineJoin} type 'round', 'bevel' or 'miter'
 	 * @example
 	 * lineJoin('round')
 	 */
@@ -2411,7 +2407,7 @@ class Vector {
 
 	/**
 	 * Returns an array [x, y, z]
-	 * @returns {Array<number>}
+	 * @returns {number[]}
 	 * @example
 	 * const v = new Vector(1, 2);
 	 * console.info(v.array()); // [1, 2]
@@ -2432,7 +2428,7 @@ class Vector {
 	 * { x, y } for dimension 2
 	 * 
 	 * { x, y, z } for dimension 3
-	 * @return {Object}
+	 * @return {object}
 	 */
 	object() {
 		const o = { x: this.x };
@@ -2483,13 +2479,13 @@ class Matrix {
 	 * const m3 = new Matrix(2, 2, 1);
 	 * 
 	 * @signature new Matrix([0, 0, 0], ...)
-	 * @param {...Array<number>} args multiple arrays of numbers
+	 * @param {...number[]} args multiple arrays of numbers
 	 * @example
 	 * // [ [0, 0, 0], [0, 0, 0] ]
 	 * const m1 = new Matrix([0, 0, 0], [0, 0, 0]);
 	 * 
 	 * @signature new Matrix([[0, 0, 0], ...])
-	 * @param {Array<number[]>} args 2D array of numbers
+	 * @param {number[][]} args 2D array of numbers
 	 * @example
 	 * // [ [0, 0, 0], [0, 0, 0] ]
 	 * const m1 = new Matrix([[0, 0, 0], [0, 0, 0]]);
@@ -2576,7 +2572,7 @@ class Matrix {
 
 	/**
 	 * Returns the matrix as 2D array.
-	 * @returns {Array<number[]>} The matrix
+	 * @returns {number[][]} The matrix
 	 */
 	get array() {
 		return this.properties.array;
@@ -2584,7 +2580,7 @@ class Matrix {
 
 	/**
 	 * Returns the matrix's values in an 1D array
-	 * @returns {Array<number>} The matrix as 1D array
+	 * @returns {number[]} The matrix as 1D array
 	 */
 	get array1D() {
 		return this.array.reduce((a, b) => [...a, ...b], []);
@@ -2608,7 +2604,7 @@ class Matrix {
 
 	/**
 	 * Returns the dimension of the matrix
-	 * @returns {Object} The dimension of the matrix {x, y}
+	 * @returns {object} The dimension of the matrix {x, y}
 	 */
 	get dimension() {
 		return this.properties.size;
@@ -2909,7 +2905,7 @@ class Matrix {
 	 */
 	mult(matrixOrnumber, onACopy = false) {
 		const m = matrixOrnumber;
-		const result = onACopy ? new Matrix(this) : this;
+		let result = onACopy ? new Matrix(this) : this;
 
 		// scalar product
 		if (typeof m === 'number') {
@@ -2954,8 +2950,8 @@ class Matrix {
 	 * @returns {Matrix} The transformed matrix
 	 */
 	transpose(onACopy = false) {
-		const copy = new Matrix(this);
-		const me = this;
+		let copy = new Matrix(this);
+		let me = this;
 
 		if (onACopy)
 			[copy, me] = [me, copy];
@@ -3258,7 +3254,7 @@ class Quadtree {
 		 * A Quadtree's Point that has a position and a pointer to an object
 		 * @param {number} x Point's X
 		 * @param {number} y Point's Y
-		 * @param {Object} dataPtr Object data
+		 * @param {object} dataPtr Object data
 		 */
 		constructor(x, y, dataPtr) {
 			this.x = x;
@@ -3351,7 +3347,7 @@ class Quadtree {
 
 	/**
 	 * Returns an array containing the tree's children.
-	 * @returns {Array<Quadtree>} All tree's children
+	 * @returns {Quadtree[]} All tree's children
 	 */
 	get children() {
 		return this.divided ? [this.northwest, this.northeast, this.southwest, this.southeast] : [];
@@ -3377,7 +3373,7 @@ class Quadtree {
 
 			this.divided = true;
 
-			for (const p in this.points) {
+			for (const p of this.points) {
 				this.insert(p);
 			}
 
@@ -3417,7 +3413,7 @@ class Quadtree {
 	/**
 	 * Finds and returns all Quadtree's Points that are in the requested area
 	 * @param {Quadtree.Rectangle} range The Rectangle where to find and returns all points
-	 * @returns {Array<Quadtree.Point>} Returns an array of all Points that are in the requested area.
+	 * @returns {Quadtree.Point[]} Returns an array of all Points that are in the requested area.
 	 */
 	query(range) {
 		// leaf
@@ -3448,10 +3444,10 @@ class Quadtree {
 		// partially or does not collides the range
 		const found = [];
 
-		found.push(...this.northeast.query(range, _isWrapped));
 		found.push(...this.northwest.query(range, _isWrapped));
-		found.push(...this.southeast.query(range, _isWrapped));
+		found.push(...this.northeast.query(range, _isWrapped));
 		found.push(...this.southwest.query(range, _isWrapped));
+		found.push(...this.southeast.query(range, _isWrapped));
 
 		return found;
 	}
@@ -3478,7 +3474,7 @@ class Quadtree {
 
 	/**
 	 * Returns all the children of this tree and its regions.
-	 * @returns {Array<Quadtree.Point>} A list of all children and subchildren of this tree
+	 * @returns {Quadtree.Point[]} A list of all children and subchildren of this tree
 	 */
 	getAllPoints() {
 		if (!this.divided)

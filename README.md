@@ -82,6 +82,28 @@ Tested and works on `Firefox`, `Chrome`, `Edge`, `new Edge`, `Opera`.
 The `pointers` event is not supported by Opera Mini.
 
 
+## Add your own plugin
+
+You can develop and add your own plugin to the environment of the library.
+
+There's 2 types of plugins :
+* The update plugin
+* The render plugin
+
+A plugin can be to update, render or both.
+
+```js
+class MyPlugin extends NoxCanvasPlugin {
+    // identify as updatePlugin
+    update() {}
+    // identify as renderPlugin
+    render() {}
+}
+
+const myModule = new MyPlugin();
+
+addModule(myModule);
+```
 
 
 ## 3 required functions
