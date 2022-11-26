@@ -6,7 +6,7 @@
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.5.0}
+ * @version		{1.5.1}
  */
 
 
@@ -29,7 +29,7 @@ export let width = 0,
 	fps = 60;
 
 /** @type {{ x: number, y: number }} */
-let dragPoint = null;
+export let dragPoint = null;
 
 /** @type {Uint8ClampedArray} */
 export var pixels = undefined;
@@ -124,7 +124,7 @@ export const line = (x1, y1, x2, y2) => {
 /**
  * Adds a polyline with given arguments to the current sub-path.
  * It goes by pairs (x, y), so an even number of arguments.
- * @argument {Array<number>} values Array of point's positions. Need to be even number
+ * @argument {number[]} values Array of point's positions. Need to be even number
  * @example
  * polyline(0, 0, 10, 10, 100, 50)
  */
@@ -557,7 +557,7 @@ export const path = p => {
 export const text = (txt, x=0, y=0) => {
 	// multiple lines
 	if(/\n/.test(txt)) {
-		const size = NOX_PV.fontSize.replace(/(\d+)(\w+)?/, '$1');
+		const size = parseInt(NOX_PV.fontSize.replace(/(\d+)(\w+)?/, '$1'));
 		txt = txt.split('\n');
 
 		for(let i=0; i < txt.length; i++) {
@@ -617,7 +617,7 @@ export const fontFamily = font => {
 
 /**
  * Change the text's alignement
- * @param {'left'|'right'|'center'|'start'|'end'} alignment text's alignment
+ * @param {CanvasTextAlign} alignment text's alignment
  * @example
  * alignText('center')
  */
@@ -778,7 +778,7 @@ export const strokeWeight = weight => {
 
 /**
  * Set the linecap style
- * @param {'butt'|'round'|'square'} style linecap style
+ * @param {CanvasLineCap} style linecap style
  */
 export const linecap = style => {
 	ctx.lineCap = ['butt', 'round', 'square'].indexOf(style) > -1 ? style : 'butt';
@@ -870,9 +870,10 @@ export const closePath = () => ctx.closePath();
  * drawFocusIfNeeded(button1)
  */
 export const drawFocusIfNeeded = (elementOrPath2D, element = null) => {
-	if(element === null && !(elementOrPath2D instanceof Path2D)) {
+	if(elementOrPath2D instanceof Element) {
 		ctx.drawFocusIfNeeded(elementOrPath2D);
-	} else {
+	}
+	else {
 		ctx.drawFocusIfNeeded(elementOrPath2D, element);
 	}
 };
@@ -914,11 +915,7 @@ export const globalAlpha = globalAlpha => {
 
 /**
  * Sets the type of compositing operation to apply when drawing new shapes.
- * @param {'source-over'|'source-in'|'source-out'|'source-atop'
- * |'destination-over'|'destination-in'|'destination-out'|'destination-atop'
- * |'lighter'|'copy'|'xor'|'multiply'|'screen'|'overlay'|'darken'|'lighten'
- * |'color-dodge'|'color-burn'|'hard-light'|'soft-light'|'difference'
- * |'exclusion'|'hue'|'saturation'|'color'|'luminosity'} type a string identifying which of the compositing or blending mode operations to use.
+ * @param {GlobalCompositeOperation} type a string identifying which of the compositing or blending mode operations to use.
  * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation for more details
  * @example
  * globalCompositeOperation('soft-light')
@@ -929,7 +926,7 @@ export const globalCompositeOperation = type => {
 
 /**
  * Sets the image smoothing quality
- * @param {'low'|'medium'|'high'} quality smooth quality
+ * @param {ImageSmoothingQuality} quality smooth quality
  * @example
  * setSmoothingQuality('low')
  */
@@ -941,7 +938,7 @@ export const setSmoothingQuality = quality => {
  * Reports whether or not the specified point is contained in the current path.
  * @param {number|Path2D} x either x point coordinate or path2D. unaffected by the current transformation of the context. If path is unspecified, current path is used.
  * @param {number} y either x or y point coordinate, following the 1st argument's type. unaffected by the current transformation of the context.
- * @param {'nonzero'|'evenodd'} fillRule The algorithm by which to determine if a point is inside or outside the path. 'nonzero' (default) or 'evenodd'
+ * @param {CanvasFillRule} fillRule The algorithm by which to determine if a point is inside or outside the path. 'nonzero' (default) or 'evenodd'
  * @return {boolean} A boolean, which is true if the specified point is contained in the current or specified path, otherwise false.
  * @example
  * if(isPointInPath(30, 20)) {
@@ -988,7 +985,7 @@ export const lineDashOffset = (value=0.0) => {
  * Determines the shape used to join two line segments where they meet.
  * This property has no effect wherever two connected segments have the same direction, because no joining area will be added in this case.
  * Degenerate segments with a length of zero (i.e., with all endpoints and control points at the exact same position) are also ignored.
- * @param {'round'|'bevel'|'miter'} type 'round', 'bevel' or 'miter'
+ * @param {CanvasLineJoin} type 'round', 'bevel' or 'miter'
  * @example
  * lineJoin('round')
  */
@@ -1242,7 +1239,7 @@ export const mag = (a, b) => new Vector(b.x - a.x, b.y - a.y);
 
 /**
  * range mapping of a value
- * @param {Array<number>|number} val value - can be either an array or a number
+ * @param {number[]|number} val value - can be either an array or a number
  * @param {number} start1 start of the current interval
  * @param {number} end1 end of the current interval
  * @param {number} start2 start of the new interval
@@ -2570,7 +2567,7 @@ export class RGB {
 	 * @example
 	 * const color = new RGB(10, 20, 30);
 	 * console.info(color.intVal()); // [10, 20, 30]
-	 * @return {Array<number>} array of values
+	 * @return {number[]} array of values
 	 */
 	intVal() {
 		return [this.r, this.g, this.b, this.a];
@@ -3513,7 +3510,7 @@ export class Vector {
 
 	/**
 	 * Returns an array [x, y, z]
-	 * @returns {Array<number>}
+	 * @returns {number[]}
 	 * @example
 	 * const v = new Vector(1, 2);
 	 * console.info(v.array()); // [1, 2]
@@ -3534,7 +3531,7 @@ export class Vector {
      * { x, y } for dimension 2
      * 
      * { x, y, z } for dimension 3
-     * @return {Object}
+     * @return {object}
      */
     object() {
         const o = { x: this.x };
@@ -3630,13 +3627,13 @@ export class Matrix {
 	 * const m3 = new Matrix(2, 2, 1);
 	 * 
 	 * @signature new Matrix([0, 0, 0], ...)
-	 * @param {...Array<number>} args multiple arrays of numbers
+	 * @param {...number[]} args multiple arrays of numbers
 	 * @example
 	 * // [ [0, 0, 0], [0, 0, 0] ]
 	 * const m1 = new Matrix([0, 0, 0], [0, 0, 0]);
 	 * 
 	 * @signature new Matrix([[0, 0, 0], ...])
-	 * @param {Array<number[]>} args 2D array of numbers
+	 * @param {number[][]} args 2D array of numbers
 	 * @example
 	 * // [ [0, 0, 0], [0, 0, 0] ]
 	 * const m1 = new Matrix([[0, 0, 0], [0, 0, 0]]);
@@ -3723,7 +3720,7 @@ export class Matrix {
 
 	/**
 	 * Returns the matrix as 2D array.
-	 * @returns {Array<number[]>} The matrix
+	 * @returns {number[][]} The matrix
 	 */
 	get array() {
 		return this.properties.array;
@@ -3731,7 +3728,7 @@ export class Matrix {
 
 	/**
 	 * Returns the matrix's values in an 1D array
-	 * @returns {Array<number>} The matrix as 1D array
+	 * @returns {number[]} The matrix as 1D array
 	 */
 	get array1D() {
 		return this.array.reduce((a, b) => [...a, ...b], []);
@@ -3755,7 +3752,7 @@ export class Matrix {
 
 	/**
 	 * Returns the dimension of the matrix
-	 * @returns {Object} The dimension of the matrix {x, y}
+	 * @returns {object} The dimension of the matrix {x, y}
 	 */
 	get dimension() {
 		return this.properties.size;
@@ -3765,7 +3762,7 @@ export class Matrix {
 	 * Returns the matrix as a string
 	 * @returns {string} The matrix as string
 	 */
-	tostring(uncluttered = false) {
+	toString(uncluttered = false) {
 		const sep = this.height > 0 ? '\n' : '';
 		const brackets = {
 			open: uncluttered ? '' : '[',
@@ -3959,7 +3956,7 @@ export class Matrix {
 		if(!this.isSquare)
 			return 0;
 
-		if(this.isIdendity)
+		if(this.isIdentity)
 			return 1;
 
 		if(this.isDiagonal || this.isTriangular) {
@@ -4056,7 +4053,7 @@ export class Matrix {
 	 */
 	mult(matrixOrnumber, onACopy = false) {
 		const m = matrixOrnumber;
-		const result = onACopy ? new Matrix(this) : this;
+		let result = onACopy ? new Matrix(this) : this;
 
 		// scalar product
 		if(typeof m === 'number') {
@@ -4101,8 +4098,8 @@ export class Matrix {
 	 * @returns {Matrix} The transformed matrix
 	 */
 	transpose(onACopy = false) {
-		const copy = new Matrix(this);
-		const me = this;
+		let copy = new Matrix(this);
+		let me = this;
 
 		if(onACopy)
 			[copy, me] = [me, copy];
@@ -4202,7 +4199,7 @@ export class Matrix {
 
 
 
-class Camera {
+export class Camera {
     // CAMERA ANCHOR TYPES. DEFAULT IS TOP-LEFT CORNER
     static ANCHOR_DEFAULT = 0;
     static ANCHOR_CENTER = 1;
@@ -4360,7 +4357,7 @@ class Camera {
         else
             length.set(x, y);
 
-        length.sub(camera.anchorPoint);
+        length.sub(this.anchorPoint);
 
         NOX_PV.camera.move = {
             from: this.position.copy(),
@@ -4619,7 +4616,7 @@ export class Quadtree {
          * A Quadtree's Point that has a position and a pointer to an object
          * @param {number} x Point's X
          * @param {number} y Point's Y
-         * @param {Object} dataPtr Object data
+         * @param {object} dataPtr Object data
          */
         constructor(x, y, dataPtr) {
             this.x = x;
@@ -4712,7 +4709,7 @@ export class Quadtree {
 
     /**
      * Returns an array containing the tree's children.
-     * @returns {Array<Quadtree>} All tree's children
+     * @returns {Quadtree[]} All tree's children
      */
 	get children() {
 		return this.divided? [this.northwest, this.northeast, this.southwest, this.southeast] : [];
@@ -4738,7 +4735,7 @@ export class Quadtree {
 
             this.divided = true;
 
-			for(const p in this.points) {
+			for(const p of this.points) {
 				this.insert(p);
 			}
 
@@ -4778,7 +4775,7 @@ export class Quadtree {
     /**
      * Finds and returns all Quadtree's Points that are in the requested area
      * @param {Quadtree.Rectangle} range The Rectangle where to find and returns all points
-     * @returns {Array<Quadtree.Point>} Returns an array of all Points that are in the requested area.
+     * @returns {Quadtree.Point[]} Returns an array of all Points that are in the requested area.
      */
     query(range) {
 		// leaf
@@ -4809,10 +4806,10 @@ export class Quadtree {
 		// partially or does not collides the range
 		const found = [];
 
-		found.push(...this.northeast.query(range, _isWrapped));
-		found.push(...this.northwest.query(range, _isWrapped));
-		found.push(...this.southeast.query(range, _isWrapped));
-		found.push(...this.southwest.query(range, _isWrapped));
+		found.push(...this.northwest.query(range));
+		found.push(...this.northeast.query(range));
+		found.push(...this.southwest.query(range));
+		found.push(...this.southeast.query(range));
 
 		return found;
     }
@@ -4839,7 +4836,7 @@ export class Quadtree {
 
 	/**
 	 * Returns all the children of this tree and its regions.
-	 * @returns {Array<Quadtree.Point>} A list of all children and subchildren of this tree
+	 * @returns {Quadtree.Point[]} A list of all children and subchildren of this tree
 	 */
 	getAllPoints() {
 		if(!this.divided)
@@ -4875,7 +4872,7 @@ export class Quadtree {
  * @param {'resize'|'resizeended'|'blur'|'focus'|'online'|'offline'|'keydown'|'keyup'|'keypress'|'mouseup'|'mousemove'|'drag'|'click'|'dblclick'|'mouseenter'|'mouseleave'|'wheel'|'contextmenu'|'swipe'} event - event to listen
  * @param {function} callback function which's called once event is fired
  */
- export const listen = (event, callback) => {
+export const listen = (event, callback) => {
 	NOX_PV.callbackListeners[event] = callback;
 };
 
@@ -4934,6 +4931,33 @@ export const update = updateFunction => {
 };
 
 
+
+
+export class NoxCanvasModule {
+	constructor() {
+		if(this.constructor === NoxCanvasModule) {
+			throw new Error("[NoxCanvasModule] Object of Abstract Class cannot be created");
+		}
+	}
+}
+
+/**
+ * 
+ * @param {NoxCanvasModule} module 
+ */
+export const addModule = module => {
+	if(!(module instanceof NoxCanvasModule)) {
+		throw new Error("[addModule] given module does not extends NoxCanvasModule.");
+	}
+
+	if(typeof module.update === 'function')
+		NOX_PV.updateModules.push(module);
+
+	if(typeof module.render === 'function')
+		NOX_PV.renderingModules.push(module);
+
+	NOX_PV.modules.push(module);
+};
 
 
 
@@ -5206,8 +5230,7 @@ NOX_PV.cam = camera;
 		mouseDirection.x = e.movementX;
 		mouseDirection.y = e.movementY;
 
-		if(typeof mouseDown === 'function')
-			mouseDown(e);
+		callback('mousedown', e);
 
 		canvas.addEventListener('pointerup', () => {
 			try {
