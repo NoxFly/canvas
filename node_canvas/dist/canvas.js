@@ -992,7 +992,7 @@ class Canvas {
 	 * Determines the shape used to join two line segments where they meet.
 	 * This property has no effect wherever two connected segments have the same direction, because no joining area will be added in this case.
 	 * Degenerate segments with a length of zero (i.e., with all endpoints and control points at the exact same position) are also ignored.
-	 * @param {'round'|'bevel'|'miter'} type 'round', 'bevel' or 'miter'
+	 * @param {CanvasLineJoin} type 'round', 'bevel' or 'miter'
 	 * @example
 	 * lineJoin('round')
 	 */

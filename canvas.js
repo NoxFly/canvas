@@ -2554,7 +2554,7 @@ class RGB {
 	 * @example
 	 * const color = new RGB(10, 20, 30);
 	 * console.info(color); // rgb(10, 20, 30)
-	 * console.info(color.toString()()); // is equivalent
+	 * console.info(color.toString()); // is equivalent
 	 * 
 	 * color.a = 100;
 	 * console.info(color); // rgba(10, 20, 30, 0.3)
@@ -2649,7 +2649,7 @@ class HEX {
 	 * @example
 	 * const color = new HEX('#fff');
 	 * console.info(color); // '#FFF'
-	 * console.info(color.toString()()); // is equivalent
+	 * console.info(color.toString()); // is equivalent
 	 */
 	tostring() { return this.color.str; }
 
@@ -2855,7 +2855,7 @@ class HSL {
 	 * @example
 	 * const color = new HSL(0);
 	 * console.info(color); // 'hsl(0, 50%, 50%)'
-	 * console.info(color.toString()()); // is equivalent
+	 * console.info(color.toString()); // is equivalent
 	 */
 	tostring() {
 		return `hsl(${this.h}, ${this.s * 100}%, ${this.l * 100}%)`;
@@ -3503,7 +3503,7 @@ class Vector {
 	 * @example
 	 * const v = new Vector(1, 2);
 	 * console.info(v); // {x: 1, y: 2}
-	 * console.info(v.toString()()); // is equivalent
+	 * console.info(v.toString()); // is equivalent
 	 */
 	toString() {
 		return `{ x: ${this.x}${(this.dimension > 1) ? `, y: ${this.y}` : ''}${(this.dimension > 2) ? `, z: ${this.z}` : ''} }`;
@@ -3773,7 +3773,7 @@ class Matrix {
 
 		const _format = uncluttered ?
 			arr => {
-				return arr.map(e => ' '.repeat(6 + m - e.toString()().length * 2) + e).join(' ');
+				return arr.map(e => ' '.repeat(6 + m - e.toString().length * 2) + e).join(' ');
 			} :
 			arr => arr.join(', ');
 
@@ -5033,7 +5033,7 @@ const NOX_PV = {
 
 		// color class instance
 		else if(oColor[0] instanceof HEX || oColor[0] instanceof RGB || oColor[0] instanceof HSL) {
-			return oColor[0].toString()();
+			return oColor[0].toString();
 		}
 
 		if(canvas) {
