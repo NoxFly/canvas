@@ -6,7 +6,7 @@
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.6.0}
+ * @version		{1.6.1}
  */
 
 const CVS = require('canvas');
@@ -1281,24 +1281,10 @@ const angleBetweenVectors = (a, b) => {
  * const distanceBetweenp1Andp2 = dist(p1, p2);
  */
 const dist = (a, b) => {
-	let s = 0;
-
-	if(a.x && b.x) {
-		const x = b.x - a.x;
-		s += x * x;
-	}
-
-	if(a.y && b.y) {
-		const y = b.y - a.y;
-		s += y * y;
-	}
-
-	if(a.z && b.z) {
-		const z = b.z - a.z;
-		s += z * z;
-	}
-
-	return sqrt(s);
+	const x = b.x - a.x;
+	const y = b.y - a.y;
+	const z = b.z - a.z;
+	return sqrt(x*x + y*y + z*z);
 }
 
 
