@@ -8,25 +8,10 @@
 [![GitHub stars](https://img.shields.io/github/stars/NoxFly/canvas.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/NoxFly/canvas/stargazers/)
 [![Npm Downloads](https://img.shields.io/npm/dt/@noxfly/canvas.svg?maxAge=3600)](https://img.shields.io/npm/dt/@noxfly/canvas.svg?maxAge=3600)
 
-
-> JS vanilla version (old)
-
 This canvas framework is only for 2D purposes.<br>
 You can use it for simulations or games.
 
 You can help me to maintain this framework with small donation on my Paypal, opening issues, or with pull requests.
-
-<hr>
-
-## IMPORTANT NOTES - What's next
-
-Future releases will be breaking changes and totally transform the project.
-* First, it will be now developped under typescript.
-* The JS vanilla version for web browser will no longer be maintained (but will still exist).
-* The `@noxfly/canvas` package will no longer be maintained (but will still exist).
-* Then, There will be a new module that will graft to the core module if imported too. This new module will be a basic engine for entities, some really basic collision stuff etc... to improve game development.
-
-Only the JS module and the TS will see new releases.
 
 <hr>
 
@@ -226,7 +211,7 @@ Here are the variables declared in the canvas file, that you can use:
 * `mobile`: either it's a mobile/tablet or PC
 
 * `ios`: either it's an IOS or not
-    
+
 * `android`: either it's an Android or not
 
 **canvas**: the canvas DOM element

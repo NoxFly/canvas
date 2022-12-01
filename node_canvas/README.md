@@ -7,14 +7,10 @@
 [![GitHub stars](https://img.shields.io/github/stars/NoxFly/canvas.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/NoxFly/canvas/stargazers/)
 [![Npm Downloads](https://img.shields.io/npm/dt/@noxfly/canvas.svg?maxAge=3600)](https://img.shields.io/npm/dt/@noxfly/canvas.svg?maxAge=3600)
 
-> ⚠️ This package will no longer be maintained. Look what's planned [here](https://github.com/NoxFly/canvas#readme)
-
 ## About
 
 This package is for 2D canvas, on backend, meaning it cannot be animated.<br>
 It is here to simplify the use of the `node-canvas` package, giving additionnal resources, like mathematical functions, perlin noise, vector, matrix, colors quadtree and image cache manager.
-
-> Note : front-end version is in development, for both JS and TS !
 
 ##  Basic usage
 
