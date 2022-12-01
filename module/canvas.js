@@ -111,7 +111,6 @@ export const line = (x1, y1, x2, y2) => {
 	beginPath();
 	moveTo(x1, y1);
 	lineTo(x2, y2);
-	closePath();
 
 	if(NOX_PV.bStroke)
 		ctx.stroke();
@@ -146,8 +145,6 @@ export const polyline = (...values) => {
 
 		lineTo(x, y);
 	}
-
-	closePath();
 
 	if(NOX_PV.bStroke)
 		ctx.stroke();
@@ -5224,9 +5221,6 @@ NOX_PV.cam = camera;
 			y: e.clientY - offset(canvas).top
 		};
 
-		mouseDirection.x = e.movementX;
-		mouseDirection.y = e.movementY;
-
 		callback('mousedown', e);
 
 		canvas.addEventListener('pointerup', () => {
@@ -5246,6 +5240,9 @@ NOX_PV.cam = camera;
 	canvas.addEventListener('pointermove', e => {
 		mouseX = e.clientX;
 		mouseY = e.clientY;
+
+		mouseDirection.x = e.movementX;
+		mouseDirection.y = e.movementY;
 
 		if(NOX_PV.isMouseDown) {
 			const xUp = e.clientX;
