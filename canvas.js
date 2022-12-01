@@ -111,7 +111,6 @@ const line = (x1, y1, x2, y2) => {
 	beginPath();
 	moveTo(x1, y1);
 	lineTo(x2, y2);
-	closePath();
 
 	if(NOX_PV.bStroke)
 		ctx.stroke();
@@ -146,8 +145,6 @@ const polyline = (...values) => {
 
 		lineTo(x, y);
 	}
-
-	closePath();
 
 	if(NOX_PV.bStroke)
 		ctx.stroke();
