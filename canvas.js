@@ -5188,9 +5188,6 @@ NOX_PV.cam = camera;
 					y: e.clientY - offset(canvas).top
 				};
 
-				mouseDirection.x = e.movementX;
-				mouseDirection.y = e.movementY;
-
 				if(typeof mouseDown === 'function')
 					mouseDown(e);
 
@@ -5211,6 +5208,9 @@ NOX_PV.cam = camera;
 			canvas.addEventListener('pointermove', e => {
 				mouseX = e.clientX;
 				mouseY = e.clientY;
+
+				mouseDirection.x = e.movementX;
+				mouseDirection.y = e.movementY;
 
 				if(NOX_PV.isMouseDown) {
 					const xUp = e.clientX;
