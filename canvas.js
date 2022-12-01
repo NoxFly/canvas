@@ -6,7 +6,7 @@
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.5.1}
+ * @version		{1.6.0}
  */
 
 
@@ -718,7 +718,7 @@ const rotate = degree => ctx.rotate(radian(degree));
  * beginPath();
  * arc(100, 75, 50, 0, PI * 2);
  * clip();
- 
+
  * // Draw stuff that gets clipped
  * fill('blue');
  * fillRect(0, 0, width, height);
@@ -1020,7 +1020,7 @@ const setTransform = (...transform) => ctx.setTransform(...transform);
 /**
  * Creates a pattern using the specified image and repetition. This method returns a CanvasPattern.
  * @param {CanvasImageSource} image A CanvasImageSource to be used as the pattern's image.
- * It can be any of the following: 
+ * It can be any of the following:
  * 	- HTMLImageElement (<img>)
  * 	- SVGImageElement (<image>)
  * 	- HTMLVideoElement (<video>, by using the capture of the video)
@@ -1028,7 +1028,7 @@ const setTransform = (...transform) => ctx.setTransform(...transform);
  * 	- ImageBitmap
  * 	- OffscreenCanvas
  * @param {'repeat'|'repeat-x'|'repeat-y'|'no-repeat'} repetition A DOMstring indicating how to repeat the pattern's image.
- * Possible values are: 
+ * Possible values are:
  * 	- 'repeat' (both directions) (default)
  * 	- 'repeat-x' (horizontal only)
  * 	- 'repeat-y' (vertical only)
@@ -1246,7 +1246,7 @@ const mag = (a, b) => new Vector(b.x - a.x, b.y - a.y);
  * @example
  * // converts 0 from interval [-1, 1] to interval [0, 255]
  * console.info(map(0, -1, 1, 0, 255)); // 127.5
- * 
+ *
  * // can be used for an entire array
  * console.info(map([-0.7, -0.35, 0, 0.1, 0.2, 0.5, 1], -1, 1, 0, 255));
  * // Array(7) [ 38.25000000000001, 82.875, 127.5, 140.25, 153, 191.25, 255 ]
@@ -1435,7 +1435,7 @@ const atan = x => Math.atan(x);
  * @param {number} x A number
  * @param {number} x A number
  * @example
- * 
+ *
  */
 const atan2 = (x, y) => Math.atan2(y, x);
 
@@ -1444,7 +1444,7 @@ const atan2 = (x, y) => Math.atan2(y, x);
  * Returns the sinh of a number
  * @param {number} x A number
  * @example
- * 
+ *
  */
 const sinh = x => Math.sinh(x);
 
@@ -1452,7 +1452,7 @@ const sinh = x => Math.sinh(x);
  * Returns the cosh of a number
  * @param {number} x A number
  * @example
- * 
+ *
  */
 const cosh = x => Math.cosh(x);
 
@@ -1842,23 +1842,23 @@ const easeOutElastic = (t, b, c, d) => NOX_PV.easeElastic('out', t, b, c, d);
 const easeInOutElastic = (t, b, c, d) => NOX_PV.easeElastic('inout', t, b, c, d);
 
 /**
- * 
+ *
  * @param {number|Vector} v The source value to move to the given target. It can be a number or a Vector.
  * @param {number|Vector} t The target coordinate. If v is a number, the target is a number, otherwise it's a Vector.
  * @param {number} p The percentage of offset to move the value forword
  * @example
  * let x = 0;
  * let target = 100;
- * 
+ *
  * function update() {
  *     x = lerp(x, target, 0.2);
  * }
- * 
+ *
  * // or
- * 
+ *
  * let position = new Vector(0, 0);
  * let target = new Vector(100, 200);
- * 
+ *
  * function update() {
  *     // even if it returns the vector
  *     // it modifies it by reference.
@@ -2155,7 +2155,7 @@ const drawLoop = () => {
         const t = m.start.asMilliseconds();
         const x = easeInOutQuad(t, m.from.x, m.length.x, m.duration);
         const y = easeInOutQuad(t, m.from.y, m.length.y, m.duration);
-        
+
         if(t >= m.duration) {
             camera.position.set(m.from.x + m.length.x, m.from.y + m.length.y);
             NOX_PV.camera.move = null;
@@ -2202,7 +2202,7 @@ const drawLoop = () => {
 				for(const module of NOX_PV.renderingModules) {
 					module.render();
 				}
-				
+
 				// user draw function
 				NOX_PV.drawFunc();
 
@@ -2349,15 +2349,15 @@ const updatePixels = () => {
 
 /**
  * Perlin Noise function.
- * 
+ *
  * Code from : http://pub.phyks.me/sdz/sdz/bruit-de-perlin.html
- * 
+ *
  * Returns the perlin noise value between 0 and 1 for a given point (x,y)
- * 
+ *
  * Lazily generates the perlin seed if not existing.
- * 
+ *
  * It's the perlin noise of the page, so seed will always be the same.
- * 
+ *
  * To have multiple custom Perlin noise arrays, create PerlinNoise class instance instead.
  * @param {number} x X-axis point coordinate
  * @param {number} y Y-axis point coordinate
@@ -2376,7 +2376,7 @@ const perlin = (x, y=0) => {
 
 /**
  * Sets the level of details for the Perlin noise function.
- * 
+ *
  * Default is 10. If given argument isn't a number, does nothing.
  * @param {number} detailLevel level of detail for Perlin noise function
  * @example
@@ -2555,11 +2555,11 @@ class RGB {
 	 * const color = new RGB(10, 20, 30);
 	 * console.info(color); // rgb(10, 20, 30)
 	 * console.info(color.toString()); // is equivalent
-	 * 
+	 *
 	 * color.a = 100;
 	 * console.info(color); // rgba(10, 20, 30, 0.3)
 	 */
-	tostring() {
+	toString() {
 		return `rgb${this.a != 255 ? 'a' : ''}(${this.r}, ${this.g}, ${this.b}${this.a != 255 ? `, ${round(this.a / 255 * 10) / 10}` : ''})`;
 	}
 
@@ -2651,7 +2651,7 @@ class HEX {
 	 * console.info(color); // '#FFF'
 	 * console.info(color.toString()); // is equivalent
 	 */
-	tostring() { return this.color.str; }
+	toString() { return this.color.str; }
 
 	/**
 	 * Returns the int value of the color
@@ -2857,7 +2857,7 @@ class HSL {
 	 * console.info(color); // 'hsl(0, 50%, 50%)'
 	 * console.info(color.toString()); // is equivalent
 	 */
-	tostring() {
+	toString() {
 		return `hsl(${this.h}, ${this.s * 100}%, ${this.l * 100}%)`;
 	}
 
@@ -2921,7 +2921,7 @@ class PerlinNoise {
 	static mapnumberTypes = ['default', 'rgb', 'hsl'];
 	static getMapNumberTypeIndex = typeStr => PerlinNoise.mapnumberTypes.indexOf(typeStr.toLowerCase())
 	/**
-	 * 
+	 *
 	 * @param {number} lod level of details
 	 * @param {number} x start x of the array
 	 * @param {number} y start y of the array
@@ -2941,7 +2941,7 @@ class PerlinNoise {
 
 	/**
 	 * Sets the level of detail for this class instance.
-     * 
+     *
 	 * If the lod changed, then it re-calculates the array.
 	 * @param {number} lod level of detail
 	 * @example
@@ -2959,7 +2959,7 @@ class PerlinNoise {
 
 	/**
 	 * Regenerates the noise's seed.
-     * 
+     *
 	 * Then it re-calculates the array.
 	 * @example
 	 * const p = new PerlinNoise();
@@ -2972,9 +2972,9 @@ class PerlinNoise {
 
 	/**
 	 * Sets the map number of the array.
-     * 
+     *
 	 * Default is [-1,1] (0).
-     * 
+     *
 	 * You can choose [0,255] (1) or [0,360] (2).
 	 * @param {0|1|2} mapnumber map style's index
 	 * @example
@@ -2998,9 +2998,9 @@ class PerlinNoise {
 
 	/**
 	 * Calculates the noised array.
-     * 
+     *
 	 * You normally don't have to call it.
-     * 
+     *
      * It's automatically called if an option is changed through methods.
 	 * @example
 	 * const p = new PerlinNoise();
@@ -3047,13 +3047,13 @@ class Time {
 
 	/**
 	 * Creates a timer since its instanciation.
-	 * 
+	 *
 	 * If a parameter is given, the timer will starts from the given time.
-	 * 
+	 *
 	 * The default time's unity is milliseconds if nothing's precised.
 	 * @param {number} value initial time value (by default in milliseconds).
 	 * @param {'nano'|'micro'|'milli'|'seconds'|'minutes'} unity unity of given time (by default milliseconds).
-	 * 
+	 *
 	 * It can be 'nano', 'micro', 'milli', 'seconds', 'minutes'
 	 */
 	constructor(startingTime=undefined, unity='milli') {
@@ -3247,7 +3247,7 @@ class Vector {
 	 * @example
 	 * const v = new Vector(10);
 	 * v.normalize(true); // now v.x = 1;
-	 * 
+	 *
 	 * v.set(20);
 	 * const v2 = v.normalize(); // v.x = 20, v2.x = 1
 	 */
@@ -3443,7 +3443,7 @@ class Vector {
 	 * @example
 	 * const v = new Vector(1, 2);
 	 * v.invert(); // now v{x: 2, y: 1}
-	 * 
+	 *
 	 * const v2 = new Vector(1, 2, 3);
 	 * v2.invert(); // now v2{x: 3, y: 1, z: 2}
 	 * v2.invert(true); // now v2{x: 1, y:2, z: 3}
@@ -3526,11 +3526,11 @@ class Vector {
 
     /**
      * Returns the vector's properties as a basic object { x, y, z }
-     * 
+     *
      * { x } for dimension 1
-     * 
+     *
      * { x, y } for dimension 2
-     * 
+     *
      * { x, y, z } for dimension 3
      * @return {object}
      */
@@ -3606,15 +3606,15 @@ class Matrix {
 
 	/**
 	 * Creates a Matrix of numbers, with 4 signatures.
-	 * 
+	 *
 	 * 1. with matrix's size (and default fill value ? - default 0)
-	 * 
+	 *
 	 * 2. with multiple arrays of numbers
-	 * 
+	 *
 	 * 3. with a 2D array of numbers
-	 * 
+	 *
 	 * 4. from another Matrix
-	 * 
+	 *
 	 * @signature new Matrix(width, height, fill)
 	 * @param {number} width size X of the matrix
 	 * @param {number} height size Y of the matrix. If not precised, a square matrix is created
@@ -3626,19 +3626,19 @@ class Matrix {
 	 * const m2 = new Matrix(3, 2);
 	 * // [ [1, 1], [1, 1] ]
 	 * const m3 = new Matrix(2, 2, 1);
-	 * 
+	 *
 	 * @signature new Matrix([0, 0, 0], ...)
 	 * @param {...number[]} args multiple arrays of numbers
 	 * @example
 	 * // [ [0, 0, 0], [0, 0, 0] ]
 	 * const m1 = new Matrix([0, 0, 0], [0, 0, 0]);
-	 * 
+	 *
 	 * @signature new Matrix([[0, 0, 0], ...])
 	 * @param {number[][]} args 2D array of numbers
 	 * @example
 	 * // [ [0, 0, 0], [0, 0, 0] ]
 	 * const m1 = new Matrix([[0, 0, 0], [0, 0, 0]]);
-	 * 
+	 *
 	 * @signature new Matrix(matrix)
 	 * @param {Matrix} args existing matrix
 	 * @example
@@ -3856,7 +3856,7 @@ class Matrix {
 
 	/**
 	 * Returns either the matrix is a square matrix or not.
-	 * 
+	 *
 	 * A square matrix has its width equals to its height.
 	 * @returns {boolean} Either it's a square matrix or not
 	 */
@@ -3866,7 +3866,7 @@ class Matrix {
 
 	/**
 	 * Returns either the matrix is idendity/unity matrix.
-	 * 
+	 *
 	 * An idendity/unity matrix has its diagonal filled by 1, all other elements are 0
 	 * @returns {boolean} Either the matrix is an identity/unity matrix or not
 	 */
@@ -3876,7 +3876,7 @@ class Matrix {
 
 	/**
 	 * Returns either the matrix has is a diagonal matrix or not.
-	 * 
+	 *
 	 * A diagonal matrix is a matrix with a diagonal filled by values different from 0, all other elements are 0
 	 * @returns {boolean} Either the matrix is a diagonal matrix or not
 	 */
@@ -3896,7 +3896,7 @@ class Matrix {
 
 	/**
 	 * Returns either the matrix is lower triangular or not.
-	 * 
+	 *
 	 * A lower triangular matrix is a matrix with all the entries above the main diagonal equals to zero
 	 * @returns {boolean} Either the matrix is lower triangular or not
 	 */
@@ -3917,7 +3917,7 @@ class Matrix {
 
 	/**
 	 * Returns either the matrix is upper triangular or not.
-	 * 
+	 *
 	 * An upper triangular matrix is a matrix with all the entries below the main diagonal equals to zero
 	 * @returns {boolean} Either the matrix is upper triangular or not
 	 */
@@ -3938,7 +3938,7 @@ class Matrix {
 
 	/**
 	 * Returns a 1D array with the diagonal of the matrix if the matrix is a square matrix.
-	 * 
+	 *
 	 * If the matrix is not a square matrix, then it returns an empty array.
 	 * @returns {number[]} The diagonal values
 	 */
@@ -4131,7 +4131,7 @@ class Matrix {
 
 	/**
 	 * Returns the column at given index.
-	 * 
+	 *
 	 * If wrong index given returns an empty array.
 	 * @param {number} x The index of the column to get
 	 * @returns {number[]} The column
@@ -4148,7 +4148,7 @@ class Matrix {
 
 	/**
 	 * Returns the column at given idnex.
-	 * 
+	 *
 	 * If wrong idnex given, returns an empty array.
 	 * @param {number} y The index of the row to get
 	 * @returns {number[]} The row
@@ -4213,18 +4213,18 @@ class Camera {
 
     /**
      * Creates a Camera which can moves in the canvas.
-     * 
+     *
      * Default position is (0, 0), and default anchor is top-left corner.
-     * 
+     *
      * The camera is by default activated. You can disable and enable it with
      * `disableCamera()` and `enableCamera()`.
-     * 
+     *
      * <b>The Camera is NOT using the `translate()` function.</b>
-     * 
+     *
      * You can create your own camera, but never replace the one used by the library.
-     * 
+     *
      * Instead, use `camera.set(myCamera)` to copy the position of your camera.
-     * 
+     *
      * You can draw static HUD using the `disableCamera()`. It will stay static in your
      * screen even if you move your camera.
      * @see {@link disableCamera}
@@ -4278,7 +4278,7 @@ class Camera {
      * Defines either the anchor of the camera is top-left corner or center.<br>
      * Default is top-left corner.<br>
      * The method only accepts `Camera.ANCHOR_DEFAULT` and `Camera.ANCHOR_CENTER`.
-     * @param {Camera.ANCHOR_DEFAULT|Camera.ANCHOR_CENTER} anchor 
+     * @param {Camera.ANCHOR_DEFAULT|Camera.ANCHOR_CENTER} anchor
      * @return {Camera} this
      */
     setAnchor(anchor) {
@@ -4306,7 +4306,7 @@ class Camera {
      * |'quartIn'|'quartOut'|'quartInOut'
      * |'quintIn'|'quintOut'|'quintInOut'
      * |'backIn'|'backOut'|'backInOut'
-     * |'elasticIn'|'elasticOut'|'elasticInOut'} moveType 
+     * |'elasticIn'|'elasticOut'|'elasticInOut'} moveType
      * @return {Camera} this
      */
     setMoveType(moveType) {
@@ -4318,7 +4318,7 @@ class Camera {
 
     /**
      * Tells the camera to follow a point. This must be a Vector.
-     * 
+     *
      * If you instead give an object than contains a `position` attribute
      * which is of type Vector, then it will follow its position.
      * @param {Vector|{position: Vector}} point The point to follow
@@ -4346,9 +4346,9 @@ class Camera {
 
     /**
      * Moves the camera with the given vector.
-     * 
+     *
      * Default duration of the move is 1000 ms.
-     * 
+     *
      * You can change the ease animation of the move with `Camera.setMoveType()`
      * @see {@link Camera.setMoveType}
      * @param {number|Vector} x A Vector or a X-axis point to move
@@ -4386,9 +4386,9 @@ class Camera {
 
     /**
      * Moves the camera to the given point.
-     * 
+     *
      * Default duration of the move is 1000 ms.
-     * 
+     *
      * You can change the ease animation of the move with `Camera.setMoveType()`
      * @see {@link Camera.setMoveType}
      * @param {number|Vector} x A Vector or a X-axis point to move
@@ -4639,7 +4639,7 @@ class Quadtree {
             this.dataPtr = dataPtr;
         }
     }
-    
+
     /**
      * A Quadtree's Rectangle is a basic rectangle that checks<br>
      * if it contains a given point or intersects with a given Rectangle
@@ -4658,7 +4658,7 @@ class Quadtree {
             this.w = w;
             this.h = h;
         }
-    
+
         /**
          * Checks if a given Quadtree's Point is in the Rectangle or not.
          * @param {Quadtree.Point} point A Quadtree's Point
@@ -4670,7 +4670,7 @@ class Quadtree {
                 this.y <= point.y && point.y <= this.y + this.h
             );
         }
-        
+
         /**
          * Checks if 2 Quadtree's Rectangles are intersecting or not.
          * @param {QuadTree.Rectangle} rectangle A Quadtree's Rectangle
@@ -4684,7 +4684,7 @@ class Quadtree {
                 rectangle.y + rectangle.h < this.y
             );
         }
-        
+
         /**
          * Checks if this Quadtree's Rectangle totally wraps the given Rectangle or not.
          * @param {Quadtree.Rectangle} rectangle A Quadtree's Rectangle
@@ -4856,7 +4856,7 @@ class Quadtree {
 	getAllPoints() {
 		if(!this.divided)
 			return this.points;
-		
+
 		const points = [];
 
 		for(const region of this.children)
@@ -4892,8 +4892,8 @@ class NoxCanvasModule {
 }
 
 /**
- * 
- * @param {NoxCanvasModule} module 
+ *
+ * @param {NoxCanvasModule} module
  */
 const addModule = module => {
 	if(!(module instanceof NoxCanvasModule)) {
@@ -4986,58 +4986,55 @@ const NOX_PV = {
 	// Treat color's entries
 	colorTreatment: (...oColor) => {
 		const n = oColor.length;
+		const color0 = oColor[0];
 
-		if(n > 0 && (oColor[0] instanceof CanvasGradient || oColor[0] instanceof CanvasPattern)) return oColor[0];
+		if(color0 instanceof CanvasGradient || color0 instanceof CanvasPattern)
+			return color0;
 
+		// color class instance
+		else if(color0 instanceof HEX || color0 instanceof RGB || color0 instanceof HSL)
+			return color0.toString();
 
-		// number - only rgb value accepted
-		if(n === 1 && typeof oColor[0] === 'number') {
-			oColor = oColor[0];
+		// rgb[a]
+		else if(n > 0 && n < 5 && oColor.every(c => typeof c === 'number')) {
+			let p = 'rgb';
+			let g = 0, b = 0, a = 0;
 
-			if(0 <= oColor && oColor <= 255) {
-				return `rgb(${oColor}, ${oColor}, ${oColor})`;
+			if(n === 3 || n === 4) {
+				g = 1;
+				b = 2;
 			}
-		}
-
-		// rgb are the same value + alpha
-		else if(n === 2 && oColor.every((c, i) => typeof c === 'number' && (0 <= c && c <= 255) || (i === 4 && 0 <= c && c <= 1))) {
-			return `rgba(${oColor[0]}, ${oColor[0]}, ${oColor[0]}, ${oColor[1] > 1 ? oColor[1] / 255 : oColor[1]})`;
-		}
-
-		// rgb or rgba integers
-		else if([3, 4].includes(n) && oColor.every(c => typeof c === 'number')) {
-			if(oColor.every((c, i) => (0 <= c && c <= 255) || (i === 4 && 0 <= c && c <= 1))) {
-				return `rgb${n === 4 ? 'a' : ''}(${oColor[0]}, ${oColor[1]}, ${oColor[2]}${n === 4 ? `, ${oColor[3] > 1 ? oColor[3] / 255 : oColor[3]}` : ''})`;
+			if(n === 2 || n === 4) {
+				p += 'a';
+				a = n-1;
 			}
+
+			let color = `${p}(${color0}, ${oColor[g]}, ${oColor[b]}`;
+
+			if(a > 0)
+				color += `, ${oColor[a]}`;
+
+			color += ')';
+
+			return color;
 		}
 
-		// hex, hsl, rgb[a], color name
-		else if(n === 1 && typeof oColor[0] === 'string') {
-			oColor = oColor[0];
-
-			const color = oColor.replace(/\s/gi, '');
+		// hex, hsl[a], rgb[a], color name
+		else if(n === 1 && typeof color0 === 'string') {
+			oColor = color0.replace(/\s/gi, '');
 
 			const reg = {
 				hex: /^#([0-9a-z]{3}){1,2}$/i,
-				rgb: /^rgba?\((\d{1,3},){2}\d{1,3}(,\d(\.\d+)?)?\)$/,
+				rgb: /^rgba?\((\d{1,3},){2}\d{1,3}(,(0|1|(0?\.\d+)))?\)$/,
 				hsl: /^hsl\(\d{1,3},\d{1,3}%,\d{1,3}%\)$/,
+				hsla: /^hsla\(\d{1,3},\d{1,3}%,\d{1,3}%,(0|1|(0?.\d+))\)$/,
 				name: /^\w{3,30}$/
 			};
 
-			for(let regex in reg) {
-				if(reg[regex].test(color)) {
+			for(const regex in reg) {
+				if(reg[regex].test(oColor))
 					return oColor;
-				}
 			}
-		}
-
-		// color class instance
-		else if(oColor[0] instanceof HEX || oColor[0] instanceof RGB || oColor[0] instanceof HSL) {
-			return oColor[0].toString();
-		}
-
-		if(canvas) {
-			return window.getComputedStyle(canvas).backgroundColor;
 		}
 
 		// default returned color if bad entry
@@ -5286,7 +5283,7 @@ NOX_PV.cam = camera;
 		window.addEventListener('resize', () => {
 			const newWidth = document.documentElement.clientWidth,
 				newHeight = document.documentElement.clientHeight;
-			
+
 			// avoids performance's hit if the user plays to resize a lot
 			// if never defined before, it does not throw an error
 			clearTimeout(NOX_PV.resizeEndedCallback);

@@ -15,18 +15,6 @@ You can help me to maintain this framework with small donation on my Paypal, ope
 
 <hr>
 
-## IMPORTANT NOTES - What's next
-
-Future releases will be breaking changes and totally transform the project.
-* First, it will be now developped under typescript.
-* The JS vanilla version for web browser will no longer be maintained (but will still exist).
-* The `@noxfly/canvas` package will no longer be maintained (but will still exist).
-* Then, There will be a new module that will graft to the core module if imported too. This new module will be a basic engine for entities, some really basic collision stuff etc... to improve game development.
-
-Only the JS module and the TS will see new releases.
-
-<hr>
-
 **For module scripts :** [module README](https://github.com/NoxFly/canvas/tree/master/module#readme).
 
 **For Nodejs backend canvas :** [nodejs README](https://github.com/NoxFly/canvas/tree/master/node_canvas#readme).
@@ -223,7 +211,7 @@ Here are the variables declared in the canvas file, that you can use:
 * `mobile`: either it's a mobile/tablet or PC
 
 * `ios`: either it's an IOS or not
-    
+
 * `android`: either it's an Android or not
 
 **canvas**: the canvas DOM element

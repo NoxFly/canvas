@@ -6,7 +6,7 @@
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.4.0}
+ * @version		{1.6.0}
  */
 
 const CVS = require('canvas');
@@ -22,58 +22,55 @@ const PI = Math.PI;
 
 const colorTreatment = (...oColor) => {
 	const n = oColor.length;
+	const color0 = oColor[0];
 
-	if(n > 0 && (oColor[0] instanceof CanvasGradient || oColor[0] instanceof CanvasPattern)) return oColor[0];
+	if(color0 instanceof CanvasGradient || color0 instanceof CanvasPattern)
+		return color0;
 
+	// color class instance
+	else if(color0 instanceof HEX || color0 instanceof RGB || color0 instanceof HSL)
+		return color0.toString();
 
-	// number - only rgb value accepted
-	if(n === 1 && typeof oColor[0] === 'number') {
-		oColor = oColor[0];
+	// rgb[a]
+	else if(n > 0 && n < 5 && oColor.every(c => typeof c === 'number')) {
+		let p = 'rgb';
+		let g = 0, b = 0, a = 0;
 
-		if(0 <= oColor && oColor <= 255) {
-			return `rgb(${oColor}, ${oColor}, ${oColor})`;
+		if(n === 3 || n === 4) {
+			g = 1;
+			b = 2;
 		}
-	}
-
-	// rgb are the same value + alpha
-	else if(n === 2 && oColor.every((c, i) => typeof c === 'number' && (0 <= c && c <= 255) || (i === 4 && 0 <= c && c <= 1))) {
-		return `rgba(${oColor[0]}, ${oColor[0]}, ${oColor[0]}, ${oColor[1] > 1 ? oColor[1] / 255 : oColor[1]})`;
-	}
-
-	// rgb or rgba integers
-	else if([3, 4].includes(n) && oColor.every(c => typeof c === 'number')) {
-		if(oColor.every((c, i) => (0 <= c && c <= 255) || (i === 4 && 0 <= c && c <= 1))) {
-			return `rgb${n === 4 ? 'a' : ''}(${oColor[0]}, ${oColor[1]}, ${oColor[2]}${n === 4 ? `, ${oColor[3] > 1 ? oColor[3] / 255 : oColor[3]}` : ''})`;
+		if(n === 2 || n === 4) {
+			p += 'a';
+			a = n-1;
 		}
+
+		let color = `${p}(${color0}, ${oColor[g]}, ${oColor[b]}`;
+
+		if(a > 0)
+			color += `, ${oColor[a]}`;
+
+		color += ')';
+
+		return color;
 	}
 
-	// hex, hsl, rgb[a], color name
-	else if(n === 1 && typeof oColor[0] === 'string') {
-		oColor = oColor[0];
-
-		const color = oColor.replace(/\s/gi, '');
+	// hex, hsl[a], rgb[a], color name
+	else if(n === 1 && typeof color0 === 'string') {
+		oColor = color0.replace(/\s/gi, '');
 
 		const reg = {
 			hex: /^#([0-9a-z]{3}){1,2}$/i,
-			rgb: /^rgba?\((\d{1,3},){2}\d{1,3}(,\d(\.\d+)?)?\)$/,
+			rgb: /^rgba?\((\d{1,3},){2}\d{1,3}(,(0|1|(0?\.\d+)))?\)$/,
 			hsl: /^hsl\(\d{1,3},\d{1,3}%,\d{1,3}%\)$/,
+			hsla: /^hsla\(\d{1,3},\d{1,3}%,\d{1,3}%,(0|1|(0?.\d+))\)$/,
 			name: /^\w{3,30}$/
 		};
 
-		for(let regex in reg) {
-			if(reg[regex].test(color)) {
+		for(const regex in reg) {
+			if(reg[regex].test(oColor))
 				return oColor;
-			}
 		}
-	}
-
-	// color class instance
-	else if(oColor[0] instanceof HEX || oColor[0] instanceof RGB || oColor[0] instanceof HSL) {
-		return oColor[0].toString();
-	}
-
-	if(canvas) {
-		return window.getComputedStyle(canvas).backgroundColor;
 	}
 
 	// default returned color if bad entry
@@ -131,7 +128,7 @@ _perlin.gradient = [
 
 class Canvas {
     /**
-     * 
+     *
      * @param {number} width canvas's width
      * @param {number} height canvas's height
      * @param {background} background canvas's background
@@ -174,7 +171,7 @@ class Canvas {
 	get height() {
 		return this._.height;
 	}
-	
+
 	/**
 	 * Returns the canvas as URL data
 	 */
@@ -190,8 +187,8 @@ class Canvas {
 	}
 
 	/**
-	 * 
-	 * @param {CanvasImageSource} image 
+	 *
+	 * @param {CanvasImageSource} image
 	 * @param  {...number} args
 	 * @param {number} sx
 	 * @param {number} sy
@@ -266,7 +263,7 @@ class Canvas {
         this.beginPath();
             this.ctx.moveTo(x1, y1);
             this.ctx.lineTo(x2, y2);
-            
+
 		this.closePath();
 
 		if(this.bStroke)
@@ -292,7 +289,7 @@ class Canvas {
             for(let i=2; i < values.length; i+=2) {
                 let x = values[i],
                     y = values[i+1];
-                
+
                 this.ctx.lineTo(x,y);
             }
 
@@ -322,7 +319,7 @@ class Canvas {
      * @param {number} r arc's radius
      * @param {number} start angle start
      * @param {number} end angle end
-     * @param {boolean} antiClockwise 
+     * @param {boolean} antiClockwise
      */
     arc(x, y, r, start, end, antiClockwise=false) {
         this.beginPath();
@@ -430,12 +427,12 @@ class Canvas {
 
         // remove spaces at the start and the end of the string
         p = p.trim();
-    
+
         // a path must start with a moveTo instruction
         if(!p.startsWith('M')) {
             return;
         }
-        
+
         // split each instructions / arguments
         p = p.split(' ');
 
@@ -479,7 +476,7 @@ class Canvas {
 
         // regex to verify if each point is okay
         const reg = new RegExp(`^[${Object.keys(modes).join('')}]|(\-?\d+(\.\d+)?)$`, 'i');
-        
+
         // if a point isn't well written, then stop
         if(p.filter(point => reg.test(point)).length == 0) {
             return;
@@ -518,7 +515,7 @@ class Canvas {
                         return;
                     }
                 }
-                
+
                 // lowercase Z isn't recognized
                 if(['z'].includes(mode)) {
                     return;
@@ -544,7 +541,7 @@ class Canvas {
                         lastPos.x = prev[1 + hv]; // x of the last point
                         lastPos.y = prev[2 - hv]; // y of the last point
                     }
-                    
+
                     else {
                         let k = 1;
 
@@ -571,7 +568,7 @@ class Canvas {
                     if(isNaN(n)) {
                         return;
                     }
-                    
+
                     // push the treated argument
                     arr.push(n);
                 }
@@ -602,7 +599,7 @@ class Canvas {
                     }
                 }
 
-                
+
                 // add the instruction and its arguments to the translated path
                 d.push(arr);
 
@@ -639,7 +636,7 @@ class Canvas {
 
 		if(this.bFill) this.ctx.fill();
 		if(this.bStroke) this.ctx.stroke();
-        
+
     }
 
     /**
@@ -661,7 +658,7 @@ class Canvas {
             }
 
         }
-        
+
         // one line
         else {
             this.ctx.fillText(txt, x, y);
@@ -1033,7 +1030,7 @@ class Canvas {
 	/**
 	 * Creates a pattern using the specified image and repetition. This method returns a CanvasPattern.
 	 * @param {CanvasImageSource} image A CanvasImageSource to be used as the pattern's image.
-	 * It can be any of the following: 
+	 * It can be any of the following:
 	 * 	- HTMLImageElement (<img>)
 	 * 	- SVGImageElement (<image>)
 	 * 	- HTMLVideoElement (<video>, by using the capture of the video)
@@ -1041,7 +1038,7 @@ class Canvas {
 	 * 	- ImageBitmap
 	 * 	- OffscreenCanvas
 	 * @param {'repeat'|'repeat-x'|'repeat-y'|'no-repeat'} repetition A DOMstring indicating how to repeat the pattern's image.
-	 * Possible values are: 
+	 * Possible values are:
 	 * 	- 'repeat' (both directions) (default)
 	 * 	- 'repeat-x' (horizontal only)
 	 * 	- 'repeat-y' (vertical only)
@@ -1196,7 +1193,7 @@ const createCanvas = (width, height, background=null, support=null) => {
 		console.warn('Canvas size must be higher than 0');
 		return null;
     }
-    
+
     if(background !== null) {
         background = colorTreatment(background);
     }
@@ -1407,49 +1404,49 @@ const ceil = n => Math.ceil(n);
 
 
 /**
- * 
+ *
  * @param {number} x x value to return its sinus
  */
 const sin = x => Math.sin(x);
 
 
 /**
- * 
+ *
  * @param {number} x x value to return its cosinus
  */
 const cos = x => Math.cos(x);
 
 
 /**
- * 
+ *
  * @param {number} x x value to return its tan
  */
 const tan = x => Math.tan(x);
 
 
 /**
- * 
+ *
  * @param {number} x x value to return its asin
  */
 const asin = x => Math.asin(x);
 
 
 /**
- * 
+ *
  * @param {number} x x value to return its acos
  */
 const acos = x => Math.acos(x);
 
 
 /**
- * 
+ *
  * @param {number} x x value to return its atan
  */
 const atan = x => Math.atan(x);
 
 
 /**
- * 
+ *
  * @param {number} x x value to return its atan2
  * @param {number} x y value to return its atan2
  */
@@ -1457,34 +1454,34 @@ const atan2 = (x, y) => Math.atan2(y, x);
 
 
 /**
- * 
+ *
  * @param {number} x x value to return its sinh
  */
 const sinh = x => Math.sinh(x);
 
 /**
- * 
+ *
  * @param {number} x x value to return its cosh
  */
 const cosh = x => Math.cosh(x);
 
 
 /**
- * 
+ *
  * @param {number} x x value to return its exponential
  */
 const exp = x => Math.exp(x);
 
 
 /**
- * 
+ *
  * @param {number} x x value to return its logarithm
  */
 const log = x => Math.log(x);
 
 
 /**
- * 
+ *
  * @param {number} x x value to return its log10
  */
 const log10 = x => Math.log10(x);
@@ -1544,15 +1541,15 @@ const std = (...values) => sqrt(variance(...values));
 /* */
 /**
  * Perlin Noise function.
- * 
+ *
  * Code from : http://pub.phyks.me/sdz/sdz/bruit-de-_perlin.html
- * 
+ *
  * Returns the perlin noise value between 0 and 1 for a given point (x,y)
- * 
+ *
  * Lazily generates the perlin seed if not existing.
- * 
+ *
  * It's the perlin noise of the page, so seed will always be the same.
- * 
+ *
  * To have multiple custom Perlin noise arrays, create PerlinNoise class instance instead.
  * @param {number} x X-axis point coordinate
  * @param {number} y Y-axis point coordinate
@@ -1571,7 +1568,7 @@ const std = (...values) => sqrt(variance(...values));
 
 /**
  * Sets the level of details for the Perlin noise function.
- * 
+ *
  * Default is 10. If given argument isn't a number, does nothing.
  * @param {number} detailLevel level of detail for Perlin noise function
  * @example
@@ -1588,7 +1585,7 @@ class PerlinNoise {
 	static mapnumberTypes = ['default', 'rgb', 'hsl'];
 	static getMapnumberTypeIndex = typeStr => PerlinNoise.mapnumberTypes.indexOf(typeStr.toLowerCase())
 	/**
-	 * 
+	 *
 	 * @param {number} lod level of details
 	 * @param {number} x start x of the array
 	 * @param {number} y start y of the array
@@ -1608,7 +1605,7 @@ class PerlinNoise {
 
 	/**
 	 * Sets the level of detail for this class instance.
-     * 
+     *
 	 * If the lod changed, then it re-calculates the array.
 	 * @param {number} lod level of detail
 	 * @example
@@ -1626,7 +1623,7 @@ class PerlinNoise {
 
 	/**
 	 * Regenerates the noise's seed.
-     * 
+     *
 	 * Then it re-calculates the array.
 	 * @example
 	 * const p = new PerlinNoise();
@@ -1639,9 +1636,9 @@ class PerlinNoise {
 
 	/**
 	 * Sets the map number of the array.
-     * 
+     *
 	 * Default is [-1,1] (0).
-     * 
+     *
 	 * You can choose [0,255] (1) or [0,360] (2).
 	 * @param {0|1|2} mapnumber map style's index
 	 * @example
@@ -1665,9 +1662,9 @@ class PerlinNoise {
 
 	/**
 	 * Calculates the noised array.
-     * 
+     *
 	 * You normally don't have to call it.
-     * 
+     *
      * It's automatically called if an option is changed through methods.
 	 * @example
 	 * const p = new PerlinNoise();
@@ -1712,7 +1709,7 @@ class RGB {
 		if(r === undefined) {
 			r = 0;
 		}
-		
+
 		if(g !== null && b === null) {
 			a = g;
 			g = b = r;
@@ -1814,7 +1811,7 @@ class RGB {
 		if(imax == imin) {
 			h = s = 0;
 		}
-		
+
 		else {
 			let d = imax - imin;
 			s = (l > 0.5)? d / (2 - imax - imin) : d / (imax + imin);
@@ -2143,7 +2140,7 @@ class Vector {
 	 * @example
 	 * const v = new Vector(10);
 	 * v.normalize(true); // now v.x = 1;
-	 * 
+	 *
 	 * v.set(20);
 	 * const v2 = v.normalize(); // v.x = 20, v2.x = 1
 	 */
@@ -2339,7 +2336,7 @@ class Vector {
 	 * @example
 	 * const v = new Vector(1, 2);
 	 * v.invert(); // now v{x: 2, y: 1}
-	 * 
+	 *
 	 * const v2 = new Vector(1, 2, 3);
 	 * v2.invert(); // now v2{x: 3, y: 1, z: 2}
 	 * v2.invert(true); // now v2{x: 1, y:2, z: 3}
@@ -2422,11 +2419,11 @@ class Vector {
 
     /**
      * Returns the vector's properties as a basic object { x, y, z }
-     * 
+     *
      * { x } for dimension 1
-     * 
+     *
      * { x, y } for dimension 2
-     * 
+     *
      * { x, y, z } for dimension 3
      * @return {object}
      */
@@ -2457,15 +2454,15 @@ class Matrix {
 
 	/**
 	 * Creates a Matrix of numbers, with 4 signatures.
-	 * 
+	 *
 	 * 1. with matrix's size (and default fill value ? - default 0)
-	 * 
+	 *
 	 * 2. with multiple arrays of numbers
-	 * 
+	 *
 	 * 3. with a 2D array of numbers
-	 * 
+	 *
 	 * 4. from another Matrix
-	 * 
+	 *
 	 * @signature new Matrix(width, height, fill)
 	 * @param {number} width size X of the matrix
 	 * @param {number} height size Y of the matrix. If not precised, a square matrix is created
@@ -2477,19 +2474,19 @@ class Matrix {
 	 * const m2 = new Matrix(3, 2);
 	 * // [ [1, 1], [1, 1] ]
 	 * const m3 = new Matrix(2, 2, 1);
-	 * 
+	 *
 	 * @signature new Matrix([0, 0, 0], ...)
 	 * @param {...number[]} args multiple arrays of numbers
 	 * @example
 	 * // [ [0, 0, 0], [0, 0, 0] ]
 	 * const m1 = new Matrix([0, 0, 0], [0, 0, 0]);
-	 * 
+	 *
 	 * @signature new Matrix([[0, 0, 0], ...])
 	 * @param {number[][]} args 2D array of numbers
 	 * @example
 	 * // [ [0, 0, 0], [0, 0, 0] ]
 	 * const m1 = new Matrix([[0, 0, 0], [0, 0, 0]]);
-	 * 
+	 *
 	 * @signature new Matrix(matrix)
 	 * @param {Matrix} args existing matrix
 	 * @example
@@ -2707,7 +2704,7 @@ class Matrix {
 
 	/**
 	 * Returns either the matrix is a square matrix or not.
-	 * 
+	 *
 	 * A square matrix has its width equals to its height.
 	 * @returns {boolean} Either it's a square matrix or not
 	 */
@@ -2717,7 +2714,7 @@ class Matrix {
 
 	/**
 	 * Returns either the matrix is idendity/unity matrix.
-	 * 
+	 *
 	 * An idendity/unity matrix has its diagonal filled by 1, all other elements are 0
 	 * @returns {boolean} Either the matrix is an identity/unity matrix or not
 	 */
@@ -2727,7 +2724,7 @@ class Matrix {
 
 	/**
 	 * Returns either the matrix has is a diagonal matrix or not.
-	 * 
+	 *
 	 * A diagonal matrix is a matrix with a diagonal filled by values different from 0, all other elements are 0
 	 * @returns {boolean} Either the matrix is a diagonal matrix or not
 	 */
@@ -2747,7 +2744,7 @@ class Matrix {
 
 	/**
 	 * Returns either the matrix is lower triangular or not.
-	 * 
+	 *
 	 * A lower triangular matrix is a matrix with all the entries above the main diagonal equals to zero
 	 * @returns {boolean} Either the matrix is lower triangular or not
 	 */
@@ -2768,7 +2765,7 @@ class Matrix {
 
 	/**
 	 * Returns either the matrix is upper triangular or not.
-	 * 
+	 *
 	 * An upper triangular matrix is a matrix with all the entries below the main diagonal equals to zero
 	 * @returns {boolean} Either the matrix is upper triangular or not
 	 */
@@ -2789,7 +2786,7 @@ class Matrix {
 
 	/**
 	 * Returns a 1D array with the diagonal of the matrix if the matrix is a square matrix.
-	 * 
+	 *
 	 * If the matrix is not a square matrix, then it returns an empty array.
 	 * @returns {number[]} The diagonal values
 	 */
@@ -2982,7 +2979,7 @@ class Matrix {
 
 	/**
 	 * Returns the column at given index.
-	 * 
+	 *
 	 * If wrong index given returns an empty array.
 	 * @param {number} x The index of the column to get
 	 * @returns {number[]} The column
@@ -2999,7 +2996,7 @@ class Matrix {
 
 	/**
 	 * Returns the column at given idnex.
-	 * 
+	 *
 	 * If wrong idnex given, returns an empty array.
 	 * @param {number} y The index of the row to get
 	 * @returns {number[]} The row
@@ -3262,7 +3259,7 @@ class Quadtree {
             this.dataPtr = dataPtr;
         }
     }
-    
+
     /**
      * A Quadtree's Rectangle is a basic rectangle that checks<br>
      * if it contains a given point or intersects with a given Rectangle
@@ -3281,7 +3278,7 @@ class Quadtree {
             this.w = w;
             this.h = h;
         }
-    
+
         /**
          * Checks if a given Quadtree's Point is in the Rectangle or not.
          * @param {Quadtree.Point} point A Quadtree's Point
@@ -3293,7 +3290,7 @@ class Quadtree {
                 this.y <= point.y && point.y <= this.y + this.h
             );
         }
-        
+
         /**
          * Checks if 2 Quadtree's Rectangles are intersecting or not.
          * @param {QuadTree.Rectangle} rectangle A Quadtree's Rectangle
@@ -3307,7 +3304,7 @@ class Quadtree {
                 rectangle.y + rectangle.h < this.y
             );
         }
-        
+
         /**
          * Checks if this Quadtree's Rectangle totally wraps the given Rectangle or not.
          * @param {Quadtree.Rectangle} rectangle A Quadtree's Rectangle
@@ -3479,7 +3476,7 @@ class Quadtree {
 	getAllPoints() {
 		if(!this.divided)
 			return this.points;
-		
+
 		const points = [];
 
 		for(const region of this.children)
@@ -3518,7 +3515,7 @@ module.exports = {
 	pow, abs, sqrt, min, max, clamp, round, floor, ceil,
 	random, sin, cos, tan, asin, acos, atan, atan2,
 	sinh, cosh, exp, log, log10, mean, median, mode,
-	variance, std, 
+	variance, std,
 
 	perlin, noiseDetails,
 
