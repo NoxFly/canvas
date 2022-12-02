@@ -1585,7 +1585,7 @@ class PerlinNoise {
 		this.start = { x, y };
 		this.size = { width: w, height: h };
 		this.array = [];
-		this.numberMapStyle = PerlinNoise.getMapnumberTypeIndex(mapnumber);
+		this.numberMapStyle = PerlinNoise.getMapNumberTypeIndex(mapnumber);
 		this.calculate();
 	}
 
