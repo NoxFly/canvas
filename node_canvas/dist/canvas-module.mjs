@@ -1632,7 +1632,7 @@ class PerlinNoise {
 	 * p.setMapNumber(1); // sets values between 0 and 255.
 	 */
 	setMapNumber(mapnumber) {
-		mapnumber = PerlinNoise.getMapnumberTypeIndex(mapnumber);
+		mapnumber = PerlinNoise.getMapNumberTypeIndex(mapnumber);
 		if (this.numberMapStyle === mapnumber) return;
 
 		let Lmin = 0, Lmax = _perlin.unit, Rmin = 0, Rmax = _perlin.unit;
