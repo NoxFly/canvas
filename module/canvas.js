@@ -2901,7 +2901,7 @@ export class HSL {
 
 export class PerlinNoise {
 	static mapnumberTypes = ['default', 'rgb', 'hsl'];
-	static getMapnumberTypeIndex = typeStr => PerlinNoise.mapnumberTypes.indexOf(typeStr.toLowerCase())
+	static getMapnumberTypeIndex = typeStr => PerlinNoise.mapnumberTypes.indexOf(typeStr)
 	/**
 	 *
 	 * @param {number} lod level of details
@@ -2964,7 +2964,7 @@ export class PerlinNoise {
 	 * p.setMapNumber(1); // sets values between 0 and 255.
 	 */
 	setMapNumber(mapnumber) {
-		mapnumber = PerlinNoise.getMapnumberTypeIndex(mapnumber);
+		mapnumber = PerlinNoise.getMapNumberTypeIndex(mapnumber);
 		if(this.numberMapStyle === mapnumber) return;
 
 		let Lmin = 0, Lmax = NOX_PV.perlin.unit, Rmin = 0, Rmax = NOX_PV.perlin.unit;

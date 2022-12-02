@@ -1569,7 +1569,7 @@ const noiseDetails = detailLevel => {
 
 class PerlinNoise {
 	static mapnumberTypes = ['default', 'rgb', 'hsl'];
-	static getMapNumberTypeIndex = typeStr => PerlinNoise.mapnumberTypes.indexOf(typeStr.toLowerCase())
+	static getMapNumberTypeIndex = typeStr => PerlinNoise.mapnumberTypes.indexOf(typeStr)
 	/**
 	 *
 	 * @param {number} lod level of details
