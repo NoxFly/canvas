@@ -22,8 +22,6 @@ export let canvas = null;
 
 export let width = 0,
 	height = 0,
-	realWidth = 0,
-	realHeight = 0,
 	mouseX = 0,
 	mouseY = 0,
 	fps = 60;
@@ -2034,11 +2032,12 @@ export const createCanvas = (w=null, h=null, bg='#000', requestPointerLock=false
 	canvas.style.width = width + 'px';
 	canvas.style.height = height + 'px';
 
-	realWidth = width;
-	realHeight = height;
-
 	canvas.id = 'nox-canvas';
 	canvas.style.background = NOX_PV.colorTreatment(bg);
+
+	if(camera.anchorType === Camera.ANCHOR_CENTER) {
+		camera.setAnchor(Camera.ANCHOR_CENTER);
+	}
 
 	container.appendChild(canvas);
 
@@ -5207,7 +5206,7 @@ NOX_PV.cam = camera;
 			y: e.clientY - offset(canvas).top
 		};
 
-		callback('mousedown', e);
+		NOX_PV.callback('mousedown', e);
 
 		canvas.addEventListener('pointerup', () => {
 			try {
