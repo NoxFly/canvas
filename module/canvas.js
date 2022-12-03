@@ -4878,14 +4878,15 @@ export const draw = drawFunction => {
 		console.error(`The draw function must take an argument as type 'function'.`);
 	}
 
-	else if(NOX_PV.drawFunc !== null) {
+	else if(NOX_PV.hasDrawFunc) {
 		console.warn('You already declared your draw function.');
 	}
 
 	else {
+		NOX_PV.hasDrawFunc = true;
 		NOX_PV.drawFunc = drawFunction;
 
-		if(typeof NOX_PV.updateFunc !== 'function')
+		if(!NOX_PV.hasUpdateFunc)
 			drawLoop();
 	}
 };
@@ -4900,14 +4901,15 @@ export const update = updateFunction => {
 		console.error(`The update function must take an argument as type 'function'.`);
 	}
 
-	else if(NOX_PV.updateFunc !== null) {
+	else if(NOX_PV.hasUpdateFunc) {
 		console.warn('You already declared your update function.');
 	}
 
 	else {
+		NOX_PV.hasUpdateFunc = true;
 		NOX_PV.updateFunc = updateFunction;
 
-		if(typeof NOX_PV.drawFunc !== 'function')
+		if(!NOX_PV.hasDrawFunc)
 			drawLoop();
 	}
 };
@@ -4956,6 +4958,9 @@ const NOX_PV = {
 	timer: new Time(),
 
 	hasInitGlobalHandlers: false,
+
+	hasUpdateFunc: false,
+	hasDrawFunc: false,
 
 	updateFunc: () => {},
 	drawFunc: () => {},
