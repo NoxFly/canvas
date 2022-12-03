@@ -5336,4 +5336,6 @@ NOX_PV.cam = camera;
 		console.info('Performances while initializing the canvas environment :');
 		console.table(perfData);
 	}
+
+	NOX_PV.timer = new Time();
 };
