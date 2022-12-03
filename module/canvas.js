@@ -22,8 +22,6 @@ export let canvas = null;
 
 export let width = 0,
 	height = 0,
-	realWidth = 0,
-	realHeight = 0,
 	mouseX = 0,
 	mouseY = 0,
 	fps = 60;
@@ -2034,11 +2032,12 @@ export const createCanvas = (w=null, h=null, bg='#000', requestPointerLock=false
 	canvas.style.width = width + 'px';
 	canvas.style.height = height + 'px';
 
-	realWidth = width;
-	realHeight = height;
-
 	canvas.id = 'nox-canvas';
 	canvas.style.background = NOX_PV.colorTreatment(bg);
+
+	if(camera.anchorType === Camera.ANCHOR_CENTER) {
+		camera.setAnchor(Camera.ANCHOR_CENTER);
+	}
 
 	container.appendChild(canvas);
 
@@ -2901,7 +2900,7 @@ export class HSL {
 
 export class PerlinNoise {
 	static mapnumberTypes = ['default', 'rgb', 'hsl'];
-	static getMapnumberTypeIndex = typeStr => PerlinNoise.mapnumberTypes.indexOf(typeStr.toLowerCase())
+	static getMapnumberTypeIndex = typeStr => PerlinNoise.mapnumberTypes.indexOf(typeStr)
 	/**
 	 *
 	 * @param {number} lod level of details
@@ -2964,7 +2963,7 @@ export class PerlinNoise {
 	 * p.setMapNumber(1); // sets values between 0 and 255.
 	 */
 	setMapNumber(mapnumber) {
-		mapnumber = PerlinNoise.getMapnumberTypeIndex(mapnumber);
+		mapnumber = PerlinNoise.getMapNumberTypeIndex(mapnumber);
 		if(this.numberMapStyle === mapnumber) return;
 
 		let Lmin = 0, Lmax = NOX_PV.perlin.unit, Rmin = 0, Rmax = NOX_PV.perlin.unit;
@@ -4879,14 +4878,15 @@ export const draw = drawFunction => {
 		console.error(`The draw function must take an argument as type 'function'.`);
 	}
 
-	else if(NOX_PV.drawFunc !== null) {
+	else if(NOX_PV.hasDrawFunc) {
 		console.warn('You already declared your draw function.');
 	}
 
 	else {
+		NOX_PV.hasDrawFunc = true;
 		NOX_PV.drawFunc = drawFunction;
 
-		if(typeof NOX_PV.updateFunc !== 'function')
+		if(!NOX_PV.hasUpdateFunc)
 			drawLoop();
 	}
 };
@@ -4901,14 +4901,15 @@ export const update = updateFunction => {
 		console.error(`The update function must take an argument as type 'function'.`);
 	}
 
-	else if(NOX_PV.updateFunc !== null) {
+	else if(NOX_PV.hasUpdateFunc) {
 		console.warn('You already declared your update function.');
 	}
 
 	else {
+		NOX_PV.hasUpdateFunc = true;
 		NOX_PV.updateFunc = updateFunction;
 
-		if(typeof NOX_PV.drawFunc !== 'function')
+		if(!NOX_PV.hasDrawFunc)
 			drawLoop();
 	}
 };
@@ -4957,6 +4958,9 @@ const NOX_PV = {
 	timer: new Time(),
 
 	hasInitGlobalHandlers: false,
+
+	hasUpdateFunc: false,
+	hasDrawFunc: false,
 
 	updateFunc: () => {},
 	drawFunc: () => {},
@@ -5207,7 +5211,7 @@ NOX_PV.cam = camera;
 			y: e.clientY - offset(canvas).top
 		};
 
-		callback('mousedown', e);
+		NOX_PV.callback('mousedown', e);
 
 		canvas.addEventListener('pointerup', () => {
 			try {

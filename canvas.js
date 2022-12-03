@@ -22,8 +22,6 @@ let canvas = null;
 
 let width = 0,
 	height = 0,
-	realWidth = 0,
-	realHeight = 0,
 	mouseX = 0,
 	mouseY = 0,
 	fps = 60;
@@ -2036,11 +2034,12 @@ const createCanvas = (w=null, h=null, bg='#000', requestPointerLock=false, conta
 	canvas.style.width = width + 'px';
 	canvas.style.height = height + 'px';
 
-	realWidth = width;
-	realHeight = height;
-
 	canvas.id = 'nox-canvas';
 	canvas.style.background = NOX_PV.colorTreatment(bg);
+
+	if(camera.anchorType === Camera.ANCHOR_CENTER) {
+		camera.setAnchor(Camera.ANCHOR_CENTER);
+	}
 
 	container.appendChild(canvas);
 
@@ -2902,7 +2901,7 @@ class HSL {
 
 class PerlinNoise {
 	static mapnumberTypes = ['default', 'rgb', 'hsl'];
-	static getMapNumberTypeIndex = typeStr => PerlinNoise.mapnumberTypes.indexOf(typeStr.toLowerCase())
+	static getMapNumberTypeIndex = typeStr => PerlinNoise.mapnumberTypes.indexOf(typeStr);
 	/**
 	 *
 	 * @param {number} lod level of details
@@ -2965,7 +2964,7 @@ class PerlinNoise {
 	 * p.setMapnumber(1); // sets values between 0 and 255.
 	 */
 	setMapNumber(mapnumber) {
-		mapnumber = PerlinNoise.getMapnumberTypeIndex(mapnumber);
+		mapnumber = PerlinNoise.getMapNumberTypeIndex(mapnumber);
 		if(this.numberMapStyle === mapnumber) return;
 
 		let Lmin = 0, Lmax = NOX_PV.perlin.unit, Rmin = 0, Rmax = NOX_PV.perlin.unit;
