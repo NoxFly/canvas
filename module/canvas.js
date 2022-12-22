@@ -6,7 +6,7 @@
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.6.1}
+ * @version		{1.6.2}
  */
 
 
@@ -2149,8 +2149,9 @@ const drawLoop = () => {
 
 	// UPDATE
 	for(const module of NOX_PV.updateModules)
-		module.update();
-	NOX_PV.updateFunc(); // user update function
+		module.update(NOX_PV.delta);
+
+	NOX_PV.updateFunc(NOX_PV.delta); // user update function
 	//
 
 	// Perfs
