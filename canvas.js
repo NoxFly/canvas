@@ -6,7 +6,7 @@
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.4.3}
+ * @version		{1.4.4}
  */
 
 
@@ -234,7 +234,10 @@ const rect = (x, y, w, h) => {
  * @param {Number} y 
  * @param {Number} w 
  * @param {Number} h 
- * @param  {...Number} radius 
+ * @param {number} radius top-left corner's radius or 4 corners radius if this is the only one passed
+ * @param {number} radiusTR top-right corner's radius
+ * @param {number} radiusBR bottom-right corner's radius
+ * @param {number} radiusBL bottom-left corner's radius
  */
 const roundRect = (x = 0, y = 0, w = 0, h = 0, radius = 0, radiusTR, radiusBR, radiusBL) => {
 	if (radiusTR === undefined) radiusTR = radius;
@@ -1196,6 +1199,16 @@ const dist = (a, b) => {
 }
 
 /**
+ * Returns a new vector, the magnitude of the two given.
+ * @param {Vector} a first point
+ * @param {Vector} b second point
+ * @returns {Vector} The resulting magnitude vector
+ */
+const mag = (a, b) => {
+    return new Vector(b.x - a.x, b.y - a.y);
+};
+
+/**
  * range mapping of a value
  * @param {Array<number>|number} val value - can be either an array or a number
  * @param {number} start1 start of the current interval
@@ -1803,6 +1816,9 @@ const frameRate = f => { if (f >= 0) NOX_PV.interval = 1000 / f };
 const getSwipe = () => NOX_PV.lastSwipe;
 
 
+const getSecondsPassed = () => NOX_PV.timer.asSeconds();
+const getMilliSecondsPassed = () => NOX_PV.timer.asMilliseconds();
+
 
 
 
@@ -2122,18 +2138,21 @@ const drawLoop = () => {
 	if (NOX_PV.loop === true)
 		requestAnimationFrame(drawLoop);
 
+	// Perfs
 	const t0 = performance.now();
 
 	if (NOX_PV.logPerfs && NOX_PV.drawLoopInfo.it === 0) {
 		NOX_PV.drawLoopInfo.start = t0;
 	}
+	//
 
-
+	// FPS
 	NOX_PV.now = Date.now();
 	NOX_PV.delta = NOX_PV.now - NOX_PV.then;
 
+
+	// Camera
     if(camera.following) {
-        // console.log(camera.followPoint.object());
         camera.position.set(camera.followPoint.x, camera.followPoint.y);
     }
 
@@ -2150,12 +2169,19 @@ const drawLoop = () => {
         else
             camera.position.set(x, y);
     }
+	//
 
-	NOX_PV.updateFunc(NOX_PV.timer.asMilliseconds()); // user update function
+	// UPDATE
+	for(const module of NOX_PV.updateModules)
+		module.update();
+	NOX_PV.updateFunc(); // user update function
+	//
 
+	// Perfs
 	if (NOX_PV.logPerfs)
 		NOX_PV.drawLoopInfo.t1 += performance.now() - t0;
 
+	// FPS -> Draw
 	if (NOX_PV.delta > NOX_PV.interval) {
 		NOX_PV.then = NOX_PV.now - (NOX_PV.delta % NOX_PV.interval);
 
@@ -2177,11 +2203,16 @@ const drawLoop = () => {
 
 			push();
 				clearRect(NOX_PV.cam.x, NOX_PV.cam.y, width, height); // clear the canvas
-
-				NOX_PV.drawFunc(); // user draw function
+				// draw extra before the basic drawing
+				for(const module of NOX_PV.renderingModules) {
+					module.render();
+				}
+				
+				// user draw function
+				NOX_PV.drawFunc();
 
 				// if guidelines enabled
-				if (NOX_PV.bGuideLines) {
+				if(NOX_PV.bGuideLines) {
 					push();
 						fill('#46eaea'); stroke('#46eaea');
 						strokeWeight(1);
@@ -2191,12 +2222,13 @@ const drawLoop = () => {
 					pop();
 				}
 			pop();
-
+			
+			// Perfs
 			NOX_PV.drawLoopInfo.t2 += performance.now() - t;
 		}
 	}
 
-
+	// Perfs
 	if (NOX_PV.logPerfs) {
 		NOX_PV.drawLoopInfo.it = (NOX_PV.drawLoopInfo.it + 1) % NOX_PV.drawLoopInfo.freq;
 
@@ -4307,6 +4339,17 @@ class Camera {
      */
     get moving() { return NOX_PV.camera.move !== null; }
 
+	/**
+	 * Returns the bounds of the camera.
+	 * @returns {Object} The bounds of the camera (x, y, width, height)
+	 */
+	getBounds() {
+		let x = this.x;
+		let y = this.y;
+
+		return { x, y, width, height };
+	}
+
     /**
      * Defines either the anchor of the camera is top-left corner or center.<br>
      * Default is top-left corner.<br>
@@ -4812,7 +4855,7 @@ class Quadtree {
     /**
      * A Quadtree's Point has a position and a pointer to an object
      */
-    static Point = class {
+    static Point = class Point {
         /**
          * A Quadtree's Point that has a position and a pointer to an object
          * @param {Number} x Point's X
@@ -4830,7 +4873,7 @@ class Quadtree {
      * A Quadtree's Rectangle is a basic rectangle that checks<br>
      * if it contains a given point or intersects with a given Rectangle
      */
-    static Rectangle = class {
+    static Rectangle = class Rectangle {
         /**
          * Creates a Quadtree's Rectangle.
          * @param {Number} x Rectangle top-left corner's X
@@ -4909,6 +4952,14 @@ class Quadtree {
     }
 
     /**
+     * Returns an array containing the tree's children.
+     * @returns {Array<Quadtree>} All tree's children
+     */
+	get children() {
+		return this.divided? [this.northwest, this.northeast, this.southwest, this.southeast] : [];
+	}
+
+    /**
      * Subdivides the Quadtree if it isn't.<br>
      * Separates itself in 4 regions that fill itself.
      */
@@ -4942,8 +4993,8 @@ class Quadtree {
     insert(point) {
         if(!this.boundary.contains(point))
             return false;
-        
-        if(this.points.length < this.capacity) {
+
+		if(this.points.length < this.capacity) {
             this.points.push(point);
             return true;
         }
@@ -4967,15 +5018,14 @@ class Quadtree {
      */
     query(range, isWrapped=false) {
         if(isWrapped)
-            return this.points;
+            return this.getAllPoints();
 
-        let found = [];
+        const found = [];
 
         if(!this.boundary.intersects(range))
             return found;
 
-        if(!isWrapped)
-            isWrapped = range.wrap(this.boundary);
+        isWrapped = range.wrap(this.boundary);
         
         if(isWrapped === true)
             found.push(...this.points);
@@ -5016,6 +5066,32 @@ class Quadtree {
             this.southwest.show();
         }
     }
+
+	/**
+	 * Returns all the children of this tree and its regions.
+	 * @returns {Array<Quadtree.Point>} A list of all children and subchildren of this tree
+	 */
+	getAllPoints() {
+		const points = [...this.points];
+		
+		for(const region of this.children)
+			points.push(...region.getAllPoints());
+
+		return points;
+	}
+
+    /**
+     * Returns the total size of the tree, containing its point and the points of its children.
+     * @returns {Number} The total size of the tree (number of points contained inside it)
+     */
+    size() {
+        let n = this.points.length;
+
+        for(const region of this.children)
+            n += region.size();
+
+        return n;
+    }
 }
 
 
@@ -5039,6 +5115,20 @@ const logPerformances = () => {
 const NOX_PV = {
 	updateFunc: () => { },
 	drawFunc: () => { },
+
+	modules: [],
+	updateModules: [],
+	renderingModules: [],
+
+	addModule: module => {
+		if(typeof module.update === 'function')
+			NOX_PV.updateModules.push(module);
+
+		if(typeof module.render === 'function')
+			NOX_PV.renderingModules.push(module);
+
+		NOX_PV.modules.push(module);
+	},
 
 	notSetup: true,
 	logPerfs: false,

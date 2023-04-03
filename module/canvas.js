@@ -234,7 +234,10 @@ export const rect = (x, y, w, h) => {
  * @param {Number} y 
  * @param {Number} w 
  * @param {Number} h 
- * @param  {...Number} radius 
+ * @param {number} radius top-left corner's radius or 4 corners radius if this is the only one passed
+ * @param {number} radiusTR top-right corner's radius
+ * @param {number} radiusBR bottom-right corner's radius
+ * @param {number} radiusBL bottom-left corner's radius
  */
 export const roundRect = (x = 0, y = 0, w = 0, h = 0, radius = 0, radiusTR, radiusBR, radiusBL) => {
 	if (radiusTR === undefined) radiusTR = radius;
@@ -4446,7 +4449,7 @@ export class Path {
 
 
 
-class Camera {
+export class Camera {
     // CAMERA ANCHOR TYPES. DEFAULT IS TOP-LEFT CORNER
     static ANCHOR_DEFAULT = 0;
     static ANCHOR_CENTER = 1;
@@ -5279,6 +5282,7 @@ NOX_PV.easeFuncMap = {
 	elasticIn: easeInElastic, elasticOut: easeOutElastic, elasticInOut: easeInOutElastic,
 };
 
-const camera = new Camera();
+export const camera = new Camera();
+
 NOX_PV.camera.hud = new Camera();
 NOX_PV.cam = camera;
