@@ -5175,7 +5175,7 @@ NOX_PV.easeFuncMap = {
 };
 
 
-const camera = new Camera();
+export const camera = new Camera();
 NOX_PV.camera.hud = new Camera();
 NOX_PV.cam = camera;
 
