@@ -663,7 +663,7 @@ export const quadraticCurveTo = (cpx, cpy, x, y) => {
  * @param {number} shadowOffsetY The shadow Y-Axis offset
  */
 const setShadow = (shadowColor, shadowBlur=0, shadowOffsetX=0, shadowOffsetY=0) => {
-	ctx.shadowColor = NOX_PV.colorTreatment([shadowColor]);
+	ctx.shadowColor = NOX_PV.colorTreatment(shadowColor);
 	ctx.shadowBlur = shadowBlur;
 	ctx.shadowOffsetX = shadowOffsetX;
 	ctx.shadowOffsetY = shadowOffsetY;

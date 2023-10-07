@@ -754,7 +754,7 @@ class Canvas {
 	 * @param {number} shadowOffsetY The shadow Y-Axis offset
 	 */
 	setShadow(shadowColor, shadowBlur=0, shadowOffsetX=0, shadowOffsetY=0) {
-		this.ctx.shadowColor = colorTreatment([shadowColor]);
+		this.ctx.shadowColor = colorTreatment(shadowColor);
 		this.ctx.shadowBlur = shadowBlur;
 		this.ctx.shadowOffsetX = shadowOffsetX;
 		this.ctx.shadowOffsetY = shadowOffsetY;
