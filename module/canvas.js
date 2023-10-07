@@ -655,6 +655,29 @@ export const quadraticCurveTo = (cpx, cpy, x, y) => {
 	ctx.quadraticCurveTo(cpx - NOX_PV.cam.x, cpy - NOX_PV.cam.y, x - NOX_PV.cam.x, y - NOX_PV.cam.y);
 };
 
+/**
+ * Applies a shadow to the shape that needs to be drawn.
+ * @param {*} shadowColor The shadow's color
+ * @param {number} shadowBlur The shadow's blur. Can be used for glow effect
+ * @param {number} shadowOffsetX The shadow X-Axis offset
+ * @param {number} shadowOffsetY The shadow Y-Axis offset
+ */
+const setShadow = (shadowColor, shadowBlur=0, shadowOffsetX=0, shadowOffsetY=0) => {
+	ctx.shadowColor = NOX_PV.colorTreatment([shadowColor]);
+	ctx.shadowBlur = shadowBlur;
+	ctx.shadowOffsetX = shadowOffsetX;
+	ctx.shadowOffsetY = shadowOffsetY;
+};
+
+/**
+ * Removes the shadow settings if there's any.
+ */
+const removeShadow = () => {
+	ctx.shadowColor = rgba(0, 0, 0, 0);
+	ctx.shadowBlur = 0;
+	ctx.shadowOffsetX = 0;
+	ctx.shadowOffsetY = 0;
+};
 
 
 
