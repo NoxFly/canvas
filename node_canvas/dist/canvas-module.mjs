@@ -1,12 +1,12 @@
 /**
- * @copyright   Copyright (C) 2019 - 2022 Dorian Thivolle All rights reserved.
+ * @copyright   Copyright (C) 2019 - 2023 Dorian Thivolle All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  * @author		Dorian Thivolle
  * @name		canvas
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.6.1}
+ * @version		{1.6.3}
  */
 
 import * as CVS from 'canvas';
@@ -250,7 +250,7 @@ class Canvas {
 	 */
 	lineTo(x, y) {
 		this.ctx.lineTo(x, y);
-	};
+	}
 
 	/**
 	 * Draw a line
@@ -727,7 +727,8 @@ class Canvas {
 	 */
 	bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y) {
 		this.ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
-	};
+	}
+
 
 	/**
 	 * Adds a quadratic Bézier curve to the current sub-path.
@@ -743,7 +744,31 @@ class Canvas {
 	 */
 	quadraticCurveTo(cpx, cpy, x, y) {
 		this.ctx.quadraticCurveTo(cpx, cpy, x, y);
-	};
+	}
+
+	/**
+	 * Applies a shadow to the shape that needs to be drawn.
+	 * @param {*} shadowColor The shadow's color
+	 * @param {number} shadowBlur The shadow's blur. Can be used for glow effect
+	 * @param {number} shadowOffsetX The shadow X-Axis offset
+	 * @param {number} shadowOffsetY The shadow Y-Axis offset
+	 */
+	setShadow(shadowColor, shadowBlur=0, shadowOffsetX=0, shadowOffsetY=0) {
+		this.ctx.shadowColor = colorTreatment([shadowColor]);
+		this.ctx.shadowBlur = shadowBlur;
+		this.ctx.shadowOffsetX = shadowOffsetX;
+		this.ctx.shadowOffsetY = shadowOffsetY;
+	}
+
+	/**
+	 * Removes the shadow settings if there's any.
+	 */
+	removeShadow() {
+		this.ctx.shadowColor = rgba(0, 0, 0, 0);
+		this.ctx.shadowBlur = 0;
+		this.ctx.shadowOffsetX = 0;
+		this.ctx.shadowOffsetY = 0;
+	}
 
 
 	/**
@@ -1069,7 +1094,7 @@ class Canvas {
 	 */
 	createImageData(widthOrImageData, height = null) {
 		return this.ctx.createImageData(...arguments);
-	};
+	}
 
 	/**
 	 * paints data from the given ImageData object onto the canvas.
@@ -1140,7 +1165,7 @@ class Canvas {
 		} else {
 			this.ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
 		}
-	};
+	}
 }
 
 

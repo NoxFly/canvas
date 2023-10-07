@@ -276,6 +276,7 @@ enableSmoothing(); // enable imageSmoothing
 disableSmoothing(); // disable imageSmoothing
 loadPixels(); // loads an array of pixels from the size of the canvas (width*height). Availible through the variable called "pixels"
 updatePixels(); // update the canvas with modified pixels
+// and more...
 ```
 
 

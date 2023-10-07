@@ -1,12 +1,12 @@
 /**
- * @copyright   Copyright (C) 2019 - 2022 Dorian Thivolle All rights reserved.
+ * @copyright   Copyright (C) 2019 - 2023 Dorian Thivolle All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  * @author		Dorian Thivolle
  * @name		canvas
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.6.1}
+ * @version		{1.6.3}
  */
 
 
@@ -655,9 +655,29 @@ const quadraticCurveTo = (cpx, cpy, x, y) => {
 	ctx.quadraticCurveTo(cpx - NOX_PV.cam.x, cpy - NOX_PV.cam.y, x - NOX_PV.cam.x, y - NOX_PV.cam.y);
 };
 
+/**
+ * Applies a shadow to the shape that needs to be drawn.
+ * @param {*} shadowColor The shadow's color
+ * @param {number} shadowBlur The shadow's blur. Can be used for glow effect
+ * @param {number} shadowOffsetX The shadow X-Axis offset
+ * @param {number} shadowOffsetY The shadow Y-Axis offset
+ */
+const setShadow = (shadowColor, shadowBlur=0, shadowOffsetX=0, shadowOffsetY=0) => {
+	ctx.shadowColor = NOX_PV.colorTreatment([shadowColor]);
+	ctx.shadowBlur = shadowBlur;
+	ctx.shadowOffsetX = shadowOffsetX;
+	ctx.shadowOffsetY = shadowOffsetY;
+};
 
-
-
+/**
+ * Removes the shadow settings if there's any.
+ */
+const removeShadow = () => {
+	ctx.shadowColor = rgba(0, 0, 0, 0);
+	ctx.shadowBlur = 0;
+	ctx.shadowOffsetX = 0;
+	ctx.shadowOffsetY = 0;
+};
 
 
 
@@ -1951,11 +1971,13 @@ const mouseDir = () =>
  */
 const setCanvasSize = (newWidth, newHeight) => {
 	if(canvas && ctx) {
+		const PIXEL_RATIO = window.devicePixelRatio || 1;
+
 		canvas.style.width = newWidth + 'px';
 		canvas.style.height = newHeight + 'px';
 
-		canvas.width = newWidth;
-		canvas.height = newHeight;
+		canvas.width = newWidth * PIXEL_RATIO;
+		canvas.height = newHeight * PIXEL_RATIO;
 
 		width = newWidth;
 		height = newHeight;
@@ -2024,13 +2046,15 @@ const createCanvas = (w=null, h=null, bg='#000', requestPointerLock=false, conta
 		ctx = null;
 	}
 
+	const PIXEL_RATIO = window.devicePixelRatio || 1;
+
 	canvas = document.createElement('canvas');
 
 	width = w;
 	height = h;
 
-	canvas.width = width;
-	canvas.height = height;
+	canvas.width = width * PIXEL_RATIO;
+	canvas.height = height * PIXEL_RATIO;
 	canvas.style.width = width + 'px';
 	canvas.style.height = height + 'px';
 
@@ -2059,6 +2083,9 @@ const createCanvas = (w=null, h=null, bg='#000', requestPointerLock=false, conta
 	}
 
 	ctx = canvas.getContext('2d');
+
+	ctx.setTransform(PIXEL_RATIO, 0, 0, PIXEL_RATIO, 0, 0);
+	ctx.fontKerning = 'normal';
 
 	return canvas;
 };
@@ -2149,8 +2176,9 @@ const drawLoop = () => {
 
 	// UPDATE
 	for(const module of NOX_PV.updateModules)
-		module.update();
-	NOX_PV.updateFunc(); // user update function
+		module.update(NOX_PV.delta);
+
+	NOX_PV.updateFunc(NOX_PV.delta); // user update function
 	//
 
 	// Perfs
