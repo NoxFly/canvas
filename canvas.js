@@ -1,12 +1,12 @@
 /**
- * @copyright   Copyright (C) 2019 - 2022 Dorian Thivolle All rights reserved.
+ * @copyright   Copyright (C) 2019 - 2023 Dorian Thivolle All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  * @author		Dorian Thivolle
  * @name		canvas
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.6.2}
+ * @version		{1.6.3}
  */
 
 
