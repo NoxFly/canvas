@@ -673,7 +673,7 @@ const setShadow = (shadowColor, shadowBlur=0, shadowOffsetX=0, shadowOffsetY=0) 
  * Removes the shadow settings if there's any.
  */
 const removeShadow = () => {
-	ctx.shadowColor = rgba(0, 0, 0, 0);
+	ctx.shadowColor = "rgba(0, 0, 0, 0)";
 	ctx.shadowBlur = 0;
 	ctx.shadowOffsetX = 0;
 	ctx.shadowOffsetY = 0;

@@ -662,7 +662,7 @@ export const quadraticCurveTo = (cpx, cpy, x, y) => {
  * @param {number} shadowOffsetX The shadow X-Axis offset
  * @param {number} shadowOffsetY The shadow Y-Axis offset
  */
-const setShadow = (shadowColor, shadowBlur=0, shadowOffsetX=0, shadowOffsetY=0) => {
+export const setShadow = (shadowColor, shadowBlur=0, shadowOffsetX=0, shadowOffsetY=0) => {
 	ctx.shadowColor = NOX_PV.colorTreatment(shadowColor);
 	ctx.shadowBlur = shadowBlur;
 	ctx.shadowOffsetX = shadowOffsetX;
@@ -672,8 +672,8 @@ const setShadow = (shadowColor, shadowBlur=0, shadowOffsetX=0, shadowOffsetY=0) 
 /**
  * Removes the shadow settings if there's any.
  */
-const removeShadow = () => {
-	ctx.shadowColor = rgba(0, 0, 0, 0);
+export const removeShadow = () => {
+	ctx.shadowColor = "rgba(0, 0, 0, 0)";
 	ctx.shadowBlur = 0;
 	ctx.shadowOffsetX = 0;
 	ctx.shadowOffsetY = 0;

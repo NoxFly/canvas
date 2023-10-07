@@ -764,7 +764,7 @@ class Canvas {
 	 * Removes the shadow settings if there's any.
 	 */
 	removeShadow() {
-		this.ctx.shadowColor = rgba(0, 0, 0, 0);
+		this.ctx.shadowColor = "rgba(0, 0, 0, 0)";
 		this.ctx.shadowBlur = 0;
 		this.ctx.shadowOffsetX = 0;
 		this.ctx.shadowOffsetY = 0;
