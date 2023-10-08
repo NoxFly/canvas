@@ -2174,7 +2174,7 @@ const drawLoop = () => {
     }
 	//
 
-	mouseWorldPos.set(mouseX, mouseY).sub(camera.anchorPoint);
+	mouseWorldPos.set(mouseX, mouseY).add(camera.x, camera.y);
 
 	// UPDATE
 	for(const module of NOX_PV.updateModules)
