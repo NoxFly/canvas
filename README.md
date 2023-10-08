@@ -453,7 +453,7 @@ fill(255, 255, 255, 255); // r, g, b, a
 
 ## Vectors
 
-You can create vectors, from 1 dimension to 3.
+You can create vectors, from 1 dimension to 4.
 
 Once you created the vector with a dimension, you cannot change it, but doesn't forbid you to do things between vectors of 2 different dimensions.
 
@@ -461,8 +461,9 @@ Once you created the vector with a dimension, you cannot change it, but doesn't 
 v1 = new Vector(5); // 1D vector
 v2 = new Vector(2, 3); // 2D vector
 v3 = new Vector(-4, 5, 20); // 3D vector
+v4 = new Vector(-4, 5, 20, 40); // 4D vector
 
-console.log(v3.x, v3.y, v3.z); // -4 5 20
+console.log(v4.x, v4.y, v4.z, v4.w); // -4 5 20, 40
 
 v1.bow(0, 0); // draw an arrow with the vector dimension from the point (0, 0)
 v2.bow(0, 0); // same for the 2D vector

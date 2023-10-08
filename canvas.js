@@ -3143,21 +3143,23 @@ class Time {
 
 class Vector {
 	/**
-	 * Creates a vector of dimension 1, 2 or 3
+	 * Creates a vector of dimension 1, 2, 3, or 4
 	 * @param {number} x x vector's coordinate
 	 * @param {number} y y vector's coordinate
 	 * @param {number} z z vector's coordinate
+	 * @param {number} w w vector's coordinate
 	 */
-	constructor(x, y=null, z=null) {
+	constructor(x, y=null, z=null, w=null) {
 		let dimension = 1;
 
 		this.coords = {
 			x: 0,
 			y: 0,
-			z: 0
+			z: 0,
+			w: 0
 		};
 
-		const tmp = { x: 0, y: 0, z: 0 };
+		const tmp = { x: 0, y: 0, z: 0, w: 0 };
 
 		// import from another vector
 		if(x instanceof Vector) {
@@ -3166,6 +3168,7 @@ class Vector {
 			tmp.x = x.x;
 			tmp.y = x.y;
 			tmp.z = x.z;
+			tmp.w = x.w;
 		}
 
 		// create new vector
@@ -3174,11 +3177,12 @@ class Vector {
 			tmp.x = x;
 			tmp.y = y;
 			tmp.z = z;
+			tmp.w = w;
 		}
 
 		// cannot modify the initial vector's dimension
-		this.constants = Object.freeze({ dimension: dimension });
-		this.set(tmp.x, tmp.y, tmp.z);
+		this.constants = Object.freeze({ dimension });
+		this.set(tmp.x, tmp.y, tmp.z, tmp.w);
 	}
 
 	/**
@@ -3205,7 +3209,7 @@ class Vector {
 	 * @return {number} y value
 	 * @example
 	 * const v = new Vector(10, 20);
-	 * console.info(v.x); // 20
+	 * console.info(v.y); // 20
 	 */
 	get y() { return this.coords.y; }
 
@@ -3215,16 +3219,26 @@ class Vector {
 	 * @return {number} z value
 	 * @example
 	 * const v = new Vector(10, 20, 30);
-	 * console.info(v.x); // 30
+	 * console.info(v.z); // 30
 	 */
 	get z() { return this.coords.z; }
+
+	/**
+	 * Returns the w value of the vector.
+	 * By default, for a 1D, 2D or 3D vector, W equals 0
+	 * @return {number} w value
+	 * @example
+	 * const v = new Vector(10, 20, 30, 40);
+	 * console.info(v.w); // 40
+	 */
+	get w() { return this.coords.w; }
 
 	/**
 	 * Sets the x value of the vector
 	 * @param {number} x A number
 	 * @example
 	 * const v = new Vector(10, 20);
-	 * v.x = 10;
+	 * v.x = 0;
 	 */
 	set x(x) { this.coords.x = x; }
 
@@ -3246,7 +3260,7 @@ class Vector {
 
 	/**
 	 * Sets the z value of the vector.
-	 * Does an error if trying to modify 2D vector.
+	 * Throws an error if trying to modify 2D vector.
 	 * @param {number} z A number
 	 * @example
 	 * const v = new Vector(10, 20, 30);
@@ -3256,7 +3270,23 @@ class Vector {
 		if(this.dimension > 2) {
 			this.coords.z = z;
 		} else {
-			console.error(`Cannot modify the Y of a ${this.dimension}D vector`);
+			console.error(`Cannot modify the Z of a ${this.dimension}D vector`);
+		}
+	}
+
+	/**
+	 * Sets the w value of the vector.
+	 * Throws an error if trying to modify 3D vector.
+	 * @param {number} z A number
+	 * @example
+	 * const v = new Vector(10, 20, 30, 40);
+	 * v.w = 10;
+	 */
+	set w(w) {
+		if(this.dimension > 2) {
+			this.coords.w = w;
+		} else {
+			console.error(`Cannot modify the W of a ${this.dimension}D vector`);
 		}
 	}
 
@@ -3277,20 +3307,24 @@ class Vector {
 	 */
 	normalize(apply=false) {
 		// does not care about vector dimension
-		const norm = Math.hypot(this.x, this.y, this.z);
+		const norm = Math.hypot(this.x, this.y, this.z, this.w);
 
 		if(!apply) {
 			return new Vector(this).normalize(true);
 		}
 
 		if(norm !== 0) {
-			this.x = this.x / norm;
+			this.x /= norm;
 
 			if(this.dimension > 1) {
-				this.y = this.y / norm;
+				this.y /= norm;
 
 				if(this.dimension === 3) {
-					this.z = this.z / norm;
+					this.z /= norm;
+
+					if(this.dimension === 4) {
+						this.w /= norm;
+					}
 				}
 			}
 		}
@@ -3304,15 +3338,17 @@ class Vector {
 	 * @param {number|Vector} x new X
 	 * @param {number} y new y
 	 * @param {number} z new z
+	 * @param {number} w new w
 	 * @example
-	 * const v = new Vector(10, 20, 30);
-	 * v.set(30, 20, 10);
+	 * const v = new Vector(10, 20, 30, 40);
+	 * v.set(30, 20, 10, 0);
 	 */
-	set(x, y=null, z=null) {
+	set(x, y=null, z=null, w=null) {
 		if(x instanceof Vector) {
 			this.x = x.x;
 			if(this.dimension === 2) this.y = x.y;
 			if(this.dimension === 3) this.z = x.z;
+			if(this.dimension === 4) this.w = x.w;
 		}
 
 		else if(typeof x !== 'number') {
@@ -3328,6 +3364,10 @@ class Vector {
 				if(z !== null && this.dimension > 2 && typeof z !== 'number') {
 					return console.error('[Error] Vector::set : z parameter must be a number');
 				}
+
+				if(w !== null && this.dimension > 3 && typeof w !== 'number') {
+					return console.error('[Error] Vector::set : w parameter must be a number');
+				}
 			}
 
 			this.x = x;
@@ -3337,8 +3377,12 @@ class Vector {
 					this.y = y;
 				}
 
-				if(this.dimension === 3 && z != null) {
+				if(this.dimension > 2 && z != null) {
 					this.z = z;
+
+					if(this.dimension > 3 && w != null) {
+						this.w = w;
+					}
 				}
 			}
 		}
@@ -3351,6 +3395,7 @@ class Vector {
 	 * @param {Vector|number} x
 	 * @param {number} y
 	 * @param {number} z
+	 * @param {number} w
 	 * @return {Vector} modified vector
 	 * @example
 	 * const v = new Vector(10, 10);
@@ -3358,9 +3403,9 @@ class Vector {
 	 * const v3 = v.add(1, 2); // now v{x: 11, y: 12} and v3 is same
 	 * v2.add(v); // now v2{x: 31, y: 32}
 	 */
-	add(x, y=null, z=null) {
+	add(x, y=null, z=null, w=null) {
 		if(x instanceof Vector) {
-			return this.set(this.x + x.x, this.y + x.y, this.z + x.z);
+			return this.set(this.x + x.x, this.y + x.y, this.z + x.z, this.w + x.w);
 		}
 
 		if(y === null) {
@@ -3371,7 +3416,11 @@ class Vector {
 			z = x;
 		}
 
-		return this.set(this.x + x, this.y + y, this.z + z);
+		if(w === null) {
+			w = x;
+		}
+
+		return this.set(this.x + x, this.y + y, this.z + z, this.w + w);
 	}
 
 	/**
@@ -3379,6 +3428,7 @@ class Vector {
 	 * @param {Vector|number} x
 	 * @param {number} y
 	 * @param {number} z
+	 * @param {number} w
 	 * @return {Vector} modified vector
 	 * @example
 	 * const v = new Vector(10, 10);
@@ -3386,9 +3436,9 @@ class Vector {
 	 * const v3 = v.sub(1, 2); // now v{x: 9, y: 8} and v3 is same
 	 * v2.sub(v); // now v2{x: 11, y: 12}
 	 */
-	sub(x, y=null, z=null) {
+	sub(x, y=null, z=null, w=null) {
 		if(x instanceof Vector) {
-			return this.set(this.x - x.x, this.y - x.y, this.z - x.z);
+			return this.set(this.x - x.x, this.y - x.y, this.z - x.z, this.w - x.w);
 		}
 
 		if(y === null) {
@@ -3399,7 +3449,11 @@ class Vector {
 			z = x;
 		}
 
-		return this.set(this.x - x, this.y - y, this.z - z);
+		if(w === null) {
+			w = x;
+		}
+
+		return this.set(this.x - x, this.y - y, this.z - z, this.w - w);
 	}
 
 	/**
@@ -3408,6 +3462,7 @@ class Vector {
 	 * @param {Vector|number} x
 	 * @param {number} y
 	 * @param {number} z
+	 * @param {number} w
 	 * @return {Vector} modified vector
 	 * @example
 	 * const v = new Vector(10, 10);
@@ -3416,9 +3471,9 @@ class Vector {
 	 * const v3 = v.mult(1, 2); // now v{x: 20, y: 40} and v3 is same
 	 * v2.mult(v); // now v2{x: 400, y: 800}
 	 */
-	mult(x, y=null, z=null) {
+	mult(x, y=null, z=null, w=null) {
 		if(x instanceof Vector) {
-			return this.set(this.x * x.x, this.y * x.y, this.z * x.z);
+			return this.set(this.x * x.x, this.y * x.y, this.z * x.z, this.w * x.w);
 		}
 
 		if(y === null) {
@@ -3429,7 +3484,11 @@ class Vector {
 			z = x;
 		}
 
-		return this.set(this.x * x, this.y * y, this.z * z);
+		if(w === null) {
+			w = x;
+		}
+
+		return this.set(this.x * x, this.y * y, this.z * z, this.w * w);
 	}
 
 	/**
@@ -3437,6 +3496,7 @@ class Vector {
 	 * @param {Vector|number} x
 	 * @param {number} y
 	 * @param {number} z
+	 * @param {number} w
 	 * @return {Vector} modified vector
 	 * @example
 	 * const v = new Vector(10, 10);
@@ -3444,9 +3504,9 @@ class Vector {
 	 * const v3 = v.div(2); // now v{x: 5, 5} and v3 is same
 	 * v2.div(v); // now v2{x: 4, y: 4}
 	 */
-	div(x, y=null, z=null) {
+	div(x, y=null, z=null, w=null) {
 		if(x instanceof Vector) {
-			return this.set(this.x / x.x, this.y / x.y, this.z / x.z);
+			return this.set(this.x / x.x, this.y / x.y, this.z / x.z, this.w / x.w);
 		}
 
 		if(y === null) {
@@ -3457,7 +3517,11 @@ class Vector {
 			z = x;
 		}
 
-		return this.set(this.x / x, this.y / y, this.z / z);
+		if(w === null) {
+			w = x;
+		}
+
+		return this.set(this.x / x, this.y / y, this.z / z, this.w / w);
 	}
 
 	/**
@@ -3481,12 +3545,16 @@ class Vector {
 			}
 
 			// 3D
-			else {
+			else if(this.dimension === 3) {
 				if(antiClockwise) {
 					[this.x, this.y, this.z] = [this.y, this.z, this.x];
 				} else {
 					[this.x, this.y, this.z] = [this.z, this.x, this.y];
 				}
+			}
+
+			else if(this.dimension === 4) {
+				[this.x, this.y, this.z, this.w] = [this.w, this.x, this.y, this.z];
 			}
 		}
 
@@ -3502,7 +3570,7 @@ class Vector {
 	 */
 	get mag() {
 		// for 1/2D vectors, y = z = 0, so it will not change anything
-		return Math.hypot(this.x, this.y, this.z);
+		return Math.hypot(this.x, this.y, this.z, this.w);
 	}
 
 	/**
@@ -3517,6 +3585,7 @@ class Vector {
 		this.x = this.x * newMag / this.mag;
 		if(this.dimension > 1) this.y = this.y * newMag / this.mag;
 		if(this.dimension > 2) this.z = this.z * newMag / this.mag;
+		if(this.dimension > 3) this.w = this.w * newMag / this.mag;
 
 		return this;
 	}
@@ -3530,11 +3599,18 @@ class Vector {
 	 * console.info(v.toString()); // is equivalent
 	 */
 	toString() {
-		return `{ x: ${this.x}${(this.dimension > 1) ? `, y: ${this.y}` : ''}${(this.dimension > 2) ? `, z: ${this.z}` : ''} }`;
+		let str = '{';
+
+		if(this.dimension > 0) str += ` x: ${this.x}`;
+		if(this.dimension > 1) str += `, y: ${this.y}`;
+		if(this.dimension > 2) str += `, z: ${this.z}`;
+		if(this.dimension > 3) str += `, w: ${this.w}`;
+
+		return str + ' }';
 	}
 
 	/**
-	 * Returns an array [x, y, z]
+	 * Returns an array [x, y, z, w]
 	 * @returns {number[]}
 	 * @example
 	 * const v = new Vector(1, 2);
@@ -3544,18 +3620,22 @@ class Vector {
 		const arr = [this.x];
 		if(this.dimension > 1) arr.push(this.y);
 		if(this.dimension > 2) arr.push(this.z);
+		if(this.dimension > 3) arr.push(this.w);
 
 		return arr;
 	}
 
     /**
-     * Returns the vector's properties as a basic object { x, y, z }
+     * Returns the vector's properties as a basic object { x, y, z, w }
      *
      * { x } for dimension 1
      *
      * { x, y } for dimension 2
      *
      * { x, y, z } for dimension 3
+	 * 
+     * { x, y, z, w } for dimension 4
+	 * 
      * @return {object}
      */
     object() {
@@ -3567,6 +3647,10 @@ class Vector {
             if(this.dimension > 2) {
                 o.z = this.z;
             }
+
+			if(this.dimension > 3) {
+				o.w = this.w;
+			}
         }
 
         return o;
@@ -3579,8 +3663,8 @@ class Vector {
 	 * @param {Object (strokeWeight: number, stroke: any)} style bow's fill & stroke style
 	 */
 	bow(x, y, style={}) {
-		// not implemented for the 3rd dimension yet
-		if(this.dimension === 3)
+		// not implemented for the 3rd and 4th dimension
+		if(this.dimension > 2)
 			return;
 
 		// arrow's style
