@@ -5315,7 +5315,7 @@ const mouseWorldPos = new Vector(0, 0);
 			});
 
 			canvas.addEventListener('pointermove', e => {
-				const rect = target.getBoundingClientRect();
+				const rect = canvas.getBoundingClientRect();
 				mouseX = e.clientX - rect.left;
 				mouseY = e.clientY - rect.top;
 
