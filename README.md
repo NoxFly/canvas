@@ -222,7 +222,7 @@ Here are the variables declared in the canvas file, that you can use:
 
 **realWidth** and **realHeight**: the size of the resolution of the canvas
 
-**mouseX** and **mouseY**: the mouse current position on the screen
+**mouseX** and **mouseY**: the mouse current position on the screen. Can be negative or greater than the canvas' size if the canvas is smaller than the document and center (for example).
 
 **mouseWorldPos**: the mouse current position on the world (depends camera anchor point).
 
