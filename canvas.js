@@ -6,7 +6,7 @@
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.6.3}
+ * @version		{1.6.4}
  */
 
 
@@ -2174,6 +2174,8 @@ const drawLoop = () => {
     }
 	//
 
+	mouseWorldPos.set(mouseX, mouseY).sub(camera.anchorPoint);
+
 	// UPDATE
 	for(const module of NOX_PV.updateModules)
 		module.update(NOX_PV.delta);
@@ -2219,11 +2221,23 @@ const drawLoop = () => {
 				// if guidelines enabled
 				if(NOX_PV.bGuideLines) {
 					push();
-						fill('#46eaea'); stroke('#46eaea');
+						disableCamera();
+						fill('#46eaea');
+						stroke('#46eaea');
+						ctx.font = '12px Consolas';
+						ctx.textAlign = 'left';
 						strokeWeight(1);
 						line(0, mouseY, width, mouseY);
 						line(mouseX, 0, mouseX, height);
-						text(`${floor(mouseX)}, ${floor(mouseY)}`, mouseX + 5, mouseY - 5);
+
+						const sText = `screen : ${floor(mouseX)}, ${floor(mouseY)}\nworld  : ${floor(mouseWorldPos.x)}, ${floor(mouseWorldPos.y)}`;
+						const textDim = measureText(sText);
+
+						const textX = (mouseX > width / 2)? mouseX - textDim.width / 2 - 8:  mouseX + 8;
+						const textY = (mouseY > height / 2)? mouseY - 20 : mouseY + 25;
+
+						text(sText, textX, textY);
+						enableCamera();
 					pop();
 				}
 			pop();
@@ -5139,6 +5153,7 @@ const camera = new Camera();
 NOX_PV.camera.hud = new Camera();
 NOX_PV.cam = camera;
 
+const mouseWorldPos = new Vector(0, 0);
 
 /**
  * initialize everything from here
