@@ -6,7 +6,7 @@
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.6.5}
+ * @version		{1.6.6}
  */
 
 
@@ -3190,6 +3190,18 @@ export class Vector {
 	get dimension() { return this.constants.dimension; }
 
 	/**
+	 * Returns the vector's magnitude (length)
+	 * @returns {number} magnitude
+	 * @example
+	 * const v = new Vector(1, 0);
+	 * console.inf(v.mag); // 1
+	 */
+	get mag() {
+		// for 1/2D vectors, y = z = 0, so it will not change anything
+		return Math.hypot(this.x, this.y, this.z, this.w);
+	}
+
+	/**
 	 * Returns the x value of the vector
 	 * @return {number} x value
 	 * @example
@@ -3325,6 +3337,37 @@ export class Vector {
 		}
 
 		return this;
+	}
+
+	/**
+	 * Checks either a given vector is equals to another, or a given set of values.
+	 * If the two vectors are not of the same dimension, it returns false.
+	 * @param {number|Vector} x 
+	 * @param {number|null} y 
+	 * @param {number|null} z 
+	 * @param {number|null} w 
+	 */
+	equals(x, y=null, z=null, w=null) {
+		let vector;
+
+		if(x instanceof Vector) {
+			vector = x;
+		}
+		else {
+			vector = new Vector(x, y, z, w);
+		}
+
+		if(this.dimension !== vector.dimension) {
+			return false;
+		}
+
+		for(const coord in this.coords) {
+			if(this.coords[coord] !== vector.coords[coord]) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**
@@ -3557,18 +3600,6 @@ export class Vector {
 	}
 
 	/**
-	 * Returns the vector's magnitude (length)
-	 * @returns {number} magnitude
-	 * @example
-	 * const v = new Vector(1, 0);
-	 * console.inf(v.mag); // 1
-	 */
-	get mag() {
-		// for 1/2D vectors, y = z = 0, so it will not change anything
-		return Math.hypot(this.x, this.y, this.z, this.w);
-	}
-
-	/**
 	 * Changes vector's magnitude
 	 * @param {number} newMag new magnitude
 	 * @return {Vector} modified vector
@@ -3582,6 +3613,43 @@ export class Vector {
 		if(this.dimension > 2) this.z = this.z * newMag / this.mag;
 		if(this.dimension > 3) this.w = this.w * newMag / this.mag;
 
+		return this;
+	}
+
+	/**
+	 * Calculates the dot product of this vector and another vector
+	 * @param {Vector} other The other vector
+	 * @return {number} The dot product
+	 */
+	dot(other) {
+		return Object.keys(this.coords)
+			.reduce((acc, key) => acc + this.coords[key] * other.coords[key], 0);
+	}
+
+	/**
+	 * Rotates this vector by a given angle (in degrees) around the origin
+	 * @param {number} angle The angle to rotate by (in degrees)
+	 * @return {Vector} The rotated vector
+	 */
+	rotate(angle) {
+		const radians = angle * Math.PI / 180;
+		const cosius = cos(radians);
+		const sinus = sin(radians);
+
+		this.x = this.x * cosius - this.y * sinus;
+
+		if(this.dimension > 1) {
+			this.y = this.x * sinus + this.y * cosius;
+			
+			if(this.dimension > 2) {
+				this.z = this.z * sinus + this.z * cosius;
+
+				if(this.dimension > 3) {
+					this.w = this.w * sinus + this.w * cosius;
+				}
+			}
+		}
+	
 		return this;
 	}
 
@@ -3658,8 +3726,8 @@ export class Vector {
 	 * @param {Object (strokeWeight: number, stroke: any)} style bow's fill & stroke style
 	 */
 	bow(x, y, style={}) {
-		// not implemented for the 3rd dimension yet
-		if(this.dimension === 3)
+		// not implemented for the 3rd and 4th dimension
+		if(this.dimension > 2)
 			return;
 
 		// arrow's style
@@ -4711,261 +4779,329 @@ export class Path {
  * A 4-children based tree that is used to manage world entities relations
  * with better performances.
  */
-export class Quadtree {
-    /**
-     * A Quadtree's Point has a position and a pointer to an object
-     */
-    static Point = class Point {
-        /**
-         * A Quadtree's Point that has a position and a pointer to an object
-         * @param {number} x Point's X
-         * @param {number} y Point's Y
-         * @param {object} dataPtr Object data
-         */
-        constructor(x, y, dataPtr) {
-            this.x = x;
-            this.y = y;
-            this.dataPtr = dataPtr;
-        }
-    }
+export /**
+* A 4-children based tree that is used to manage world entities relations
+* with better performances.
+*/
+class Quadtree {
+   /**
+	* A Quadtree's Point has a position and a pointer to an object
+	*/
+   static Point = class Point {
+	   /**
+		* A Quadtree's Point that has a position and a pointer to an object
+		* @param {number} x Point's X
+		* @param {number} y Point's Y
+		* @param {object} dataPtr Object data
+		*/
+	   constructor(x, y, dataPtr) {
+		   this.x = x;
+		   this.y = y;
+		   this.dataPtr = dataPtr;
+	   }
+   }
 
-    /**
-     * A Quadtree's Rectangle is a basic rectangle that checks<br>
-     * if it contains a given point or intersects with a given Rectangle
-     */
-    static Rectangle = class Rectangle {
-        /**
-         * Creates a Quadtree's Rectangle.
-         * @param {number} x Rectangle top-left corner's X
-         * @param {number} y Rectangle top-left corner's Y
-         * @param {number} w Rectangle's width
-         * @param {number} h Rectangle's height
-         */
-        constructor(x, y, w, h) {
-            this.x = x;
-            this.y = y;
-            this.w = w;
-            this.h = h;
-        }
+   /**
+	* A Quadtree's Rectangle is a basic rectangle that checks<br>
+	* if it contains a given point or intersects with a given Rectangle
+	*/
+   static Rectangle = class Rectangle {
+	   /**
+		* Creates a Quadtree's Rectangle.
+		* @param {number} x Rectangle top-left corner's X
+		* @param {number} y Rectangle top-left corner's Y
+		* @param {number} w Rectangle's width
+		* @param {number} h Rectangle's height
+		*/
+	   constructor(x, y, w, h) {
+		   this.x = x;
+		   this.y = y;
+		   this.w = w;
+		   this.h = h;
+	   }
 
-        /**
-         * Checks if a given Quadtree's Point is in the Rectangle or not.
-         * @param {Quadtree.Point} point A Quadtree's Point
-         * @returns boolean - either the point is in the Rectangle or not
-         */
-        contains(point) {
-            return (
-                this.x <= point.x && point.x <= this.x + this.w &&
-                this.y <= point.y && point.y <= this.y + this.h
-            );
-        }
+	   /**
+		* Checks if a given Quadtree's Point is in the Rectangle or not.
+		* @param {Quadtree.Point} point A Quadtree's Point
+		* @returns boolean - either the point is in the Rectangle or not
+		*/
+	   contains(point) {
+		   return (
+			   this.x <= point.x && point.x <= this.x + this.w &&
+			   this.y <= point.y && point.y <= this.y + this.h
+		   );
+	   }
 
-        /**
-         * Checks if 2 Quadtree's Rectangles are intersecting or not.
-         * @param {QuadTree.Rectangle} rectangle A Quadtree's Rectangle
-         * @returns boolean - either both Rectangles intersect or not
-         */
-        intersect(rectangle) {
-            return !(
-                rectangle.x > this.x + this.w ||
-                rectangle.x + rectangle.w < this.x ||
-                rectangle.y > this.y + this.h ||
-                rectangle.y + rectangle.h < this.y
-            );
-        }
+	   /**
+		* Checks if 2 Quadtree's Rectangles are intersecting or not.
+		* @param {QuadTree.Rectangle} rectangle A Quadtree's Rectangle
+		* @returns boolean - either both Rectangles intersect or not
+		*/
+	   intersect(rectangle) {
+		   return !(
+			   rectangle.x > this.x + this.w ||
+			   rectangle.x + rectangle.w < this.x ||
+			   rectangle.y > this.y + this.h ||
+			   rectangle.y + rectangle.h < this.y
+		   );
+	   }
 
-        /**
-         * Checks if this Quadtree's Rectangle totally wraps the given Rectangle or not.
-         * @param {Quadtree.Rectangle} rectangle A Quadtree's Rectangle
-         * @returns boolean - either this Rectangle totally wraps the given rectangle or not
-         */
-        wrap(rectangle) {
-            return (
-                this.x <= rectangle.x && rectangle.x + rectangle.w <= this.x + this.w &&
-                this.y <= rectangle.y && rectangle.y + rectangle.h <= this.y + this.h
-            )
-        }
-    }
+	   /**
+		* Checks if this Quadtree's Rectangle totally wraps the given Rectangle or not.
+		* @param {Quadtree.Rectangle} rectangle A Quadtree's Rectangle
+		* @returns boolean - either this Rectangle totally wraps the given rectangle or not
+		*/
+	   wrap(rectangle) {
+		   return (
+			   this.x <= rectangle.x && rectangle.x + rectangle.w <= this.x + this.w &&
+			   this.y <= rectangle.y && rectangle.y + rectangle.h <= this.y + this.h
+		   )
+	   }
+   }
 
-    /**
-     * Creates a new Quadtree.
-     * @param {Quadtree.Rectangle} boundary The region covered by the Quadtree
-     * @param {number} capacity The max capacity of Points that can supports this Quadtree
-     */
-    constructor(boundary, capacity=5) {
-        this.boundary = boundary;
-        this.capacity = capacity;
-        this.points = [];
-        this.divided = false;
-    }
+   /**
+	* Creates a new Quadtree.
+	* @param {Quadtree.Rectangle} boundary The region covered by the Quadtree
+	* @param {number} capacity The max capacity of Points that can supports this Quadtree
+	*/
+   constructor(boundary, capacity=5) {
+	   if(!(boundary instanceof Quadtree.Rectangle)) {
+		   throw new Error('[Quadtree::constructor] boundary must be a Quadtree.Rectangle');
+	   }
 
-    /**
-     * Clears the Quadtree and delete its 4 children if divided.
-     */
-    clear() {
-        this.points = [];
-        this.divided = false;
-        delete this.northeast;
-        delete this.northwest;
-        delete this.southeast;
-        delete this.southwest;
-    }
+	   this.boundary = boundary;
+	   this.capacity = capacity;
+	   this.points = [];
+	   this.divided = false;
+   }
 
-    /**
-     * Returns an array containing the tree's children.
-     * @returns {Quadtree[]} All tree's children
-     */
-	get children() {
-		return this.divided? [this.northwest, this.northeast, this.southwest, this.southeast] : [];
-	}
+   /**
+	* Returns an array containing the tree's children.
+	* @returns {Quadtree[]} All tree's children
+	*/
+   get children() {
+	   return this.divided
+		   ? [this.northwest, this.northeast, this.southwest, this.southeast]
+		   : [];
+   }
 
-    /**
-     * Subdivides the Quadtree if it isn't.<br>
-     * Separates itself in 4 regions that fill itself.
-     */
-    subdivide() {
-        if(!this.divided) {
-            const { x, y, w, h } = this.boundary;
+   /**
+	* Clears the Quadtree and delete its 4 children if divided.
+	*/
+   clear() {
+	   this.points = [];
+	   this.divided = false;
+	   delete this.northeast;
+	   delete this.northwest;
+	   delete this.southeast;
+	   delete this.southwest;
+   }
 
-            const ne = new Quadtree.Rectangle(x + w/2, y, w/2, h/2);
-            const nw = new Quadtree.Rectangle(x, y, w/2, h/2);
-            const se = new Quadtree.Rectangle(x + w/2, y + h/2, w/2, h/2);
-            const sw = new Quadtree.Rectangle(x, y + h/2, w/2, h/2);
+   /**
+	* Subdivides the Quadtree if it isn't.<br>
+	* Separates itself in 4 regions that fill itself.
+	*/
+   subdivide() {
+	   if(!this.divided) {
+		   const { x, y, w, h } = this.boundary;
 
-            this.northwest = new Quadtree(nw);
-            this.northeast = new Quadtree(ne);
-            this.southwest = new Quadtree(sw);
-            this.southeast = new Quadtree(se);
+		   const ne = new Quadtree.Rectangle(x + w/2, y, w/2, h/2);
+		   const nw = new Quadtree.Rectangle(x, y, w/2, h/2);
+		   const se = new Quadtree.Rectangle(x + w/2, y + h/2, w/2, h/2);
+		   const sw = new Quadtree.Rectangle(x, y + h/2, w/2, h/2);
 
-            this.divided = true;
+		   this.northwest = new Quadtree(nw);
+		   this.northeast = new Quadtree(ne);
+		   this.southwest = new Quadtree(sw);
+		   this.southeast = new Quadtree(se);
 
-			for(const p of this.points) {
-				this.insert(p);
-			}
+		   this.divided = true;
 
-			this.points = [];
-        }
-    }
+		   for(const p of this.points) {
+			   this.insert(p);
+		   }
 
-    /**
-     * Tries to insert a Quadtree's Point in itself.<br>
-     * If the Point is already present in the Quadtree, does nothing.<br>
-     * Two Points cannot have the same position in it.<br>
-     * If the Quadtree has reach its max capacity, then splits / subdivides
-     * itself and tries to insert the Point in one of its child.
-     * @param {Quadtree.Point} point The Point to insert
-     * @returns Either the Point is well inserted or not in the Quadtree
-     */
-    insert(point) {
-        if(!this.boundary.contains(point))
-            return false;
+		   this.points = [];
+	   }
+   }
 
-		if(this.divided) {
-			return this.northeast.insert(point)
-				|| this.northwest.insert(point)
-				|| this.southeast.insert(point)
-				|| this.southwest.insert(point);
-		}
-		else if(this.points.length < this.capacity) {
-			this.points.push(point);
-			return true;
-		}
-		else {
-			this.subdivide();
-			this.insert(point);
-		}
-    }
+   /**
+	* Tries to insert a Quadtree's Point in itself.<br>
+	* If the Point is already present in the Quadtree, does nothing.<br>
+	* Two Points cannot have the same position in it.<br>
+	* If the Quadtree has reach its max capacity, then splits / subdivides
+	* itself and tries to insert the Point in one of its child.
+	* @param {Quadtree.Point[]} points The Points to insert
+	* @returns Either the Point is well inserted or not in the Quadtree
+	*/
+   insert(...points) {
+	   for(const point of points) {
+		   if(!this.boundary.contains(point)) {
+			   return false;
+		   }
 
-    /**
-     * Finds and returns all Quadtree's Points that are in the requested area
-     * @param {Quadtree.Rectangle} range The Rectangle where to find and returns all points
-     * @returns {Quadtree.Point[]} Returns an array of all Points that are in the requested area.
-     */
-    query(range) {
-		// leaf
-		if(!this.divided) {
-			if(range.wrap(this.boundary)) {
-				return this.points;
-			}
-			else if(range.intersect(this.boundary)) {
-				const found = [];
+		   if(this.divided) {
+			   return this.northeast.insert(point)
+				   || this.northwest.insert(point)
+				   || this.southeast.insert(point)
+				   || this.southwest.insert(point);
+		   }
+		   else if(this.points.length < this.capacity) {
+			   this.points.push(point);
+			   return true;
+		   }
+		   else {
+			   this.subdivide();
+			   this.insert(point);
+		   }
+	   }
+   }
 
-				for(const p of this.points) {
-					if(range.contains(p))
-						found.push(p);
-				}
+   /**
+	* 
+	* @param {number} x 
+	* @param {number} y 
+	* @returns {Quadtree}
+	*/
+   getRegion(x, y) {
+	   if (!this.subtrees) {
+		   return this;
+		 }
+	 
+		 const index = (x >= this.x + this.width / 2 ? 1 : 0) + (y >= this.y + this.height / 2 ? 2 : 0);
+		 return this.children[index].getRegion(x, y);
+   }
 
-				return found;
-			}
+   /**
+	* 
+	* @param {Quadtree} region 
+	* @returns 
+	*/
+   getNeighboringRegions(region) {
+	   if(!(region instanceof Quadtree)) {
+		   throw new Error('[Quadtree::getNeighboringRegions] region must be a Quadtree');
+	   }
 
-			return [];
-		}
+	   const neighbors = [];
+	 
+	   const left = region.x < this.x;
+	   const right = region.x + region.width > this.x + this.width;
+	   const top = region.y < this.y;
+	   const bottom = region.y + region.height > this.y + this.height;
+	 
+	   if (left && top) {
+		 neighbors.push(this.children[0]);
+	   }
 
-		// node
-		// totally wraps the boundary : add all leafs
-		if(range.wrap(this.boundary)) {
-			return this.getAllPoints();
-		}
+	   if (right && top) {
+		 neighbors.push(this.children[1]);
+	   }
 
-		// partially or does not collides the range
-		const found = [];
+	   if (left && bottom) {
+		 neighbors.push(this.children[2]);
+	   }
 
-		found.push(...this.northwest.query(range));
-		found.push(...this.northeast.query(range));
-		found.push(...this.southwest.query(range));
-		found.push(...this.southeast.query(range));
+	   if (right && bottom) {
+		 neighbors.push(this.children[3]);
+	   }
+	 
+	   return neighbors.filter(neighbor => neighbor && neighbor.boundary.intersect(region));
+   }
 
-		return found;
-    }
+   /**
+	* Finds and returns all Quadtree's Points that are in the requested area
+	* @param {Quadtree.Rectangle} range The Rectangle where to find and returns all points
+	* @returns {Quadtree.Point[]} Returns an array of all Points that are in the requested area.
+	*/
+   query(range) {
+	   if(!(range instanceof Quadtree.Rectangle)) {
+		   throw new Error('[Quadtree::query] range must be a Quadtree.Rectangle');
+	   }
 
-    /**
-     * Delimits the bounds of the Quadtree and recursivly do it for its children
-     * if it is splitted.<br>
-     * Default stroke color is #141414, but you can change it.
-     * @param {any} color The color of the limits. Default is #141414
-     */
-    show(color=20) {
-        noFill();
-        stroke(color);
-        strokeWeight(1);
-        strokeRect(this.boundary.x, this.boundary.y, this.boundary.w-1, this.boundary.h-1);
+	   // leaf
+	   if(!this.divided) {
+		   if(range.wrap(this.boundary)) {
+			   return this.points;
+		   }
+		   else if(range.intersect(this.boundary)) {
+			   const found = [];
 
-        if(this.divided) {
-            this.northeast.show();
-            this.northwest.show();
-            this.southeast.show();
-            this.southwest.show();
-        }
-    }
+			   for(const p of this.points) {
+				   if(range.contains(p))
+					   found.push(p);
+			   }
 
-	/**
-	 * Returns all the children of this tree and its regions.
-	 * @returns {Quadtree.Point[]} A list of all children and subchildren of this tree
-	 */
-	getAllPoints() {
-		if(!this.divided)
-			return this.points;
+			   return found;
+		   }
 
-		const points = [];
+		   return [];
+	   }
 
-		for(const region of this.children)
-			points.push(...region.getAllPoints());
+	   // node
+	   // totally wraps the boundary : add all leafs
+	   if(range.wrap(this.boundary)) {
+		   return this.getAllPoints();
+	   }
 
-		return points;
-	}
+	   // partially or does not collides the range
+	   const found = [];
 
-    /**
-     * Returns the total size of the tree, containing its point and the points of its children.
-     * @returns {number} The total size of the tree (number of points contained inside it)
-     */
-    size() {
-        let n = this.points.length;
+	   found.push(...this.northwest.query(range));
+	   found.push(...this.northeast.query(range));
+	   found.push(...this.southwest.query(range));
+	   found.push(...this.southeast.query(range));
 
-        for(const region of this.children)
-            n += region.size();
+	   return found;
+   }
 
-        return n;
-    }
+   /**
+	* Delimits the bounds of the Quadtree and recursivly do it for its children
+	* if it is splitted.<br>
+	* Default stroke color is #141414, but you can change it.
+	* @param {any} color The color of the limits. Default is #141414
+	*/
+   show(color=20) {
+	   noFill();
+	   stroke(color);
+	   strokeWeight(1);
+	   strokeRect(this.boundary.x, this.boundary.y, this.boundary.w-1, this.boundary.h-1);
+
+	   if(this.divided) {
+		   this.northeast.show();
+		   this.northwest.show();
+		   this.southeast.show();
+		   this.southwest.show();
+	   }
+   }
+
+   /**
+	* Returns all the children of this tree and its regions.
+	* @returns {Quadtree.Point[]} A list of all children and subchildren of this tree
+	*/
+   getAllPoints() {
+	   if(!this.divided)
+		   return this.points;
+
+	   const points = [];
+
+	   for(const region of this.children)
+		   points.push(...region.getAllPoints());
+
+	   return points;
+   }
+
+   /**
+	* Returns the total size of the tree, containing its point and the points of its children.
+	* @returns {number} The total size of the tree (number of points contained inside it)
+	*/
+   size() {
+	   let n = this.points.length;
+
+	   for(const region of this.children)
+		   n += region.size();
+
+	   return n;
+   }
 }
 
 

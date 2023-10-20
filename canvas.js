@@ -6,7 +6,7 @@
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.6.5}
+ * @version		{1.6.6}
  */
 
 
@@ -3195,6 +3195,18 @@ class Vector {
 	get dimension() { return this.constants.dimension; }
 
 	/**
+	 * Returns the vector's magnitude (length)
+	 * @returns {number} magnitude
+	 * @example
+	 * const v = new Vector(1, 0);
+	 * console.inf(v.mag); // 1
+	 */
+	get mag() {
+		// for 1/2D vectors, y = z = 0, so it will not change anything
+		return Math.hypot(this.x, this.y, this.z, this.w);
+	}
+
+	/**
 	 * Returns the x value of the vector
 	 * @return {number} x value
 	 * @example
@@ -3290,6 +3302,10 @@ class Vector {
 		}
 	}
 
+	/**
+	 * Returns a deep copy of the vector.
+	 * @returns {Vector} - A deep copy of the vector
+	 */
     copy() {
         return new Vector(this);
     }
@@ -3330,6 +3346,37 @@ class Vector {
 		}
 
 		return this;
+	}
+
+	/**
+	 * Checks either a given vector is equals to another, or a given set of values.
+	 * If the two vectors are not of the same dimension, it returns false.
+	 * @param {number|Vector} x 
+	 * @param {number|null} y 
+	 * @param {number|null} z 
+	 * @param {number|null} w 
+	 */
+	equals(x, y=null, z=null, w=null) {
+		let vector;
+
+		if(x instanceof Vector) {
+			vector = x;
+		}
+		else {
+			vector = new Vector(x, y, z, w);
+		}
+
+		if(this.dimension !== vector.dimension) {
+			return false;
+		}
+
+		for(const coord in this.coords) {
+			if(this.coords[coord] !== vector.coords[coord]) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**
@@ -3562,18 +3609,6 @@ class Vector {
 	}
 
 	/**
-	 * Returns the vector's magnitude (length)
-	 * @returns {number} magnitude
-	 * @example
-	 * const v = new Vector(1, 0);
-	 * console.inf(v.mag); // 1
-	 */
-	get mag() {
-		// for 1/2D vectors, y = z = 0, so it will not change anything
-		return Math.hypot(this.x, this.y, this.z, this.w);
-	}
-
-	/**
 	 * Changes vector's magnitude
 	 * @param {number} newMag new magnitude
 	 * @return {Vector} modified vector
@@ -3587,6 +3622,43 @@ class Vector {
 		if(this.dimension > 2) this.z = this.z * newMag / this.mag;
 		if(this.dimension > 3) this.w = this.w * newMag / this.mag;
 
+		return this;
+	}
+
+	/**
+	 * Calculates the dot product of this vector and another vector
+	 * @param {Vector} other The other vector
+	 * @return {number} The dot product
+	 */
+	dot(other) {
+		return Object.keys(this.coords)
+			.reduce((acc, key) => acc + this.coords[key] * other.coords[key], 0);
+	}
+
+	/**
+	 * Rotates this vector by a given angle (in degrees) around the origin
+	 * @param {number} angle The angle to rotate by (in degrees)
+	 * @return {Vector} The rotated vector
+	 */
+	rotate(angle) {
+		const radians = angle * Math.PI / 180;
+		const cosius = cos(radians);
+		const sinus = sin(radians);
+
+		this.x = this.x * cosius - this.y * sinus;
+
+		if(this.dimension > 1) {
+			this.y = this.x * sinus + this.y * cosius;
+			
+			if(this.dimension > 2) {
+				this.z = this.z * sinus + this.z * cosius;
+
+				if(this.dimension > 3) {
+					this.w = this.w * sinus + this.w * cosius;
+				}
+			}
+		}
+	
 		return this;
 	}
 
@@ -4812,11 +4884,25 @@ class Quadtree {
      * @param {number} capacity The max capacity of Points that can supports this Quadtree
      */
     constructor(boundary, capacity=5) {
+		if(!(boundary instanceof Quadtree.Rectangle)) {
+			throw new Error('[Quadtree::constructor] boundary must be a Quadtree.Rectangle');
+		}
+
         this.boundary = boundary;
         this.capacity = capacity;
         this.points = [];
         this.divided = false;
     }
+
+	/**
+     * Returns an array containing the tree's children.
+     * @returns {Quadtree[]} All tree's children
+     */
+	get children() {
+		return this.divided
+			? [this.northwest, this.northeast, this.southwest, this.southeast]
+			: [];
+	}
 
     /**
      * Clears the Quadtree and delete its 4 children if divided.
@@ -4829,14 +4915,6 @@ class Quadtree {
         delete this.southeast;
         delete this.southwest;
     }
-
-    /**
-     * Returns an array containing the tree's children.
-     * @returns {Quadtree[]} All tree's children
-     */
-	get children() {
-		return this.divided? [this.northwest, this.northeast, this.southwest, this.southeast] : [];
-	}
 
     /**
      * Subdivides the Quadtree if it isn't.<br>
@@ -4872,28 +4950,82 @@ class Quadtree {
      * Two Points cannot have the same position in it.<br>
      * If the Quadtree has reach its max capacity, then splits / subdivides
      * itself and tries to insert the Point in one of its child.
-     * @param {Quadtree.Point} point The Point to insert
+     * @param {Quadtree.Point[]} points The Points to insert
      * @returns Either the Point is well inserted or not in the Quadtree
      */
-    insert(point) {
-        if(!this.boundary.contains(point))
-            return false;
+    insert(...points) {
+		for(const point of points) {
+			if(!this.boundary.contains(point)) {
+				return false;
+			}
 
-		if(this.divided) {
-			return this.northeast.insert(point)
-				|| this.northwest.insert(point)
-				|| this.southeast.insert(point)
-				|| this.southwest.insert(point);
-		}
-		else if(this.points.length < this.capacity) {
-			this.points.push(point);
-			return true;
-		}
-		else {
-			this.subdivide();
-			this.insert(point);
+			if(this.divided) {
+				return this.northeast.insert(point)
+					|| this.northwest.insert(point)
+					|| this.southeast.insert(point)
+					|| this.southwest.insert(point);
+			}
+			else if(this.points.length < this.capacity) {
+				this.points.push(point);
+				return true;
+			}
+			else {
+				this.subdivide();
+				this.insert(point);
+			}
 		}
     }
+
+	/**
+	 * 
+	 * @param {number} x 
+	 * @param {number} y 
+	 * @returns {Quadtree}
+	 */
+	getRegion(x, y) {
+		if (!this.subtrees) {
+			return this;
+		  }
+	  
+		  const index = (x >= this.x + this.width / 2 ? 1 : 0) + (y >= this.y + this.height / 2 ? 2 : 0);
+		  return this.children[index].getRegion(x, y);
+	}
+
+	/**
+	 * 
+	 * @param {Quadtree} region 
+	 * @returns 
+	 */
+	getNeighboringRegions(region) {
+		if(!(region instanceof Quadtree)) {
+			throw new Error('[Quadtree::getNeighboringRegions] region must be a Quadtree');
+		}
+
+		const neighbors = [];
+	  
+		const left = region.x < this.x;
+		const right = region.x + region.width > this.x + this.width;
+		const top = region.y < this.y;
+		const bottom = region.y + region.height > this.y + this.height;
+	  
+		if (left && top) {
+		  neighbors.push(this.children[0]);
+		}
+
+		if (right && top) {
+		  neighbors.push(this.children[1]);
+		}
+
+		if (left && bottom) {
+		  neighbors.push(this.children[2]);
+		}
+
+		if (right && bottom) {
+		  neighbors.push(this.children[3]);
+		}
+	  
+		return neighbors.filter(neighbor => neighbor && neighbor.boundary.intersect(region));
+	}
 
     /**
      * Finds and returns all Quadtree's Points that are in the requested area
@@ -4901,6 +5033,10 @@ class Quadtree {
      * @returns {Quadtree.Point[]} Returns an array of all Points that are in the requested area.
      */
     query(range) {
+		if(!(range instanceof Quadtree.Rectangle)) {
+			throw new Error('[Quadtree::query] range must be a Quadtree.Rectangle');
+		}
+
 		// leaf
 		if(!this.divided) {
 			if(range.wrap(this.boundary)) {

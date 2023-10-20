@@ -494,6 +494,18 @@ v2.mult(); // same as add() but multiply
 v2.div(); // same as add() but divide
 
 v2.normalize(); // doesn't change the vector direction but brings back in interval [-1, 1]
+
+// tests if 2 vectors are equals (have same values)
+// if comparing 2 vectors with not the same dimension, returns false.
+v4.equals(v2); // false
+
+// compute dot product
+v1.dot(v2);
+
+// rotate the vector (in degrees)
+v1.rotate(90);
+
+
 ```
 
 
@@ -863,8 +875,11 @@ function update() {
 
     // e is an object so the Quadtree.Point will store a reference to it
     // not a copy
-    for(const e of entities)
+    for(const e of entities) {
         quadTree.insert(new Quadtree.Point(e.x, e.y, e));
+    }
+    // or simply
+    quadtree.insert(...entities.map(p => new Quadtree.Point(e.x, e.y, e)));
 
     // mouse the research rectangle depending on the mouse
     researchRect.x = mouseX;
@@ -879,6 +894,15 @@ function update() {
 function draw() {
     quadtree.show(); // draws the Quadtree for visual interpretation
 }
+
+
+// get the region of a point in a quadtree
+// type : Quadtree
+const region = quadtree.getRegion(0, 0);
+
+// get all neighbors of the quadtree / quadtree's region
+// type : Quadtree[]
+const neigh = quadtree.getNeighboringRegions(region);
 ```
 
 ```js
