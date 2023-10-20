@@ -722,7 +722,7 @@ export const translate = (x, y) => ctx.translate(x, y);
  * @example
  * rotate(45) // rotates 45 degrees
  */
-export const rotate = degree => ctx.rotate(radian(degree));
+export const rotate = degree => ctx.rotate(radian(-degree));
 
 /**
  * turns the current or given path into the current clipping region.
@@ -1195,11 +1195,11 @@ export const vectorToAngle = vec => {
     if(vec.y > 0)
         angle *= -1;
 
-    return angle%360;
+    return degree(angle);
 }
 
 /**
- * Returns the angle between two given vectors
+ * Returns the angle in radian between two given vectors
  * @param {Vector} a first vector
  * @param {Vector} b second vector
  * @example
