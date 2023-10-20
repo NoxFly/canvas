@@ -1210,7 +1210,7 @@ export const vectorToAngle = vec => {
 export const angleBetweenVectors = (a, b) => {
 	const ab = a.x * b.x + a.y * b.y + a.z * b.z;
 
-	const cosO = ab / (a.mag * b.mag) || 0;
+	const cosO = ab / (a.mag * b.mag) || 1;
 	const O = acos(cosO);
 
 	return O;
