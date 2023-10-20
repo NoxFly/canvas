@@ -5,7 +5,7 @@
   "type": "commonjs",
   "main": "dist/canvas.js",
   "exports": {
-    "import": "./dist/canvas-module.mjs",
+    "import": "./dist/esm/canvas.mjs",
     "require": "./dist/canvas.js"
   },
   "repository": {
