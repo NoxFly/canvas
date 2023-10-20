@@ -2033,6 +2033,21 @@ export const createCanvas = (w=null, h=null, bg='#000', requestPointerLock=false
 		h = documentHeight();
 	}
 
+	if(!container) {
+		return console.warn('Canvas container is null. Aborting canvas creation.');
+	}
+
+	if(w == null && h == null) {
+		if(container === document.body) {
+			w = documentWidth();
+			h = documentHeight();
+		}
+		else {
+			w = container.clientWidth;
+			h = container.clientHeight;
+		}
+	}
+
 	if(w <= 0 || h <= 0) {
 		console.warn('Canvas size must be higher than 0');
 		return;

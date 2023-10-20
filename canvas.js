@@ -2026,12 +2026,23 @@ const setAutoResize = (enable, onceDone=true) => {
  * createCanvas(200, 200, 0, true); // create 200x200 canvas with black background, and enable requestPointerLock feature
  */
 const createCanvas = (w=null, h=null, bg='#000', requestPointerLock=false, container=document.body) => {
-	if(!('inSetup' in NOX_PV))
+	if(!('inSetup' in NOX_PV)) {
 		return console.warn('[Warning] createCanvas : usable only setup() function.');
+	}
+
+	if(!container) {
+		return console.warn('Canvas container is null. Aborting canvas creation.');
+	}
 
 	if(w == null && h == null) {
-		w = documentWidth();
-		h = documentHeight();
+		if(container === document.body) {
+			w = documentWidth();
+			h = documentHeight();
+		}
+		else {
+			w = container.clientWidth;
+			h = container.clientHeight;
+		}
 	}
 
 	if(w <= 0 || h <= 0) {
