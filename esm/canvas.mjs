@@ -6,7 +6,7 @@
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.6.6}
+ * @version		{1.6.7}
  */
 
 
@@ -107,8 +107,8 @@ export const arcTo = (x1, y1, x2, y2, r) => ctx.arcTo(x1 - NOX_PV.cam.x, y1 - NO
  */
 export const line = (x1, y1, x2, y2) => {
 	beginPath();
-	moveTo(x1, y1);
-	lineTo(x2, y2);
+	moveTo(x1 - NOX_PV.offsetLineBlur, y1 - NOX_PV.offsetLineBlur);
+	lineTo(x2 - NOX_PV.offsetLineBlur, y2 - NOX_PV.offsetLineBlur);
 
 	if(NOX_PV.bStroke)
 		ctx.stroke();
@@ -792,6 +792,7 @@ export const stroke = (...color) => {
  */
 export const strokeWeight = weight => {
 	ctx.lineWidth = weight;
+	NOX_PV.offsetLineBlur = (weight % 2 === 0)? 0 : 0.5;
 };
 
 /**
@@ -5292,6 +5293,8 @@ const NOX_PV = {
 	// default text size & font-family
 	fontSize: '12px',
 	fontFamily: 'Monospace',
+
+	offsetLineBlur: 0.5,
 
 	loop: true,
 
