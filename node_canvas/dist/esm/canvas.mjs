@@ -6,7 +6,7 @@
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.6.6}
+ * @version		{1.6.8}
  */
 
 import * as CVS from 'canvas';
@@ -24,30 +24,30 @@ const colorTreatment = (...oColor) => {
 	const n = oColor.length;
 	const color0 = oColor[0];
 
-	if(color0 instanceof CanvasGradient || color0 instanceof CanvasPattern)
+	if (color0 instanceof CanvasGradient || color0 instanceof CanvasPattern)
 		return color0;
 
 	// color class instance
-	else if(color0 instanceof HEX || color0 instanceof RGB || color0 instanceof HSL)
+	else if (color0 instanceof HEX || color0 instanceof RGB || color0 instanceof HSL)
 		return color0.toString();
 
 	// rgb[a]
-	else if(n > 0 && n < 5 && oColor.every(c => typeof c === 'number')) {
+	else if (n > 0 && n < 5 && oColor.every(c => typeof c === 'number')) {
 		let p = 'rgb';
 		let g = 0, b = 0, a = 0;
 
-		if(n === 3 || n === 4) {
+		if (n === 3 || n === 4) {
 			g = 1;
 			b = 2;
 		}
-		if(n === 2 || n === 4) {
+		if (n === 2 || n === 4) {
 			p += 'a';
-			a = n-1;
+			a = n - 1;
 		}
 
 		let color = `${p}(${color0}, ${oColor[g]}, ${oColor[b]}`;
 
-		if(a > 0)
+		if (a > 0)
 			color += `, ${oColor[a]}`;
 
 		color += ')';
@@ -56,7 +56,7 @@ const colorTreatment = (...oColor) => {
 	}
 
 	// hex, hsl[a], rgb[a], color name
-	else if(n === 1 && typeof color0 === 'string') {
+	else if (n === 1 && typeof color0 === 'string') {
 		oColor = color0.replace(/\s/gi, '');
 
 		const reg = {
@@ -67,8 +67,8 @@ const colorTreatment = (...oColor) => {
 			name: /^\w{3,30}$/
 		};
 
-		for(const regex in reg) {
-			if(reg[regex].test(oColor))
+		for (const regex in reg) {
+			if (reg[regex].test(oColor))
 				return oColor;
 		}
 	}
@@ -165,9 +165,9 @@ class Canvas {
 		return this._.width;
 	}
 
-	 /**
-	  * Canvas's height
-	  */
+	/**
+	 * Canvas's height
+	 */
 	get height() {
 		return this._.height;
 	}
@@ -263,7 +263,6 @@ class Canvas {
 		this.beginPath();
 		this.ctx.moveTo(x1, y1);
 		this.ctx.lineTo(x2, y2);
-
 		this.closePath();
 
 		if (this.bStroke)
@@ -609,7 +608,7 @@ class Canvas {
 					// arr = ['A', x, y, r, start, end, acw]
 					const angle = radian(arr[5]);
 
-					let x = arr[1] + cos(angle) * arr[3]
+					let x = arr[1] + cos(angle) * arr[3];
 					y = arr[2] + sin(angle) * arr[3];
 
 					d.push(['M', x, y]);
@@ -753,7 +752,7 @@ class Canvas {
 	 * @param {number} shadowOffsetX The shadow X-Axis offset
 	 * @param {number} shadowOffsetY The shadow Y-Axis offset
 	 */
-	setShadow(shadowColor, shadowBlur=0, shadowOffsetX=0, shadowOffsetY=0) {
+	setShadow(shadowColor, shadowBlur = 0, shadowOffsetX = 0, shadowOffsetY = 0) {
 		this.ctx.shadowColor = colorTreatment(shadowColor);
 		this.ctx.shadowBlur = shadowBlur;
 		this.ctx.shadowOffsetX = shadowOffsetX;
@@ -901,7 +900,7 @@ class Canvas {
 	 * @return {CanvasGradient} A linear CanvasGradient initialized with the specified line.
 	 */
 	createLinearGradient(x1, y1, x2, y2) {
-		this.ctx.createLinearGradient(x1, y1, x2, y2)
+		this.ctx.createLinearGradient(x1, y1, x2, y2);
 	}
 
 	/**
@@ -1266,19 +1265,22 @@ const degree = rad => rad * (180 / PI);
 
 /**
  * Convert an angle to a vector (class instance) (2d vector)
- * @param {number} angle angle in radian
+ * @param {number} angle angle in degree
  */
-const angleToVector = angle => new Vector(cos(angle), sin(angle));
+const angleToVector = angle => {
+	const r = radian(angle);
+	return new Vector(cos(r), sin(r));
+};
 
 /**
  * Returns the angle in degree of a given vector from the default vector (1,0)
- * @param {Vector} vector vector to calculate its angle
+ * @param {Vector} vec vector to calculate its angle
  */
 const vectorToAngle = vec => {
 	// horizontal vector - we don't care about its mag, but its orientation
 	const baseVector = new Vector(1, 0);
 	return angleBetweenVectors(baseVector, vec);
-}
+};
 
 /**
  * Returns the angle between two given vectors
@@ -1292,7 +1294,7 @@ const angleBetweenVectors = (a, b) => {
 	const O = acos(cosO);
 
 	return O;
-}
+};
 
 
 
@@ -1309,8 +1311,8 @@ const dist = (a, b) => {
 	const x = b.x - a.x;
 	const y = b.y - a.y;
 	const z = b.z - a.z;
-	return sqrt(x*x + y*y + z*z);
-}
+	return sqrt(x * x + y * y + z * z);
+};
 
 
 /**
@@ -1594,7 +1596,7 @@ const noiseDetails = detailLevel => {
 
 class PerlinNoise {
 	static mapnumberTypes = ['default', 'rgb', 'hsl'];
-	static getMapNumberTypeIndex = typeStr => PerlinNoise.mapnumberTypes.indexOf(typeStr)
+	static getMapNumberTypeIndex = typeStr => PerlinNoise.mapnumberTypes.indexOf(typeStr);
 	/**
 	 *
 	 * @param {number} lod level of details
@@ -2029,7 +2031,7 @@ class Vector {
 	 * @param {number} z z vector's coordinate
 	 * @param {number} w w vector's coordinate
 	 */
-	constructor(x, y=null, z=null, w=null) {
+	constructor(x, y = null, z = null, w = null) {
 		let dimension = 1;
 
 		this.coords = {
@@ -2042,7 +2044,7 @@ class Vector {
 		const tmp = { x: 0, y: 0, z: 0, w: 0 };
 
 		// import from another vector
-		if(x instanceof Vector) {
+		if (x instanceof Vector) {
 			// same dimension
 			dimension = x.dimension;
 			tmp.x = x.x;
@@ -2143,7 +2145,7 @@ class Vector {
 	 * v.y = 10;
 	 */
 	set y(y) {
-		if(this.dimension > 1) {
+		if (this.dimension > 1) {
 			this.coords.y = y;
 		} else {
 			console.error('Cannot modify the Y of a 1D vector');
@@ -2159,7 +2161,7 @@ class Vector {
 	 * v.z = 10;
 	 */
 	set z(z) {
-		if(this.dimension > 2) {
+		if (this.dimension > 2) {
 			this.coords.z = z;
 		} else {
 			console.error(`Cannot modify the Z of a ${this.dimension}D vector`);
@@ -2175,16 +2177,16 @@ class Vector {
 	 * v.w = 10;
 	 */
 	set w(w) {
-		if(this.dimension > 2) {
+		if (this.dimension > 2) {
 			this.coords.w = w;
 		} else {
 			console.error(`Cannot modify the W of a ${this.dimension}D vector`);
 		}
 	}
 
-    copy() {
-        return new Vector(this);
-    }
+	copy() {
+		return new Vector(this);
+	}
 
 	/**
 	 * Adapts the vector on a scale of 1
@@ -2197,24 +2199,24 @@ class Vector {
 	 * v.set(20);
 	 * const v2 = v.normalize(); // v.x = 20, v2.x = 1
 	 */
-	normalize(apply=false) {
+	normalize(apply = false) {
 		// does not care about vector dimension
 		const norm = Math.hypot(this.x, this.y, this.z, this.w);
 
-		if(!apply) {
+		if (!apply) {
 			return new Vector(this).normalize(true);
 		}
 
-		if(norm !== 0) {
+		if (norm !== 0) {
 			this.x /= norm;
 
-			if(this.dimension > 1) {
+			if (this.dimension > 1) {
 				this.y /= norm;
 
-				if(this.dimension === 3) {
+				if (this.dimension === 3) {
 					this.z /= norm;
 
-					if(this.dimension === 4) {
+					if (this.dimension === 4) {
 						this.w /= norm;
 					}
 				}
@@ -2232,22 +2234,22 @@ class Vector {
 	 * @param {number|null} z 
 	 * @param {number|null} w 
 	 */
-	equals(x, y=null, z=null, w=null) {
+	equals(x, y = null, z = null, w = null) {
 		let vector;
 
-		if(x instanceof Vector) {
+		if (x instanceof Vector) {
 			vector = x;
 		}
 		else {
 			vector = new Vector(x, y, z, w);
 		}
 
-		if(this.dimension !== vector.dimension) {
+		if (this.dimension !== vector.dimension) {
 			return false;
 		}
 
-		for(const coord in this.coords) {
-			if(this.coords[coord] !== vector.coords[coord]) {
+		for (const coord in this.coords) {
+			if (this.coords[coord] !== vector.coords[coord]) {
 				return false;
 			}
 		}
@@ -2266,44 +2268,44 @@ class Vector {
 	 * const v = new Vector(10, 20, 30, 40);
 	 * v.set(30, 20, 10, 0);
 	 */
-	set(x, y=null, z=null, w=null) {
-		if(x instanceof Vector) {
+	set(x, y = null, z = null, w = null) {
+		if (x instanceof Vector) {
 			this.x = x.x;
-			if(this.dimension === 2) this.y = x.y;
-			if(this.dimension === 3) this.z = x.z;
-			if(this.dimension === 4) this.w = x.w;
+			if (this.dimension === 2) this.y = x.y;
+			if (this.dimension === 3) this.z = x.z;
+			if (this.dimension === 4) this.w = x.w;
 		}
 
-		else if(typeof x !== 'number') {
+		else if (typeof x !== 'number') {
 			return console.error('[Error] Vector::set : x parameter must be a number or a Vector');
 		}
 
 		else {
-			if(this.dimension > 1) {
-				if(y !== null && typeof y !== 'number') {
+			if (this.dimension > 1) {
+				if (y !== null && typeof y !== 'number') {
 					return console.error('[Error] Vector::set : y parameter must be a number');
 				}
 
-				if(z !== null && this.dimension > 2 && typeof z !== 'number') {
+				if (z !== null && this.dimension > 2 && typeof z !== 'number') {
 					return console.error('[Error] Vector::set : z parameter must be a number');
 				}
 
-				if(w !== null && this.dimension > 3 && typeof w !== 'number') {
+				if (w !== null && this.dimension > 3 && typeof w !== 'number') {
 					return console.error('[Error] Vector::set : w parameter must be a number');
 				}
 			}
 
 			this.x = x;
 
-			if(this.dimension > 1) {
-				if(y !== null) {
+			if (this.dimension > 1) {
+				if (y !== null) {
 					this.y = y;
 				}
 
-				if(this.dimension > 2 && z != null) {
+				if (this.dimension > 2 && z != null) {
 					this.z = z;
 
-					if(this.dimension > 3 && w != null) {
+					if (this.dimension > 3 && w != null) {
 						this.w = w;
 					}
 				}
@@ -2326,20 +2328,20 @@ class Vector {
 	 * const v3 = v.add(1, 2); // now v{x: 11, y: 12} and v3 is same
 	 * v2.add(v); // now v2{x: 31, y: 32}
 	 */
-	add(x, y=null, z=null, w=null) {
-		if(x instanceof Vector) {
+	add(x, y = null, z = null, w = null) {
+		if (x instanceof Vector) {
 			return this.set(this.x + x.x, this.y + x.y, this.z + x.z, this.w + x.w);
 		}
 
-		if(y === null) {
+		if (y === null) {
 			y = x;
 		}
 
-		if(z === null) {
+		if (z === null) {
 			z = x;
 		}
 
-		if(w === null) {
+		if (w === null) {
 			w = x;
 		}
 
@@ -2359,20 +2361,20 @@ class Vector {
 	 * const v3 = v.sub(1, 2); // now v{x: 9, y: 8} and v3 is same
 	 * v2.sub(v); // now v2{x: 11, y: 12}
 	 */
-	sub(x, y=null, z=null, w=null) {
-		if(x instanceof Vector) {
+	sub(x, y = null, z = null, w = null) {
+		if (x instanceof Vector) {
 			return this.set(this.x - x.x, this.y - x.y, this.z - x.z, this.w - x.w);
 		}
 
-		if(y === null) {
+		if (y === null) {
 			y = x;
 		}
 
-		if(z === null) {
+		if (z === null) {
 			z = x;
 		}
 
-		if(w === null) {
+		if (w === null) {
 			w = x;
 		}
 
@@ -2394,20 +2396,20 @@ class Vector {
 	 * const v3 = v.mult(1, 2); // now v{x: 20, y: 40} and v3 is same
 	 * v2.mult(v); // now v2{x: 400, y: 800}
 	 */
-	mult(x, y=null, z=null, w=null) {
-		if(x instanceof Vector) {
+	mult(x, y = null, z = null, w = null) {
+		if (x instanceof Vector) {
 			return this.set(this.x * x.x, this.y * x.y, this.z * x.z, this.w * x.w);
 		}
 
-		if(y === null) {
+		if (y === null) {
 			y = x;
 		}
 
-		if(z === null) {
+		if (z === null) {
 			z = x;
 		}
 
-		if(w === null) {
+		if (w === null) {
 			w = x;
 		}
 
@@ -2427,20 +2429,20 @@ class Vector {
 	 * const v3 = v.div(2); // now v{x: 5, 5} and v3 is same
 	 * v2.div(v); // now v2{x: 4, y: 4}
 	 */
-	div(x, y=null, z=null, w=null) {
-		if(x instanceof Vector) {
+	div(x, y = null, z = null, w = null) {
+		if (x instanceof Vector) {
 			return this.set(this.x / x.x, this.y / x.y, this.z / x.z, this.w / x.w);
 		}
 
-		if(y === null) {
+		if (y === null) {
 			y = x;
 		}
 
-		if(z === null) {
+		if (z === null) {
 			z = x;
 		}
 
-		if(w === null) {
+		if (w === null) {
 			w = x;
 		}
 
@@ -2459,24 +2461,24 @@ class Vector {
 	 * v2.invert(); // now v2{x: 3, y: 1, z: 2}
 	 * v2.invert(true); // now v2{x: 1, y:2, z: 3}
 	 */
-	invert(antiClockwise=false) {
+	invert(antiClockwise = false) {
 		// not 1D, else we just have to do x = x
-		if(this.dimension > 1) {
+		if (this.dimension > 1) {
 			// 2D
-			if(this.dimension === 2) {
+			if (this.dimension === 2) {
 				[this.x, this.y] = [this.y, this.x];
 			}
 
 			// 3D
-			else if(this.dimension === 3) {
-				if(antiClockwise) {
+			else if (this.dimension === 3) {
+				if (antiClockwise) {
 					[this.x, this.y, this.z] = [this.y, this.z, this.x];
 				} else {
 					[this.x, this.y, this.z] = [this.z, this.x, this.y];
 				}
 			}
 
-			else if(this.dimension === 4) {
+			else if (this.dimension === 4) {
 				[this.x, this.y, this.z, this.w] = [this.w, this.x, this.y, this.z];
 			}
 		}
@@ -2494,9 +2496,9 @@ class Vector {
 	 */
 	setMag(newMag) {
 		this.x = this.x * newMag / this.mag;
-		if(this.dimension > 1) this.y = this.y * newMag / this.mag;
-		if(this.dimension > 2) this.z = this.z * newMag / this.mag;
-		if(this.dimension > 3) this.w = this.w * newMag / this.mag;
+		if (this.dimension > 1) this.y = this.y * newMag / this.mag;
+		if (this.dimension > 2) this.z = this.z * newMag / this.mag;
+		if (this.dimension > 3) this.w = this.w * newMag / this.mag;
 
 		return this;
 	}
@@ -2512,6 +2514,13 @@ class Vector {
 	}
 
 	/**
+	 * @returns {number} The angle between this vector and the x axis (in degrees)
+	 */
+	heading() {
+		return vectorToAngle(this);
+	}
+
+	/**
 	 * Rotates this vector by a given angle (in degrees) around the origin
 	 * @param {number} angle The angle to rotate by (in degrees)
 	 * @return {Vector} The rotated vector
@@ -2523,18 +2532,18 @@ class Vector {
 
 		this.x = this.x * cosius - this.y * sinus;
 
-		if(this.dimension > 1) {
+		if (this.dimension > 1) {
 			this.y = this.x * sinus + this.y * cosius;
-			
-			if(this.dimension > 2) {
+
+			if (this.dimension > 2) {
 				this.z = this.z * sinus + this.z * cosius;
 
-				if(this.dimension > 3) {
+				if (this.dimension > 3) {
 					this.w = this.w * sinus + this.w * cosius;
 				}
 			}
 		}
-	
+
 		return this;
 	}
 
@@ -2549,10 +2558,10 @@ class Vector {
 	toString() {
 		let str = '{';
 
-		if(this.dimension > 0) str += ` x: ${this.x}`;
-		if(this.dimension > 1) str += `, y: ${this.y}`;
-		if(this.dimension > 2) str += `, z: ${this.z}`;
-		if(this.dimension > 3) str += `, w: ${this.w}`;
+		if (this.dimension > 0) str += ` x: ${this.x}`;
+		if (this.dimension > 1) str += `, y: ${this.y}`;
+		if (this.dimension > 2) str += `, z: ${this.z}`;
+		if (this.dimension > 3) str += `, w: ${this.w}`;
 
 		return str + ' }';
 	}
@@ -2566,43 +2575,43 @@ class Vector {
 	 */
 	array() {
 		const arr = [this.x];
-		if(this.dimension > 1) arr.push(this.y);
-		if(this.dimension > 2) arr.push(this.z);
-		if(this.dimension > 3) arr.push(this.w);
+		if (this.dimension > 1) arr.push(this.y);
+		if (this.dimension > 2) arr.push(this.z);
+		if (this.dimension > 3) arr.push(this.w);
 
 		return arr;
 	}
 
-    /**
-     * Returns the vector's properties as a basic object { x, y, z, w }
-     *
-     * { x } for dimension 1
-     *
-     * { x, y } for dimension 2
-     *
-     * { x, y, z } for dimension 3
+	/**
+	 * Returns the vector's properties as a basic object { x, y, z, w }
+	 *
+	 * { x } for dimension 1
+	 *
+	 * { x, y } for dimension 2
+	 *
+	 * { x, y, z } for dimension 3
 	 * 
-     * { x, y, z, w } for dimension 4
+	 * { x, y, z, w } for dimension 4
 	 * 
-     * @return {object}
-     */
-    object() {
-        const o = { x: this.x };
+	 * @return {object}
+	 */
+	object() {
+		const o = { x: this.x };
 
-        if(this.dimension > 1) {
-            o.y = this.y;
+		if (this.dimension > 1) {
+			o.y = this.y;
 
-            if(this.dimension > 2) {
-                o.z = this.z;
-            }
+			if (this.dimension > 2) {
+				o.z = this.z;
+			}
 
-			if(this.dimension > 3) {
+			if (this.dimension > 3) {
 				o.w = this.w;
 			}
-        }
+		}
 
-        return o;
-    }
+		return o;
+	}
 
 	/**
 	 * Draw the vector on the canvas (1 & 2 dimensions only for now)
@@ -2610,16 +2619,16 @@ class Vector {
 	 * @param {number} y vector's position on the canvas
 	 * @param {Object (strokeWeight: number, stroke: any)} style bow's fill & stroke style
 	 */
-	bow(x, y, style={}) {
+	bow(x, y, style = {}) {
 		// not implemented for the 3rd and 4th dimension
-		if(this.dimension > 2)
+		if (this.dimension > 2)
 			return;
 
 		// arrow's style
-		if(style.strokeWeight) strokeWeight(style.strokeWeight);
+		if (style.strokeWeight) strokeWeight(style.strokeWeight);
 		else strokeWeight(1);
 
-		if(style.stroke) stroke(style.stroke);
+		if (style.stroke) stroke(style.stroke);
 		else stroke('#fff');
 
 
@@ -2627,25 +2636,25 @@ class Vector {
 		const rotation = degree(vectorToAngle(this));
 
 		push();
-			// trunk
-			translate(x, y);
-			line(0, 0, this.x, this.y);
-			linecap('round');
+		// trunk
+		translate(x, y);
+		line(0, 0, this.x, this.y);
+		linecap('round');
 
-			// spike
-			push();
-				translate(this.x, this.y);
+		// spike
+		push();
+		translate(this.x, this.y);
 
-				push();
-					// left
-					rotate(rotation + 25);
-					line(0, 0, -min(this.mag / 2.5, 10), 0);
+		push();
+		// left
+		rotate(rotation + 25);
+		line(0, 0, -min(this.mag / 2.5, 10), 0);
 
-					// right
-					rotate(-50);
-					line(0, 0, -min(this.mag / 2.5, 10), 0);
-				pop();
-			pop();
+		// right
+		rotate(-50);
+		line(0, 0, -min(this.mag / 2.5, 10), 0);
+		pop();
+		pop();
 		pop();
 	}
 }
@@ -3455,169 +3464,169 @@ class Path {
  * with better performances.
  */
 class Quadtree {
-    /**
-     * A Quadtree's Point has a position and a pointer to an object
-     */
-    static Point = class Point {
-        /**
-         * A Quadtree's Point that has a position and a pointer to an object
-         * @param {number} x Point's X
-         * @param {number} y Point's Y
-         * @param {object} dataPtr Object data
-         */
-        constructor(x, y, dataPtr) {
-            this.x = x;
-            this.y = y;
-            this.dataPtr = dataPtr;
-        }
-    }
+	/**
+	 * A Quadtree's Point has a position and a pointer to an object
+	 */
+	static Point = class Point {
+		/**
+		 * A Quadtree's Point that has a position and a pointer to an object
+		 * @param {number} x Point's X
+		 * @param {number} y Point's Y
+		 * @param {object} dataPtr Object data
+		 */
+		constructor(x, y, dataPtr) {
+			this.x = x;
+			this.y = y;
+			this.dataPtr = dataPtr;
+		}
+	};
 
-    /**
-     * A Quadtree's Rectangle is a basic rectangle that checks<br>
-     * if it contains a given point or intersects with a given Rectangle
-     */
-    static Rectangle = class Rectangle {
-        /**
-         * Creates a Quadtree's Rectangle.
-         * @param {number} x Rectangle top-left corner's X
-         * @param {number} y Rectangle top-left corner's Y
-         * @param {number} w Rectangle's width
-         * @param {number} h Rectangle's height
-         */
-        constructor(x, y, w, h) {
-            this.x = x;
-            this.y = y;
-            this.w = w;
-            this.h = h;
-        }
+	/**
+	 * A Quadtree's Rectangle is a basic rectangle that checks<br>
+	 * if it contains a given point or intersects with a given Rectangle
+	 */
+	static Rectangle = class Rectangle {
+		/**
+		 * Creates a Quadtree's Rectangle.
+		 * @param {number} x Rectangle top-left corner's X
+		 * @param {number} y Rectangle top-left corner's Y
+		 * @param {number} w Rectangle's width
+		 * @param {number} h Rectangle's height
+		 */
+		constructor(x, y, w, h) {
+			this.x = x;
+			this.y = y;
+			this.w = w;
+			this.h = h;
+		}
 
-        /**
-         * Checks if a given Quadtree's Point is in the Rectangle or not.
-         * @param {Quadtree.Point} point A Quadtree's Point
-         * @returns boolean - either the point is in the Rectangle or not
-         */
-        contains(point) {
-            return (
-                this.x <= point.x && point.x <= this.x + this.w &&
-                this.y <= point.y && point.y <= this.y + this.h
-            );
-        }
+		/**
+		 * Checks if a given Quadtree's Point is in the Rectangle or not.
+		 * @param {Quadtree.Point} point A Quadtree's Point
+		 * @returns boolean - either the point is in the Rectangle or not
+		 */
+		contains(point) {
+			return (
+				this.x <= point.x && point.x <= this.x + this.w &&
+				this.y <= point.y && point.y <= this.y + this.h
+			);
+		}
 
-        /**
-         * Checks if 2 Quadtree's Rectangles are intersecting or not.
-         * @param {QuadTree.Rectangle} rectangle A Quadtree's Rectangle
-         * @returns boolean - either both Rectangles intersect or not
-         */
-        intersect(rectangle) {
-            return !(
-                rectangle.x > this.x + this.w ||
-                rectangle.x + rectangle.w < this.x ||
-                rectangle.y > this.y + this.h ||
-                rectangle.y + rectangle.h < this.y
-            );
-        }
+		/**
+		 * Checks if 2 Quadtree's Rectangles are intersecting or not.
+		 * @param {QuadTree.Rectangle} rectangle A Quadtree's Rectangle
+		 * @returns boolean - either both Rectangles intersect or not
+		 */
+		intersect(rectangle) {
+			return !(
+				rectangle.x > this.x + this.w ||
+				rectangle.x + rectangle.w < this.x ||
+				rectangle.y > this.y + this.h ||
+				rectangle.y + rectangle.h < this.y
+			);
+		}
 
-        /**
-         * Checks if this Quadtree's Rectangle totally wraps the given Rectangle or not.
-         * @param {Quadtree.Rectangle} rectangle A Quadtree's Rectangle
-         * @returns boolean - either this Rectangle totally wraps the given rectangle or not
-         */
-        wrap(rectangle) {
-            return (
-                this.x <= rectangle.x && rectangle.x + rectangle.w <= this.x + this.w &&
-                this.y <= rectangle.y && rectangle.y + rectangle.h <= this.y + this.h
-            )
-        }
-    }
+		/**
+		 * Checks if this Quadtree's Rectangle totally wraps the given Rectangle or not.
+		 * @param {Quadtree.Rectangle} rectangle A Quadtree's Rectangle
+		 * @returns boolean - either this Rectangle totally wraps the given rectangle or not
+		 */
+		wrap(rectangle) {
+			return (
+				this.x <= rectangle.x && rectangle.x + rectangle.w <= this.x + this.w &&
+				this.y <= rectangle.y && rectangle.y + rectangle.h <= this.y + this.h
+			);
+		}
+	};
 
-    /**
-     * Creates a new Quadtree.
-     * @param {Quadtree.Rectangle} boundary The region covered by the Quadtree
-     * @param {number} capacity The max capacity of Points that can supports this Quadtree
-     */
-    constructor(boundary, capacity=5) {
-		if(!(boundary instanceof Quadtree.Rectangle)) {
+	/**
+	 * Creates a new Quadtree.
+	 * @param {Quadtree.Rectangle} boundary The region covered by the Quadtree
+	 * @param {number} capacity The max capacity of Points that can supports this Quadtree
+	 */
+	constructor(boundary, capacity = 5) {
+		if (!(boundary instanceof Quadtree.Rectangle)) {
 			throw new Error('[Quadtree::constructor] boundary must be a Quadtree.Rectangle');
 		}
 
-        this.boundary = boundary;
-        this.capacity = capacity;
-        this.points = [];
-        this.divided = false;
-    }
+		this.boundary = boundary;
+		this.capacity = capacity;
+		this.points = [];
+		this.divided = false;
+	}
 
 	/**
-     * Returns an array containing the tree's children.
-     * @returns {Quadtree[]} All tree's children
-     */
+	 * Returns an array containing the tree's children.
+	 * @returns {Quadtree[]} All tree's children
+	 */
 	get children() {
 		return this.divided
 			? [this.northwest, this.northeast, this.southwest, this.southeast]
 			: [];
 	}
 
-    /**
-     * Clears the Quadtree and delete its 4 children if divided.
-     */
-    clear() {
-        this.points = [];
-        this.divided = false;
-        delete this.northeast;
-        delete this.northwest;
-        delete this.southeast;
-        delete this.southwest;
-    }
+	/**
+	 * Clears the Quadtree and delete its 4 children if divided.
+	 */
+	clear() {
+		this.points = [];
+		this.divided = false;
+		delete this.northeast;
+		delete this.northwest;
+		delete this.southeast;
+		delete this.southwest;
+	}
 
-    /**
-     * Subdivides the Quadtree if it isn't.<br>
-     * Separates itself in 4 regions that fill itself.
-     */
-    subdivide() {
-        if(!this.divided) {
-            const { x, y, w, h } = this.boundary;
+	/**
+	 * Subdivides the Quadtree if it isn't.<br>
+	 * Separates itself in 4 regions that fill itself.
+	 */
+	subdivide() {
+		if (!this.divided) {
+			const { x, y, w, h } = this.boundary;
 
-            const ne = new Quadtree.Rectangle(x + w/2, y, w/2, h/2);
-            const nw = new Quadtree.Rectangle(x, y, w/2, h/2);
-            const se = new Quadtree.Rectangle(x + w/2, y + h/2, w/2, h/2);
-            const sw = new Quadtree.Rectangle(x, y + h/2, w/2, h/2);
+			const ne = new Quadtree.Rectangle(x + w / 2, y, w / 2, h / 2);
+			const nw = new Quadtree.Rectangle(x, y, w / 2, h / 2);
+			const se = new Quadtree.Rectangle(x + w / 2, y + h / 2, w / 2, h / 2);
+			const sw = new Quadtree.Rectangle(x, y + h / 2, w / 2, h / 2);
 
-            this.northwest = new Quadtree(nw);
-            this.northeast = new Quadtree(ne);
-            this.southwest = new Quadtree(sw);
-            this.southeast = new Quadtree(se);
+			this.northwest = new Quadtree(nw);
+			this.northeast = new Quadtree(ne);
+			this.southwest = new Quadtree(sw);
+			this.southeast = new Quadtree(se);
 
-            this.divided = true;
+			this.divided = true;
 
-			for(const p of this.points) {
+			for (const p of this.points) {
 				this.insert(p);
 			}
 
 			this.points = [];
-        }
-    }
+		}
+	}
 
-    /**
-     * Tries to insert a Quadtree's Point in itself.<br>
-     * If the Point is already present in the Quadtree, does nothing.<br>
-     * Two Points cannot have the same position in it.<br>
-     * If the Quadtree has reach its max capacity, then splits / subdivides
-     * itself and tries to insert the Point in one of its child.
-     * @param {Quadtree.Point[]} points The Points to insert
-     * @returns Either the Point is well inserted or not in the Quadtree
-     */
-    insert(...points) {
-		for(const point of points) {
-			if(!this.boundary.contains(point)) {
+	/**
+	 * Tries to insert a Quadtree's Point in itself.<br>
+	 * If the Point is already present in the Quadtree, does nothing.<br>
+	 * Two Points cannot have the same position in it.<br>
+	 * If the Quadtree has reach its max capacity, then splits / subdivides
+	 * itself and tries to insert the Point in one of its child.
+	 * @param {Quadtree.Point[]} points The Points to insert
+	 * @returns Either the Point is well inserted or not in the Quadtree
+	 */
+	insert(...points) {
+		for (const point of points) {
+			if (!this.boundary.contains(point)) {
 				return false;
 			}
 
-			if(this.divided) {
+			if (this.divided) {
 				return this.northeast.insert(point)
 					|| this.northwest.insert(point)
 					|| this.southeast.insert(point)
 					|| this.southwest.insert(point);
 			}
-			else if(this.points.length < this.capacity) {
+			else if (this.points.length < this.capacity) {
 				this.points.push(point);
 				return true;
 			}
@@ -3626,7 +3635,7 @@ class Quadtree {
 				this.insert(point);
 			}
 		}
-    }
+	}
 
 	/**
 	 * 
@@ -3635,12 +3644,12 @@ class Quadtree {
 	 * @returns {Quadtree}
 	 */
 	getRegion(x, y) {
-		if (!this.subtrees) {
+		if (!this.divided) {
 			return this;
-		  }
-	  
-		  const index = (x >= this.x + this.width / 2 ? 1 : 0) + (y >= this.y + this.height / 2 ? 2 : 0);
-		  return this.children[index].getRegion(x, y);
+		}
+
+		const index = (x >= this.boundary.x + this.boundary.w / 2 ? 1 : 0) + (y >= this.boundary.y + this.boundary.h / 2 ? 2 : 0);
+		return this.children[index].getRegion(x, y);
 	}
 
 	/**
@@ -3649,56 +3658,56 @@ class Quadtree {
 	 * @returns 
 	 */
 	getNeighboringRegions(region) {
-		if(!(region instanceof Quadtree)) {
+		if (!(region instanceof Quadtree)) {
 			throw new Error('[Quadtree::getNeighboringRegions] region must be a Quadtree');
 		}
 
 		const neighbors = [];
-	  
+
 		const left = region.x < this.x;
 		const right = region.x + region.width > this.x + this.width;
 		const top = region.y < this.y;
 		const bottom = region.y + region.height > this.y + this.height;
-	  
+
 		if (left && top) {
-		  neighbors.push(this.children[0]);
+			neighbors.push(this.children[0]);
 		}
 
 		if (right && top) {
-		  neighbors.push(this.children[1]);
+			neighbors.push(this.children[1]);
 		}
 
 		if (left && bottom) {
-		  neighbors.push(this.children[2]);
+			neighbors.push(this.children[2]);
 		}
 
 		if (right && bottom) {
-		  neighbors.push(this.children[3]);
+			neighbors.push(this.children[3]);
 		}
-	  
+
 		return neighbors.filter(neighbor => neighbor && neighbor.boundary.intersect(region));
 	}
 
-    /**
-     * Finds and returns all Quadtree's Points that are in the requested area
-     * @param {Quadtree.Rectangle} range The Rectangle where to find and returns all points
-     * @returns {Quadtree.Point[]} Returns an array of all Points that are in the requested area.
-     */
-    query(range) {
-		if(!(range instanceof Quadtree.Rectangle)) {
+	/**
+	 * Finds and returns all Quadtree's Points that are in the requested area
+	 * @param {Quadtree.Rectangle} range The Rectangle where to find and returns all points
+	 * @returns {Quadtree.Point[]} Returns an array of all Points that are in the requested area.
+	 */
+	query(range) {
+		if (!(range instanceof Quadtree.Rectangle)) {
 			throw new Error('[Quadtree::query] range must be a Quadtree.Rectangle');
 		}
 
 		// leaf
-		if(!this.divided) {
-			if(range.wrap(this.boundary)) {
+		if (!this.divided) {
+			if (range.wrap(this.boundary)) {
 				return this.points;
 			}
-			else if(range.intersect(this.boundary)) {
+			else if (range.intersect(this.boundary)) {
 				const found = [];
 
-				for(const p of this.points) {
-					if(range.contains(p))
+				for (const p of this.points) {
+					if (range.contains(p))
 						found.push(p);
 				}
 
@@ -3710,7 +3719,7 @@ class Quadtree {
 
 		// node
 		// totally wraps the boundary : add all leafs
-		if(range.wrap(this.boundary)) {
+		if (range.wrap(this.boundary)) {
 			return this.getAllPoints();
 		}
 
@@ -3723,56 +3732,56 @@ class Quadtree {
 		found.push(...this.southeast.query(range));
 
 		return found;
-    }
+	}
 
-    /**
-     * Delimits the bounds of the Quadtree and recursivly do it for its children
-     * if it is splitted.<br>
-     * Default stroke color is #141414, but you can change it.
-     * @param {any} color The color of the limits. Default is #141414
-     */
-    show(color=20) {
-        noFill();
-        stroke(color);
-        strokeWeight(1);
-        strokeRect(this.boundary.x, this.boundary.y, this.boundary.w-1, this.boundary.h-1);
+	/**
+	 * Delimits the bounds of the Quadtree and recursivly do it for its children
+	 * if it is splitted.<br>
+	 * Default stroke color is #141414, but you can change it.
+	 * @param {any} color The color of the limits. Default is #141414
+	 */
+	show(color = 20) {
+		noFill();
+		stroke(color);
+		strokeWeight(1);
+		strokeRect(this.boundary.x, this.boundary.y, this.boundary.w - 1, this.boundary.h - 1);
 
-        if(this.divided) {
-            this.northeast.show();
-            this.northwest.show();
-            this.southeast.show();
-            this.southwest.show();
-        }
-    }
+		if (this.divided) {
+			this.northeast.show(color);
+			this.northwest.show(color);
+			this.southeast.show(color);
+			this.southwest.show(color);
+		}
+	}
 
 	/**
 	 * Returns all the children of this tree and its regions.
 	 * @returns {Quadtree.Point[]} A list of all children and subchildren of this tree
 	 */
 	getAllPoints() {
-		if(!this.divided)
+		if (!this.divided)
 			return this.points;
 
 		const points = [];
 
-		for(const region of this.children)
+		for (const region of this.children)
 			points.push(...region.getAllPoints());
 
 		return points;
 	}
 
-    /**
-     * Returns the total size of the tree, containing its point and the points of its children.
-     * @returns {number} The total size of the tree (number of points contained inside it)
-     */
-    size() {
-        let n = this.points.length;
+	/**
+	 * Returns the total size of the tree, containing its point and the points of its children.
+	 * @returns {number} The total size of the tree (number of points contained inside it)
+	 */
+	size() {
+		let n = this.points.length;
 
-        for(const region of this.children)
-            n += region.size();
+		for (const region of this.children)
+			n += region.size();
 
-        return n;
-    }
+		return n;
+	}
 }
 
 

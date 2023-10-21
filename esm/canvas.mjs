@@ -6,7 +6,7 @@
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.6.7}
+ * @version		{1.6.8}
  */
 
 
@@ -109,8 +109,9 @@ export const line = (x1, y1, x2, y2) => {
 	beginPath();
 	moveTo(x1 - NOX_PV.offsetLineBlur, y1 - NOX_PV.offsetLineBlur);
 	lineTo(x2 - NOX_PV.offsetLineBlur, y2 - NOX_PV.offsetLineBlur);
+	closePath();
 
-	if(NOX_PV.bStroke)
+	if (NOX_PV.bStroke)
 		ctx.stroke();
 };
 
@@ -127,27 +128,27 @@ export const line = (x1, y1, x2, y2) => {
  */
 export const polyline = (...values) => {
 	// got an odd number of argument
-	if(values.length % 2 !== 0) {
+	if (values.length % 2 !== 0) {
 		return console.error('The function polyline must take an even number of values');
 	}
 
 	beginPath();
 
-	if(values.length > 0) {
+	if (values.length > 0) {
 		moveTo(values[0], values[1]);
 	}
 
-	for(let i=2; i < values.length; i += 2) {
+	for (let i = 2; i < values.length; i += 2) {
 		const x = values[i],
-			y = values[i+1];
+			y = values[i + 1];
 
 		lineTo(x, y);
 	}
 
-	if(NOX_PV.bStroke)
+	if (NOX_PV.bStroke)
 		ctx.stroke();
 
-	if(NOX_PV.bFill)
+	if (NOX_PV.bFill)
 		ctx.fill();
 };
 
@@ -166,15 +167,15 @@ export const polyline = (...values) => {
  * @example
  * arc(100, 70, 20)
  */
-export const arc = (x, y, r, start, end, antiClockwise=false) => {
+export const arc = (x, y, r, start, end, antiClockwise = false) => {
 	beginPath();
 	ctx.arc(x - NOX_PV.cam.x, y - NOX_PV.cam.y, r, start, end, antiClockwise);
 	closePath();
 
-	if(NOX_PV.bStroke)
+	if (NOX_PV.bStroke)
 		ctx.stroke();
 
-	if(NOX_PV.bFill)
+	if (NOX_PV.bFill)
 		ctx.fill();
 };
 
@@ -243,10 +244,10 @@ export const strokeRect = (x, y, w, h) => {
 export const rect = (x, y, w, h) => {
 	ctx.rect(x - NOX_PV.cam.x, y - NOX_PV.cam.y, w, h);
 
-	if(NOX_PV.bFill)
+	if (NOX_PV.bFill)
 		ctx.fill();
 
-	if(NOX_PV.bStroke)
+	if (NOX_PV.bStroke)
 		ctx.stroke();
 };
 
@@ -263,15 +264,15 @@ export const rect = (x, y, w, h) => {
  * @param  {number} radiusBR bottom-right corner's radius
  * @param  {number} radiusBL bottom-left corner's radius
  */
-export const roundRect = (x=0, y=0, w=0, h=0, radius=0, radiusTR, radiusBR, radiusBL) => {
-	if(radiusTR === undefined) radiusTR = radius;
-	if(radiusBR === undefined) radiusBR = radius;
-	if(radiusBL === undefined) radiusBL = radius;
+export const roundRect = (x = 0, y = 0, w = 0, h = 0, radius = 0, radiusTR, radiusBR, radiusBL) => {
+	if (radiusTR === undefined) radiusTR = radius;
+	if (radiusBR === undefined) radiusBR = radius;
+	if (radiusBL === undefined) radiusBL = radius;
 
-	radius 		= min(max(0, radius), 50);
-	radiusTR 	= min(max(0, radiusTR), 50);
-	radiusBR 	= min(max(0, radiusBR), 50);
-	radiusBL 	= min(max(0, radiusBL), 50);
+	radius = min(max(0, radius), 50);
+	radiusTR = min(max(0, radiusTR), 50);
+	radiusBR = min(max(0, radiusBR), 50);
+	radiusBL = min(max(0, radiusBL), 50);
 
 	const x1 = x + radius,
 		y1 = y;
@@ -300,10 +301,10 @@ export const roundRect = (x=0, y=0, w=0, h=0, radius=0, radiusTR, radiusBR, radi
 	arcTo(x5, y5 - radius, x1, y1, radius);
 	closePath();
 
-	if(NOX_PV.bStroke)
+	if (NOX_PV.bStroke)
 		ctx.stroke();
 
-	if(NOX_PV.bFill)
+	if (NOX_PV.bFill)
 		ctx.fill();
 };
 
@@ -326,7 +327,7 @@ export const path = p => {
 	p = p.trim();
 
 	// a path must start with a moveTo instruction
-	if(!p.startsWith('M')) {
+	if (!p.startsWith('M')) {
 		return;
 	}
 
@@ -375,12 +376,12 @@ export const path = p => {
 	const reg = new RegExp(`^[${Object.keys(modes).join('')}]|(\-?\d+(\.\d+)?)$`, 'i');
 
 	// if a point isn't well written, then stop
-	if(p.filter(point => reg.test(point)).length === 0) {
+	if (p.filter(point => reg.test(point)).length === 0) {
 		return;
 	}
 
 	// doesn't need to try to draw something: need at least an instruction M first and 2 parameters x,y
-	if(p.length < 3) {
+	if (p.length < 3) {
 		return;
 	}
 
@@ -391,20 +392,20 @@ export const path = p => {
 
 
 	// read arguments - normally starts with x,y of the M instruction
-	for(let i=0; i < p.length; i++) {
+	for (let i = 0; i < p.length; i++) {
 		const point = p[i];
 
 		// is a letter - new instruction
-		if(/[a-z]/i.test(point)) {
+		if (/[a-z]/i.test(point)) {
 			// lowercase - relative
 			// uppercase - absolute
 			// push pile of instructions (only 2 saved)
 			mode = point;
 
 			// if the instruction is Z
-			if(mode === 'Z') {
+			if (mode === 'Z') {
 				// and if it's the last mode
-				if(i === lastIdx) {
+				if (i === lastIdx) {
 					// then close the path
 					d.push('Z');
 				} else {
@@ -414,14 +415,14 @@ export const path = p => {
 			}
 
 			// lowercase Z isn't recognized
-			if(['z'].includes(mode)) {
+			if (['z'].includes(mode)) {
 				return;
 			}
 
 			const nArg = modes[mode.toUpperCase()].n;
 
 			// depending on the current instruction, there need to have to right number of argument following this instruction
-			if(lastIdx - nArg < i) {
+			if (lastIdx - nArg < i) {
 				return;
 			}
 
@@ -429,21 +430,21 @@ export const path = p => {
 			const lastPos = { x: 0, y: 0 };
 
 			// get the last cursor position
-			if(d.length > 0) {
+			if (d.length > 0) {
 				const prev = d[d.length - 1];
 
 				const hv = ['H', 'V'].indexOf(prev[0]);
 
-				if(hv !== -1) {
-					lastPos.x = prev[1+hv]; // x of the last point
-					lastPos.y = prev[2-hv]; // y of the last point
+				if (hv !== -1) {
+					lastPos.x = prev[1 + hv]; // x of the last point
+					lastPos.y = prev[2 - hv]; // y of the last point
 				}
 
 				else {
 					const k = 1;
 
 					lastPos.x = prev[k]; // x of the last point
-					lastPos.y = prev[k+1]; // y of the last point
+					lastPos.y = prev[k + 1]; // y of the last point
 				}
 			}
 
@@ -456,13 +457,13 @@ export const path = p => {
 
 
 			// add each argument that are following the instruction
-			for(let j=0; j < nArg; j++) {
+			for (let j = 0; j < nArg; j++) {
 				i++;
 
 				const n = parseFloat(p[i]);
 
 				// it must be a number
-				if(isNaN(n)) {
+				if (isNaN(n)) {
 					return;
 				}
 
@@ -472,21 +473,21 @@ export const path = p => {
 
 
 			// only for H or V
-			if(hv !== -1) {
-				arr.push(lastPos[Object.keys(lastPos)[1-hv]]);
+			if (hv !== -1) {
+				arr.push(lastPos[Object.keys(lastPos)[1 - hv]]);
 			}
 
-			if(arr[0] === 'A') {
+			if (arr[0] === 'A') {
 				arr[1] -= arr[3];
 			}
 
 			// lowercase: relative to last point - only for MLHVA
-			if(/[mlhva]/.test(mode)) {
-				if(mode === 'v') {
+			if (/[mlhva]/.test(mode)) {
+				if (mode === 'v') {
 					arr[1] += lastPos.y;
 				}
 
-				else if(mode === 'h') {
+				else if (mode === 'h') {
 					arr[1] += lastPos.x;
 				}
 
@@ -502,11 +503,11 @@ export const path = p => {
 
 
 			// draw the arc isn't enough, we have to move the cursor to the end of the arc too
-			if(arr[0] === 'A') {
+			if (arr[0] === 'A') {
 				// arr = ['A', x, y, r, start, end, acw]
 				const angle = radian(arr[5]);
 
-				const x = arr[1] + cos(angle) * arr[3]
+				const x = arr[1] + cos(angle) * arr[3];
 				y = arr[2] + sin(angle) * arr[3];
 
 				d.push(['M', x, y]);
@@ -521,7 +522,7 @@ export const path = p => {
 
 	d.forEach(step => {
 		// surely Z()
-		if(typeof step === 'string') {
+		if (typeof step === 'string') {
 			modes[step].f();
 		}
 
@@ -531,12 +532,12 @@ export const path = p => {
 		}
 	});
 
-	if(NOX_PV.bFill)
+	if (NOX_PV.bFill)
 		ctx.fill();
 
-	if(NOX_PV.bStroke)
+	if (NOX_PV.bStroke)
 		ctx.stroke();
-}
+};
 
 
 
@@ -549,13 +550,13 @@ export const path = p => {
  * @example
  * text('Hello world', 20, 20)
  */
-export const text = (txt, x=0, y=0) => {
+export const text = (txt, x = 0, y = 0) => {
 	// multiple lines
-	if(/\n/.test(txt)) {
+	if (/\n/.test(txt)) {
 		const size = parseInt(NOX_PV.fontSize.replace(/(\d+)(\w+)?/, '$1'));
 		txt = txt.split('\n');
 
-		for(let i=0; i < txt.length; i++) {
+		for (let i = 0; i < txt.length; i++) {
 			ctx.fillText(txt[i], x - NOX_PV.cam.x, y - NOX_PV.cam.y + i * size);
 		}
 	}
@@ -662,7 +663,7 @@ export const quadraticCurveTo = (cpx, cpy, x, y) => {
  * @param {number} shadowOffsetX The shadow X-Axis offset
  * @param {number} shadowOffsetY The shadow Y-Axis offset
  */
-export const setShadow = (shadowColor, shadowBlur=0, shadowOffsetX=0, shadowOffsetY=0) => {
+export const setShadow = (shadowColor, shadowBlur = 0, shadowOffsetX = 0, shadowOffsetY = 0) => {
 	ctx.shadowColor = NOX_PV.colorTreatment(shadowColor);
 	ctx.shadowBlur = shadowBlur;
 	ctx.shadowOffsetX = shadowOffsetX;
@@ -750,7 +751,7 @@ export const clip = (...args) => ctx.clip(...args);
  * @param {number} x Scaling factor in the horizontal direction. A negative value flips pixels across the vertical axis. A value of 1 results in no horizontal scaling.
  * @param {number} y Scaling factor in the vertical direction. A negative value flips pixels across the horizontal axis. A value of 1 results in no vertical scaling.
  */
-export const scale = (x, y=x) => ctx.scale(x, y);
+export const scale = (x, y = x) => ctx.scale(x, y);
 
 
 
@@ -792,7 +793,7 @@ export const stroke = (...color) => {
  */
 export const strokeWeight = weight => {
 	ctx.lineWidth = weight;
-	NOX_PV.offsetLineBlur = (weight % 2 === 0)? 0 : 0.5;
+	NOX_PV.offsetLineBlur = (weight % 2 === 0) ? 0 : 0.5;
 };
 
 /**
@@ -836,13 +837,13 @@ export const createLinearGradient = (x1, y1, x2, y2) => ctx.createLinearGradient
  * makeLinearGradient(0, 0, width, height, 0, 'black', 1, 'white')
  */
 export const makeLinearGradient = (x1, y1, x2, y2, ...params) => {
-	if(params.length % 2 !== 0) {
+	if (params.length % 2 !== 0) {
 		return console.error('you have to tell params by pair (offset, color). Odd number of arguments given.');
 	}
 
 	const grad = createLinearGradient(x1, y1, x2, y2);
 
-	for(let i=0; i < params.length; i += 2) {
+	for (let i = 0; i < params.length; i += 2) {
 		const offset = params[i];
 		const color = NOX_PV.colorTreatment(params[i + 1]);
 
@@ -889,7 +890,7 @@ export const closePath = () => ctx.closePath();
  * drawFocusIfNeeded(button1)
  */
 export const drawFocusIfNeeded = (elementOrPath2D, element = null) => {
-	if(elementOrPath2D instanceof Element) {
+	if (elementOrPath2D instanceof Element) {
 		ctx.drawFocusIfNeeded(elementOrPath2D);
 	}
 	else {
@@ -905,7 +906,7 @@ export const drawFocusIfNeeded = (elementOrPath2D, element = null) => {
  * setLineDash([5, 15])
  */
 export const setLineDash = array => {
-	if(!Array.isArray(array)) {
+	if (!Array.isArray(array)) {
 		return console.error('Array type expected. Got ' + typeof array);
 	}
 
@@ -941,7 +942,7 @@ export const globalAlpha = globalAlpha => {
  */
 export const globalCompositeOperation = type => {
 	ctx.globalCompositeOperation = type;
-}
+};
 
 /**
  * Sets the image smoothing quality
@@ -964,7 +965,7 @@ export const setSmoothingQuality = quality => {
  * 	// ... do stuff
  * }
  */
-export const isPointInPath = function(x, y, fillRule='nonzero') {
+export const isPointInPath = function (x, y, fillRule = 'nonzero') {
 	return ctx.isPointInPath(...arguments);
 };
 
@@ -978,7 +979,7 @@ export const isPointInPath = function(x, y, fillRule='nonzero') {
  * 	// ... do stuff
  * }
  */
-export const isPointInStroke = function(x, y) {
+export const isPointInStroke = function (x, y) {
 	return ctx.isPointInStroke(...arguments);
 };
 
@@ -996,7 +997,7 @@ export const getTransform = () => ctx.getTransform();
  * @example
  * lineDashOffset(1)
  */
-export const lineDashOffset = (value=0.0) => {
+export const lineDashOffset = (value = 0.0) => {
 	ctx.lineDashOffset = value;
 };
 
@@ -1062,7 +1063,7 @@ export const setTransform = (...transform) => ctx.setTransform(...transform);
  * 	fillRect(0, 0, 300, 300);
  * };
  */
-export const createPattern = (image, repetition='repeat') => {
+export const createPattern = (image, repetition = 'repeat') => {
 	ctx.createPattern(image, repetition);
 };
 
@@ -1077,7 +1078,7 @@ export const createPattern = (image, repetition='repeat') => {
  * const imageData = createImageData(100, 50);
  * // ImageData { width: 100, height: 50, data: Uint8ClampedArray[20000] }
  */
-export const createImageData = function(widthOrImageData, height=null) {
+export const createImageData = function (widthOrImageData, height = null) {
 	return ctx.createImageData(...arguments);
 };
 
@@ -1096,13 +1097,13 @@ export const createImageData = function(widthOrImageData, height=null) {
  * const imgData = getImageData(0, 0, width, height);
  * putImageData(imgData, 0, 0);
  */
-export const putImageData = (imageData, dx, dy, dirtyX=null, dirtyY=null, dirtyWidth=null, dirtyHeight=null) => {
-	if(dirtyX === null) {
+export const putImageData = (imageData, dx, dy, dirtyX = null, dirtyY = null, dirtyWidth = null, dirtyHeight = null) => {
+	if (dirtyX === null) {
 		ctx.putImageData(imageData, dx, dy);
 	} else {
 		ctx.putImageData(imageData, dx, dy, dirtyX, dirtyY, dirtyWidth, dirtyHeight);
 	}
-}
+};
 
 /**
  * Returns an ImageData object representing the underlying pixel data for a specified portion of the canvas.
@@ -1140,10 +1141,10 @@ export const getImageData = (sx, sy, sw, sh) => ctx.getImageData(sx, sy, sw, sh)
  * 	drawImage(image, 33, 71, 104, 124, 21, 20, 87, 104);
  * });
  */
-export const drawImage = (image, sx, sy, sWidth=null, sHeight=null, dx=null, dy=null, dWidth=null, dHeight=null) => {
-	if(sWidth === null) {
+export const drawImage = (image, sx, sy, sWidth = null, sHeight = null, dx = null, dy = null, dWidth = null, dHeight = null) => {
+	if (sWidth === null) {
 		ctx.drawImage(image, sx - NOX_PV.cam.x, sy - NOX_PV.cam.y);
-	} else if(dx === null) {
+	} else if (dx === null) {
 		ctx.drawImage(image, sx - NOX_PV.cam.x, sy - NOX_PV.cam.y, sWidth, sHeight);
 	} else {
 		ctx.drawImage(image, sx, sy, sWidth, sHeight, dx - NOX_PV.cam.x, dy - NOX_PV.cam.y, dWidth, dHeight);
@@ -1175,15 +1176,18 @@ export const degree = rad => rad * (180 / PI);
 
 /**
  * Convert an angle to a vector (class instance) (2d vector)
- * @param {number} angle angle in radian
+ * @param {number} angle angle in degree
  * @example
  * const v = angleToVector(45); // Vector{x: 0.52, y: 0.85}
  */
-export const angleToVector = angle => new Vector(cos(angle), sin(angle));
+export const angleToVector = angle => {
+	const r = radian(angle);
+	return new Vector(cos(r), sin(r));
+};
 
 /**
  * Returns the angle in degree of a given vector from the default vector (1,0)
- * @param {Vector} vector vector to calculate its angle
+ * @param {Vector} vec vector to calculate its angle
  * @example
  * const angle = vectorToAngle(1, 1)
  */
@@ -1192,11 +1196,11 @@ export const vectorToAngle = vec => {
 	const baseVector = new Vector(1, 0);
 	let angle = angleBetweenVectors(baseVector, vec);
 
-    if(vec.y > 0)
-        angle *= -1;
+	if (vec.y > 0)
+		angle *= -1;
 
-    return degree(angle);
-}
+	return degree(angle);
+};
 
 /**
  * Returns the angle in radian between two given vectors
@@ -1208,13 +1212,13 @@ export const vectorToAngle = vec => {
  * const angle = angleBetweenVectors(v1, v2);
  */
 export const angleBetweenVectors = (a, b) => {
-	const ab = a.x * b.x + a.y * b.y + a.z * b.z;
+	const ab = a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 
 	const cosO = ab / (a.mag * b.mag) || 1;
 	const O = acos(cosO);
 
 	return O;
-}
+};
 
 
 
@@ -1231,7 +1235,7 @@ export const dist = (a, b) => {
 	const x = b.x - a.x;
 	const y = b.y - a.y;
 	const z = b.z - a.z;
-	return sqrt(x*x + y*y + z*z);
+	return sqrt(x * x + y * y + z * z);
 };
 
 /**
@@ -1260,7 +1264,7 @@ export const mag = (a, b) => new Vector(b.x - a.x, b.y - a.y);
 export const map = (arrayOrValue, start1, end1, start2, end2) => {
 	const m = val => (val - start1) * (end2 - start2) / (end1 - start1) + start2;
 
-	if(typeof arrayOrValue === 'number') {
+	if (typeof arrayOrValue === 'number') {
 		return m(arrayOrValue);
 	}
 
@@ -1374,7 +1378,7 @@ export const trunc = n => Math.trunc(n);
  * random(-25); // a random between -25 and 0
  * random(); // a random float between 0 and 1
  */
-export const random = (iMin=null, iMax = 0) => iMin===null? Math.random() : floor(random() * (max(iMin, iMax) - min(iMin, iMax) + 1)) + min(iMin, iMax);
+export const random = (iMin = null, iMax = 0) => iMin === null ? Math.random() : floor(random() * (max(iMin, iMax) - min(iMin, iMax) + 1)) + min(iMin, iMax);
 
 
 /**
@@ -1517,14 +1521,14 @@ export const mean = (...values) => sum(...values) / values.length;
  * median(1, 2, 3);
  */
 export const median = (...values) => {
-	if(values.length === 0)
+	if (values.length === 0)
 		return 0;
 
 	values.sort((a, b) => a - b);
 
 	const half = floor(values.length / 2);
 
-	if(values.length % 2)
+	if (values.length % 2)
 		return values[half];
 
 	return (values[half - 1] + values[half]) / 2.0;
@@ -1872,12 +1876,12 @@ export const easeInOutElastic = (t, b, c, d) => NOX_PV.easeElastic('inout', t, b
  * }
  */
 export const lerp = (v, t, p) => {
-	if(v instanceof Vector && t instanceof Vector) {
+	if (v instanceof Vector && t instanceof Vector) {
 		v.x = lerp(v.x, t.x, p);
 		v.y = lerp(v.y, t.y, p);
 		return v;
 	}
-	else if(typeof v === 'number' && typeof t === 'number') {
+	else if (typeof v === 'number' && typeof t === 'number') {
 		return v + (t - v) * p;
 	}
 
@@ -1890,7 +1894,7 @@ export const lerp = (v, t, p) => {
  * @example
  * frameRate(60)
  */
-export const frameRate = f => { if(f >= 0) NOX_PV.interval = 1000 / f; };
+export const frameRate = f => { if (f >= 0) NOX_PV.interval = 1000 / f; };
 
 
 
@@ -1957,15 +1961,15 @@ export const mouseDir = () =>
 	NOX_PV.isPointerLocked ?
 		mouseDirection
 		:
-		(mouseX > NOX_PV.oldMouseX && mouseY > NOX_PV.oldMouseY) 	? 'BOTTOM_RIGHT' :
-		(mouseX > NOX_PV.oldMouseX && mouseY < NOX_PV.oldMouseY) 	? 'TOP_RIGHT' :
-		(mouseX < NOX_PV.oldMouseX && mouseY < NOX_PV.oldMouseY) 	? 'TOP_LEFT' :
-		(mouseX < NOX_PV.oldMouseX && mouseY > NOX_PV.oldMouseY) 	? 'BOTTOM_LEFT' :
-		(mouseX > NOX_PV.oldMouseX && mouseY === NOX_PV.oldMouseY) 	? 'RIGHT' :
-		(mouseX === NOX_PV.oldMouseX && mouseY > NOX_PV.oldMouseY) 	? 'DOWN' :
-		(mouseX === NOX_PV.oldMouseX && mouseY < NOX_PV.oldMouseY) 	? 'UP' :
-		(mouseX < NOX_PV.oldMouseX && mouseY === NOX_PV.oldMouseY) 	? 'LEFT' :
-		null;
+		(mouseX > NOX_PV.oldMouseX && mouseY > NOX_PV.oldMouseY) ? 'BOTTOM_RIGHT' :
+			(mouseX > NOX_PV.oldMouseX && mouseY < NOX_PV.oldMouseY) ? 'TOP_RIGHT' :
+				(mouseX < NOX_PV.oldMouseX && mouseY < NOX_PV.oldMouseY) ? 'TOP_LEFT' :
+					(mouseX < NOX_PV.oldMouseX && mouseY > NOX_PV.oldMouseY) ? 'BOTTOM_LEFT' :
+						(mouseX > NOX_PV.oldMouseX && mouseY === NOX_PV.oldMouseY) ? 'RIGHT' :
+							(mouseX === NOX_PV.oldMouseX && mouseY > NOX_PV.oldMouseY) ? 'DOWN' :
+								(mouseX === NOX_PV.oldMouseX && mouseY < NOX_PV.oldMouseY) ? 'UP' :
+									(mouseX < NOX_PV.oldMouseX && mouseY === NOX_PV.oldMouseY) ? 'LEFT' :
+										null;
 
 
 
@@ -1975,7 +1979,7 @@ export const mouseDir = () =>
  * @param {number} newHeight canvas height
  */
 export const setCanvasSize = (newWidth, newHeight) => {
-	if(canvas && ctx) {
+	if (canvas && ctx) {
 		canvas.style.width = newWidth + 'px';
 		canvas.style.height = newHeight + 'px';
 
@@ -1985,8 +1989,8 @@ export const setCanvasSize = (newWidth, newHeight) => {
 		width = newWidth;
 		height = newHeight;
 
-        if(camera.anchorType === Camera.ANCHOR_CENTER)
-            camera.anchorPoint.set(width/2, height/2);
+		if (camera.anchorType === Camera.ANCHOR_CENTER)
+			camera.anchorPoint.set(width / 2, height / 2);
 	}
 
 	else {
@@ -1999,8 +2003,8 @@ export const setCanvasSize = (newWidth, newHeight) => {
  * @param {boolean} enable Either it has to enable or not this feature.
  * @param {boolean} onceDone Either it has to resize when the user stopped resize the page or at any resize moment.
  */
-export const setAutoResize = (enable, onceDone=true) => {
-	NOX_PV.autoResize = enable? (onceDone? 2 : 1) : 0;
+export const setAutoResize = (enable, onceDone = true) => {
+	NOX_PV.autoResize = enable ? (onceDone ? 2 : 1) : 0;
 };
 
 
@@ -2028,18 +2032,18 @@ export const setAutoResize = (enable, onceDone=true) => {
  * createCanvas(200, 200, '#fff'); // create 200x200 canvas with white background
  * createCanvas(200, 200, 0, true); // create 200x200 canvas with black background, and enable requestPointerLock feature
  */
-export const createCanvas = (w=null, h=null, bg='#000', requestPointerLock=false, container=document.body) => {
-	if(w == null && h == null) {
+export const createCanvas = (w = null, h = null, bg = '#000', requestPointerLock = false, container = document.body) => {
+	if (w == null && h == null) {
 		w = documentWidth();
 		h = documentHeight();
 	}
 
-	if(!container) {
+	if (!container) {
 		return console.warn('Canvas container is null. Aborting canvas creation.');
 	}
 
-	if(w == null && h == null) {
-		if(container === document.body) {
+	if (w == null && h == null) {
+		if (container === document.body) {
 			w = documentWidth();
 			h = documentHeight();
 		}
@@ -2049,13 +2053,13 @@ export const createCanvas = (w=null, h=null, bg='#000', requestPointerLock=false
 		}
 	}
 
-	if(w <= 0 || h <= 0) {
+	if (w <= 0 || h <= 0) {
 		console.warn('Canvas size must be higher than 0');
 		return;
 	}
 
 	// if canvas already created, then remove it and recreate it
-	if(canvas != null) {
+	if (canvas != null) {
 		canvas.remove();
 		canvas = null;
 		ctx = null;
@@ -2074,21 +2078,21 @@ export const createCanvas = (w=null, h=null, bg='#000', requestPointerLock=false
 	canvas.id = 'nox-canvas';
 	canvas.style.background = NOX_PV.colorTreatment(bg);
 
-	if(camera.anchorType === Camera.ANCHOR_CENTER) {
+	if (camera.anchorType === Camera.ANCHOR_CENTER) {
 		camera.setAnchor(Camera.ANCHOR_CENTER);
 	}
 
 	container.appendChild(canvas);
 
-	if(requestPointerLock) {
+	if (requestPointerLock) {
 		document.addEventListener('pointerlockchange', () => {
-			if(!document.pointerLockElement || document.pointerLockElement.id != 'nox-canvas') {
+			if (!document.pointerLockElement || document.pointerLockElement.id != 'nox-canvas') {
 				NOX_PV.isPointerLocked = false;
 			}
 		}, false);
 
 		canvas.addEventListener('click', () => {
-			if(!NOX_PV.isPointerLocked) {
+			if (!NOX_PV.isPointerLocked) {
 				NOX_PV.isPointerLocked = true;
 				canvas.requestPointerLock();
 			}
@@ -2130,7 +2134,7 @@ export const showGuideLines = bool => {
  * setDrawCondition(() => x < 10);
  */
 export const setDrawCondition = (condition = null) => {
-	if(condition) {
+	if (condition) {
 		NOX_PV.drawCond = condition;
 	}
 };
@@ -2150,13 +2154,13 @@ export const setDrawCondition = (condition = null) => {
  * Do not Call it.
  */
 const drawLoop = () => {
-	if(NOX_PV.loop === true)
+	if (NOX_PV.loop === true)
 		requestAnimationFrame(drawLoop);
 
 	// Perfs
 	const t0 = performance.now();
 
-	if(NOX_PV.logPerfs && NOX_PV.drawLoopInfo.it === 0) {
+	if (NOX_PV.logPerfs && NOX_PV.drawLoopInfo.it === 0) {
 		NOX_PV.drawLoopInfo.start = t0;
 	}
 	//
@@ -2167,43 +2171,43 @@ const drawLoop = () => {
 
 
 	// Camera
-    if(camera.following) {
-        camera.position.set(camera.followPoint.x, camera.followPoint.y);
-    }
+	if (camera.following) {
+		camera.position.set(camera.followPoint.x, camera.followPoint.y);
+	}
 
-    else if(camera.moving) {
-        const m = NOX_PV.camera.move;
-        const t = m.start.asMilliseconds();
-        const x = easeInOutQuad(t, m.from.x, m.length.x, m.duration);
-        const y = easeInOutQuad(t, m.from.y, m.length.y, m.duration);
+	else if (camera.moving) {
+		const m = NOX_PV.camera.move;
+		const t = m.start.asMilliseconds();
+		const x = easeInOutQuad(t, m.from.x, m.length.x, m.duration);
+		const y = easeInOutQuad(t, m.from.y, m.length.y, m.duration);
 
-        if(t >= m.duration) {
-            camera.position.set(m.from.x + m.length.x, m.from.y + m.length.y);
-            NOX_PV.camera.move = null;
-        }
-        else
-            camera.position.set(x, y);
-    }
+		if (t >= m.duration) {
+			camera.position.set(m.from.x + m.length.x, m.from.y + m.length.y);
+			NOX_PV.camera.move = null;
+		}
+		else
+			camera.position.set(x, y);
+	}
 	//
 
 	mouseWorldPos.set(mouseX, mouseY).add(camera.x, camera.y);
 
 	// UPDATE
-	for(const module of NOX_PV.updateModules)
+	for (const module of NOX_PV.updateModules)
 		module.update(NOX_PV.delta);
 
 	NOX_PV.updateFunc(NOX_PV.delta); // user update function
 	//
 
 	// Perfs
-	if(NOX_PV.logPerfs)
+	if (NOX_PV.logPerfs)
 		NOX_PV.drawLoopInfo.t1 += performance.now() - t0;
 
 	// FPS -> Draw
-	if(NOX_PV.delta > NOX_PV.interval) {
+	if (NOX_PV.delta > NOX_PV.interval) {
 		NOX_PV.then = NOX_PV.now - (NOX_PV.delta % NOX_PV.interval);
 
-		if(NOX_PV.then - NOX_PV.firstThen > 99999) {
+		if (NOX_PV.then - NOX_PV.firstThen > 99999) {
 			NOX_PV.firstThen = NOX_PV.now;
 			NOX_PV.then = NOX_PV.firstThen;
 			NOX_PV.counter = 0;
@@ -2216,42 +2220,42 @@ const drawLoop = () => {
 		fps = round(NOX_PV.counter / NOX_PV.time_el);
 
 		// if canvas created & drawCond returns true
-		if(ctx && NOX_PV.drawCond()) {
+		if (ctx && NOX_PV.drawCond()) {
 			const t = performance.now();
 
 			push();
-				clearRect(NOX_PV.cam.x, NOX_PV.cam.y, width, height); // clear the canvas
+			clearRect(NOX_PV.cam.x, NOX_PV.cam.y, width, height); // clear the canvas
 
-				// draw extra before the basic drawing
-				for(const module of NOX_PV.renderingModules) {
-					module.render();
-				}
+			// draw extra before the basic drawing
+			for (const module of NOX_PV.renderingModules) {
+				module.render();
+			}
 
-				// user draw function
-				NOX_PV.drawFunc();
+			// user draw function
+			NOX_PV.drawFunc();
 
-				// if guidelines enabled
-				if(NOX_PV.bGuideLines) {
-					push();
-						disableCamera();
-						fill('#46eaea');
-						stroke('#46eaea');
-						ctx.font = '12px Consolas';
-						ctx.textAlign = 'left';
-						strokeWeight(1);
-						line(0, mouseY, width, mouseY);
-						line(mouseX, 0, mouseX, height);
+			// if guidelines enabled
+			if (NOX_PV.bGuideLines) {
+				push();
+				disableCamera();
+				fill('#46eaea');
+				stroke('#46eaea');
+				ctx.font = '12px Consolas';
+				ctx.textAlign = 'left';
+				strokeWeight(1);
+				line(0, mouseY, width, mouseY);
+				line(mouseX, 0, mouseX, height);
 
-						const sText = `screen : ${floor(mouseX)}, ${floor(mouseY)}\nworld  : ${floor(mouseWorldPos.x)}, ${floor(mouseWorldPos.y)}`;
-						const textDim = measureText(sText);
+				const sText = `screen : ${floor(mouseX)}, ${floor(mouseY)}\nworld  : ${floor(mouseWorldPos.x)}, ${floor(mouseWorldPos.y)}`;
+				const textDim = measureText(sText);
 
-						const textX = (mouseX > width / 2)? mouseX - textDim.width / 2 - 8:  mouseX + 8;
-						const textY = (mouseY > height / 2)? mouseY - 20 : mouseY + 25;
+				const textX = (mouseX > width / 2) ? mouseX - textDim.width / 2 - 8 : mouseX + 8;
+				const textY = (mouseY > height / 2) ? mouseY - 20 : mouseY + 25;
 
-						text(sText, textX, textY);
-						enableCamera();
-					pop();
-				}
+				text(sText, textX, textY);
+				enableCamera();
+				pop();
+			}
 			pop();
 
 			// Perfs
@@ -2260,10 +2264,10 @@ const drawLoop = () => {
 	}
 
 	// Perfs
-	if(NOX_PV.logPerfs) {
+	if (NOX_PV.logPerfs) {
 		NOX_PV.drawLoopInfo.it = (NOX_PV.drawLoopInfo.it + 1) % NOX_PV.drawLoopInfo.freq;
 
-		if(NOX_PV.drawLoopInfo.it === 0) {
+		if (NOX_PV.drawLoopInfo.it === 0) {
 			NOX_PV.drawLoopInfo.t1 /= NOX_PV.drawLoopInfo.freq;
 			NOX_PV.drawLoopInfo.t2 /= NOX_PV.drawLoopInfo.freq;
 
@@ -2306,8 +2310,8 @@ export const noLoop = () => {
  * enableSmoothing();
  */
 export const enableSmoothing = () => {
-	if(ctx) ctx.imageSmoothingEnabled = true;
-}
+	if (ctx) ctx.imageSmoothingEnabled = true;
+};
 
 /**
  * Disables image's smoothing.
@@ -2316,24 +2320,24 @@ export const enableSmoothing = () => {
  * disableSmoothing();
  */
 export const disableSmoothing = () => {
-	if(ctx) ctx.imageSmoothingEnabled = false;
-}
+	if (ctx) ctx.imageSmoothingEnabled = false;
+};
 
 
 /**
  * Enables the camera.
  */
 export const disableCamera = () => {
-    NOX_PV.camera.enabled = false;
-    NOX_PV.cam = NOX_PV.camera.hud;
+	NOX_PV.camera.enabled = false;
+	NOX_PV.cam = NOX_PV.camera.hud;
 };
 
 /**
  * Disables the camera.
  */
 export const enableCamera = () => {
-    NOX_PV.camera.enabled = true;
-    NOX_PV.cam = camera;
+	NOX_PV.camera.enabled = true;
+	NOX_PV.cam = camera;
 };
 
 
@@ -2347,11 +2351,11 @@ export const enableCamera = () => {
  * pixels[0] = 255; // first pixel is now red
  */
 export const loadPixels = () => {
-	if(ctx instanceof CanvasRenderingContext2D && canvas instanceof HTMLCanvasElement) {
+	if (ctx instanceof CanvasRenderingContext2D && canvas instanceof HTMLCanvasElement) {
 		NOX_PV.pixels = ctx.createImageData(canvas.width, canvas.height);
 		pixels = NOX_PV.pixels.data;
 
-		for(let i=0; i < width * height; i++) {
+		for (let i = 0; i < width * height; i++) {
 			pixels[i * 4 + 3] = 255; // enable max opacity (to see each pixels)
 		}
 	}
@@ -2369,7 +2373,7 @@ export const loadPixels = () => {
  * updatePixels();
  */
 export const updatePixels = () => {
-	if(typeof pixels !== 'undefined' && ctx instanceof CanvasRenderingContext2D) {
+	if (typeof pixels !== 'undefined' && ctx instanceof CanvasRenderingContext2D) {
 		NOX_PV.pixels.data = pixels;
 		ctx.putImageData(NOX_PV.pixels, 0, 0);
 	}
@@ -2400,9 +2404,9 @@ export const updatePixels = () => {
  * @example
  * const value = perlin(0, 0); // value between -1 and 1.
  */
-export const perlin = (x, y=0) => {
+export const perlin = (x, y = 0) => {
 	// create seed if never used perlin noise previously
-	if(!NOX_PV.perlin.seed || NOX_PV.perlin.seed.length === 0) {
+	if (!NOX_PV.perlin.seed || NOX_PV.perlin.seed.length === 0) {
 		NOX_PV.perlin.seed = NOX_PV.perlin.generateSeed();
 	}
 
@@ -2418,7 +2422,7 @@ export const perlin = (x, y=0) => {
  * noiseDetails(200);
  */
 export const noiseDetails = detailLevel => {
-	if(typeof detailLevel === 'number') {
+	if (typeof detailLevel === 'number') {
 		NOX_PV.perlin.lod = detailLevel;
 	}
 };
@@ -2458,20 +2462,20 @@ export class RGB {
 	 * @param {number} b blue value [0 - 255]
 	 * @param {number} a alpha (opacity) value [0 - 255]
 	 */
-	constructor(r, g=null, b=null, a=255) {
+	constructor(r, g = null, b = null, a = 255) {
 		this.color = { r: 0, g: 0, b: 0 };
 
-		if(r === undefined) {
+		if (r === undefined) {
 			r = 0;
 		}
 
-		if(g !== null && b === null) {
+		if (g !== null && b === null) {
 			a = g;
 			g = b = r;
 		}
 
 		// only one argument given: 3 are same (do grey)
-		if(g === null) {
+		if (g === null) {
 			g = r;
 			b = r;
 		}
@@ -2487,7 +2491,7 @@ export class RGB {
 	 * @param {number} val A number
 	 */
 	valueInInterval(val) {
-		if(val < 0 || val > 255) {
+		if (val < 0 || val > 255) {
 			console.error(`Color interval [0 - 255] no repespected (${val} given)`);
 			return min(max(val, 0), 255);
 		}
@@ -2576,11 +2580,11 @@ export class RGB {
 	 * const color = new Color(0, 0, 0);
 	 * color.set(10, 20, 30); // now color.r = 10, color.g = 20 and color.b = 30
 	 */
-	set(r, g, b, a=null) {
+	set(r, g, b, a = null) {
 		this.r = r;
 		this.g = g;
 		this.b = b;
-		if(a !== null) this.a = a;
+		if (a !== null) this.a = a;
 	}
 
 	/**
@@ -2617,9 +2621,9 @@ export class RGB {
 	 * console.info(color.toHEX()); // '#F00'
 	 */
 	toHEX() {
-		let r = Number(this.r).toString()(16); if(r.length < 2) r = '0' + r;
-		let g = Number(this.g).toString()(16); if(g.length < 2) g = '0' + g;
-		let b = Number(this.b).toString()(16); if(b.length < 2) b = '0' + b;
+		let r = Number(this.r).toString()(16); if (r.length < 2) r = '0' + r;
+		let g = Number(this.g).toString()(16); if (g.length < 2) g = '0' + g;
+		let b = Number(this.b).toString()(16); if (b.length < 2) b = '0' + b;
 		const rgb = '#' + r + g + b;
 
 		return new HEX(rgb);
@@ -2642,7 +2646,7 @@ export class RGB {
 
 		let h, s, l = (imax + imin) / 2;
 
-		if(imax === imin) {
+		if (imax === imin) {
 			h = s = 0;
 		}
 
@@ -2702,15 +2706,15 @@ export class HEX {
 	 * color.set('#f00'); // red
 	 */
 	set(hexaColor) {
-		if(typeof hexaColor === 'number') {
+		if (typeof hexaColor === 'number') {
 			this.color.int = hexaColor;
 			const h = hexaColor.toString()(16) + '';
 			this.color.str = '#' + (h.length === 4 ? '00' : '') + h;
 		}
 
-		else if(typeof hexaColor === 'string' && /^#?([0-9a-f]{3}){1,2}$/i.test(hexaColor)) {
+		else if (typeof hexaColor === 'string' && /^#?([0-9a-f]{3}){1,2}$/i.test(hexaColor)) {
 			hexaColor = hexaColor.replace('#', '');
-			if(hexaColor.length === 3) hexaColor = hexaColor[0].repeat(2) + hexaColor[1].repeat(2) + hexaColor[2].repeat(2);
+			if (hexaColor.length === 3) hexaColor = hexaColor[0].repeat(2) + hexaColor[1].repeat(2) + hexaColor[2].repeat(2);
 			this.color.str = '#' + hexaColor;
 			this.color.int = parseInt(hexaColor, 16);
 		}
@@ -2754,10 +2758,10 @@ export class HSL {
 	 * @param {number} saturation saturation value [0 - 1]
 	 * @param {number} light brightness value [0 - 1]
 	 */
-	constructor(hue, saturation=0.5, light=0.5) {
+	constructor(hue, saturation = 0.5, light = 0.5) {
 		this.color = { h: 0, s: 0, l: 0 };
 
-		if(typeof hue !== 'number') {
+		if (typeof hue !== 'number') {
 			console.error(`Hue given parameter isn't a recognized number value: ${hue}`);
 			hue = 0;
 		}
@@ -2934,11 +2938,11 @@ export class HSL {
 
 		r = g = b = 0;
 
-		if(hh >= 0 && hh < 1) [r, g] = [C, X];
-		else if(hh >= 1 && hh < 2) [r, g] = [X, C];
-		else if(hh >= 2 && hh < 3) [g, b] = [C, X];
-		else if(hh >= 3 && hh < 4) [g, b] = [X, C];
-		else if(hh >= 4 && hh < 5) [r, b] = [X, C];
+		if (hh >= 0 && hh < 1) [r, g] = [C, X];
+		else if (hh >= 1 && hh < 2) [r, g] = [X, C];
+		else if (hh >= 2 && hh < 3) [g, b] = [C, X];
+		else if (hh >= 3 && hh < 4) [g, b] = [X, C];
+		else if (hh >= 4 && hh < 5) [r, b] = [X, C];
 		else[r, b] = [C, X];
 
 		const m = this.l - C / 2;
@@ -2954,7 +2958,7 @@ export class HSL {
 
 export class PerlinNoise {
 	static mapnumberTypes = ['default', 'rgb', 'hsl'];
-	static getMapnumberTypeIndex = typeStr => PerlinNoise.mapnumberTypes.indexOf(typeStr)
+	static getMapnumberTypeIndex = typeStr => PerlinNoise.mapnumberTypes.indexOf(typeStr);
 	/**
 	 *
 	 * @param {number} lod level of details
@@ -2964,7 +2968,7 @@ export class PerlinNoise {
 	 * @param {number} h height of the array
 	 * @param {string} mapnumber map values to [auto: (-1,1)], [rgb: (0,255)], [hsl: (0, 360)]
 	 */
-	constructor(lod=10, x=0, y=0, w=width, h=height, mapnumber='default') {
+	constructor(lod = 10, x = 0, y = 0, w = width, h = height, mapnumber = 'default') {
 		this.lod = lod;
 		this.seed = NOX_PV.perlin.generateSeed();
 		this.start = { x, y };
@@ -2976,7 +2980,7 @@ export class PerlinNoise {
 
 	/**
 	 * Sets the level of detail for this class instance.
-     *
+	 *
 	 * If the lod changed, then it re-calculates the array.
 	 * @param {number} lod level of detail
 	 * @example
@@ -2987,14 +2991,14 @@ export class PerlinNoise {
 		const tmp = this.lod;
 		this.lod = lod;
 
-		if(tmp !== lod) {
+		if (tmp !== lod) {
 			this.calculate();
 		}
 	}
 
 	/**
 	 * Regenerates the noise's seed.
-     *
+	 *
 	 * Then it re-calculates the array.
 	 * @example
 	 * const p = new PerlinNoise();
@@ -3007,9 +3011,9 @@ export class PerlinNoise {
 
 	/**
 	 * Sets the map number of the array.
-     *
+	 *
 	 * Default is [-1,1] (0).
-     *
+	 *
 	 * You can choose [0,255] (1) or [0,360] (2).
 	 * @param {0|1|2} mapnumber map style's index
 	 * @example
@@ -3018,13 +3022,13 @@ export class PerlinNoise {
 	 */
 	setMapNumber(mapnumber) {
 		mapnumber = PerlinNoise.getMapNumberTypeIndex(mapnumber);
-		if(this.numberMapStyle === mapnumber) return;
+		if (this.numberMapStyle === mapnumber) return;
 
 		let Lmin = 0, Lmax = NOX_PV.perlin.unit, Rmin = 0, Rmax = NOX_PV.perlin.unit;
 
-		if(this.numberMapStyle > 0) [Lmin, Lmax] = [0, (this.numberMapStyle === 1) ? 255 : 360];
+		if (this.numberMapStyle > 0) [Lmin, Lmax] = [0, (this.numberMapStyle === 1) ? 255 : 360];
 		this.numberMapStyle = mapnumber;
-		if(this.numberMapStyle > 0) [Rmin, Rmax] = [0, (this.numberMapStyle === 1) ? 255 : 360];
+		if (this.numberMapStyle > 0) [Rmin, Rmax] = [0, (this.numberMapStyle === 1) ? 255 : 360];
 
 		this.array.forEach((row, i) => {
 			this.array[i] = map(this.array[i], Lmin, Lmax, Rmin, Rmax);
@@ -3033,10 +3037,10 @@ export class PerlinNoise {
 
 	/**
 	 * Calculates the noised array.
-     *
+	 *
 	 * You normally don't have to call it.
-     *
-     * It's automatically called if an option is changed through methods.
+	 *
+	 * It's automatically called if an option is changed through methods.
 	 * @example
 	 * const p = new PerlinNoise();
 	 * p.calculate();
@@ -3044,17 +3048,17 @@ export class PerlinNoise {
 	calculate() {
 		this.array = [];
 
-		for(let y = this.start.y; y < this.start.y + this.size.height; y++) {
+		for (let y = this.start.y; y < this.start.y + this.size.height; y++) {
 			const row = [];
 
-			for(let x = this.start.x; x < this.start.x + this.size.width; x++) {
+			for (let x = this.start.x; x < this.start.x + this.size.width; x++) {
 				row.push(NOX_PV.perlin.get(x, y, this.lod, this.seed));
 			}
 
 			this.array.push(row);
 		}
 
-		if(this.numberMapStyle > 0) {
+		if (this.numberMapStyle > 0) {
 			this.setMapNumber(PerlinNoise.mapnumberTypes[this.numberMapStyle]);
 		}
 	}
@@ -3069,10 +3073,10 @@ export class Time {
 		micro: ms => ms * 1000,
 		milli: (t, unit = 'milli') => {
 			switch (unit) {
-				case 'nano': return t / 100000000 // nano to ms
-				case 'micro': return t / 1000 // micro to ms
-				case 'seconds': return t * 1000 // seconds to ms
-				case 'minutes': return t * 60000 // minutes to ms
+				case 'nano': return t / 100000000; // nano to ms
+				case 'micro': return t / 1000; // micro to ms
+				case 'seconds': return t * 1000; // seconds to ms
+				case 'minutes': return t * 60000; // minutes to ms
 				default: return t;
 			}
 		},
@@ -3091,8 +3095,8 @@ export class Time {
 	 *
 	 * It can be 'nano', 'micro', 'milli', 'seconds', 'minutes'
 	 */
-	constructor(startingTime=undefined, unity='milli') {
-		if(typeof startingTime === 'undefined' || !Object.keys(Time.units).includes(unity)) {
+	constructor(startingTime = undefined, unity = 'milli') {
+		if (typeof startingTime === 'undefined' || !Object.keys(Time.units).includes(unity)) {
 			this.reset();
 			this.staticTime = false;
 		} else {
@@ -3122,7 +3126,7 @@ export class Time {
 	 * @return {number}
 	 */
 	asMilliseconds() {
-		return Time.units.milli(this.staticTime? this.start : (Date.now() - this.start));
+		return Time.units.milli(this.staticTime ? this.start : (Date.now() - this.start));
 	}
 
 	/**
@@ -3160,7 +3164,7 @@ export class Vector {
 	 * @param {number} z z vector's coordinate
 	 * @param {number} w w vector's coordinate
 	 */
-	constructor(x, y=null, z=null, w=null) {
+	constructor(x, y = null, z = null, w = null) {
 		let dimension = 1;
 
 		this.coords = {
@@ -3173,7 +3177,7 @@ export class Vector {
 		const tmp = { x: 0, y: 0, z: 0, w: 0 };
 
 		// import from another vector
-		if(x instanceof Vector) {
+		if (x instanceof Vector) {
 			// same dimension
 			dimension = x.dimension;
 			tmp.x = x.x;
@@ -3274,7 +3278,7 @@ export class Vector {
 	 * v.y = 10;
 	 */
 	set y(y) {
-		if(this.dimension > 1) {
+		if (this.dimension > 1) {
 			this.coords.y = y;
 		} else {
 			console.error('Cannot modify the Y of a 1D vector');
@@ -3290,7 +3294,7 @@ export class Vector {
 	 * v.z = 10;
 	 */
 	set z(z) {
-		if(this.dimension > 2) {
+		if (this.dimension > 2) {
 			this.coords.z = z;
 		} else {
 			console.error(`Cannot modify the Z of a ${this.dimension}D vector`);
@@ -3306,16 +3310,16 @@ export class Vector {
 	 * v.w = 10;
 	 */
 	set w(w) {
-		if(this.dimension > 2) {
+		if (this.dimension > 2) {
 			this.coords.w = w;
 		} else {
 			console.error(`Cannot modify the W of a ${this.dimension}D vector`);
 		}
 	}
 
-    copy() {
-        return new Vector(this);
-    }
+	copy() {
+		return new Vector(this);
+	}
 
 	/**
 	 * Adapts the vector on a scale of 1
@@ -3328,24 +3332,24 @@ export class Vector {
 	 * v.set(20);
 	 * const v2 = v.normalize(); // v.x = 20, v2.x = 1
 	 */
-	normalize(apply=false) {
+	normalize(apply = false) {
 		// does not care about vector dimension
 		const norm = Math.hypot(this.x, this.y, this.z, this.w);
 
-		if(!apply) {
+		if (!apply) {
 			return new Vector(this).normalize(true);
 		}
 
-		if(norm !== 0) {
+		if (norm !== 0) {
 			this.x /= norm;
 
-			if(this.dimension > 1) {
+			if (this.dimension > 1) {
 				this.y /= norm;
 
-				if(this.dimension === 3) {
+				if (this.dimension === 3) {
 					this.z /= norm;
 
-					if(this.dimension === 4) {
+					if (this.dimension === 4) {
 						this.w /= norm;
 					}
 				}
@@ -3363,22 +3367,22 @@ export class Vector {
 	 * @param {number|null} z 
 	 * @param {number|null} w 
 	 */
-	equals(x, y=null, z=null, w=null) {
+	equals(x, y = null, z = null, w = null) {
 		let vector;
 
-		if(x instanceof Vector) {
+		if (x instanceof Vector) {
 			vector = x;
 		}
 		else {
 			vector = new Vector(x, y, z, w);
 		}
 
-		if(this.dimension !== vector.dimension) {
+		if (this.dimension !== vector.dimension) {
 			return false;
 		}
 
-		for(const coord in this.coords) {
-			if(this.coords[coord] !== vector.coords[coord]) {
+		for (const coord in this.coords) {
+			if (this.coords[coord] !== vector.coords[coord]) {
 				return false;
 			}
 		}
@@ -3397,44 +3401,44 @@ export class Vector {
 	 * const v = new Vector(10, 20, 30, 40);
 	 * v.set(30, 20, 10, 0);
 	 */
-	set(x, y=null, z=null, w=null) {
-		if(x instanceof Vector) {
+	set(x, y = null, z = null, w = null) {
+		if (x instanceof Vector) {
 			this.x = x.x;
-			if(this.dimension === 2) this.y = x.y;
-			if(this.dimension === 3) this.z = x.z;
-			if(this.dimension === 4) this.w = x.w;
+			if (this.dimension === 2) this.y = x.y;
+			if (this.dimension === 3) this.z = x.z;
+			if (this.dimension === 4) this.w = x.w;
 		}
 
-		else if(typeof x !== 'number') {
+		else if (typeof x !== 'number') {
 			return console.error('[Error] Vector::set : x parameter must be a number or a Vector');
 		}
 
 		else {
-			if(this.dimension > 1) {
-				if(y !== null && typeof y !== 'number') {
+			if (this.dimension > 1) {
+				if (y !== null && typeof y !== 'number') {
 					return console.error('[Error] Vector::set : y parameter must be a number');
 				}
 
-				if(z !== null && this.dimension > 2 && typeof z !== 'number') {
+				if (z !== null && this.dimension > 2 && typeof z !== 'number') {
 					return console.error('[Error] Vector::set : z parameter must be a number');
 				}
 
-				if(w !== null && this.dimension > 3 && typeof w !== 'number') {
+				if (w !== null && this.dimension > 3 && typeof w !== 'number') {
 					return console.error('[Error] Vector::set : w parameter must be a number');
 				}
 			}
 
 			this.x = x;
 
-			if(this.dimension > 1) {
-				if(y !== null) {
+			if (this.dimension > 1) {
+				if (y !== null) {
 					this.y = y;
 				}
 
-				if(this.dimension > 2 && z != null) {
+				if (this.dimension > 2 && z != null) {
 					this.z = z;
 
-					if(this.dimension > 3 && w != null) {
+					if (this.dimension > 3 && w != null) {
 						this.w = w;
 					}
 				}
@@ -3457,20 +3461,20 @@ export class Vector {
 	 * const v3 = v.add(1, 2); // now v{x: 11, y: 12} and v3 is same
 	 * v2.add(v); // now v2{x: 31, y: 32}
 	 */
-	add(x, y=null, z=null, w=null) {
-		if(x instanceof Vector) {
+	add(x, y = null, z = null, w = null) {
+		if (x instanceof Vector) {
 			return this.set(this.x + x.x, this.y + x.y, this.z + x.z, this.w + x.w);
 		}
 
-		if(y === null) {
+		if (y === null) {
 			y = x;
 		}
 
-		if(z === null) {
+		if (z === null) {
 			z = x;
 		}
 
-		if(w === null) {
+		if (w === null) {
 			w = x;
 		}
 
@@ -3490,20 +3494,20 @@ export class Vector {
 	 * const v3 = v.sub(1, 2); // now v{x: 9, y: 8} and v3 is same
 	 * v2.sub(v); // now v2{x: 11, y: 12}
 	 */
-	sub(x, y=null, z=null, w=null) {
-		if(x instanceof Vector) {
+	sub(x, y = null, z = null, w = null) {
+		if (x instanceof Vector) {
 			return this.set(this.x - x.x, this.y - x.y, this.z - x.z, this.w - x.w);
 		}
 
-		if(y === null) {
+		if (y === null) {
 			y = x;
 		}
 
-		if(z === null) {
+		if (z === null) {
 			z = x;
 		}
 
-		if(w === null) {
+		if (w === null) {
 			w = x;
 		}
 
@@ -3525,20 +3529,20 @@ export class Vector {
 	 * const v3 = v.mult(1, 2); // now v{x: 20, y: 40} and v3 is same
 	 * v2.mult(v); // now v2{x: 400, y: 800}
 	 */
-	mult(x, y=null, z=null, w=null) {
-		if(x instanceof Vector) {
+	mult(x, y = null, z = null, w = null) {
+		if (x instanceof Vector) {
 			return this.set(this.x * x.x, this.y * x.y, this.z * x.z, this.w * x.w);
 		}
 
-		if(y === null) {
+		if (y === null) {
 			y = x;
 		}
 
-		if(z === null) {
+		if (z === null) {
 			z = x;
 		}
 
-		if(w === null) {
+		if (w === null) {
 			w = x;
 		}
 
@@ -3558,20 +3562,20 @@ export class Vector {
 	 * const v3 = v.div(2); // now v{x: 5, 5} and v3 is same
 	 * v2.div(v); // now v2{x: 4, y: 4}
 	 */
-	div(x, y=null, z=null, w=null) {
-		if(x instanceof Vector) {
+	div(x, y = null, z = null, w = null) {
+		if (x instanceof Vector) {
 			return this.set(this.x / x.x, this.y / x.y, this.z / x.z, this.w / x.w);
 		}
 
-		if(y === null) {
+		if (y === null) {
 			y = x;
 		}
 
-		if(z === null) {
+		if (z === null) {
 			z = x;
 		}
 
-		if(w === null) {
+		if (w === null) {
 			w = x;
 		}
 
@@ -3590,24 +3594,24 @@ export class Vector {
 	 * v2.invert(); // now v2{x: 3, y: 1, z: 2}
 	 * v2.invert(true); // now v2{x: 1, y:2, z: 3}
 	 */
-	invert(antiClockwise=false) {
+	invert(antiClockwise = false) {
 		// not 1D, else we just have to do x = x
-		if(this.dimension > 1) {
+		if (this.dimension > 1) {
 			// 2D
-			if(this.dimension === 2) {
+			if (this.dimension === 2) {
 				[this.x, this.y] = [this.y, this.x];
 			}
 
 			// 3D
-			else if(this.dimension === 3) {
-				if(antiClockwise) {
+			else if (this.dimension === 3) {
+				if (antiClockwise) {
 					[this.x, this.y, this.z] = [this.y, this.z, this.x];
 				} else {
 					[this.x, this.y, this.z] = [this.z, this.x, this.y];
 				}
 			}
 
-			else if(this.dimension === 4) {
+			else if (this.dimension === 4) {
 				[this.x, this.y, this.z, this.w] = [this.w, this.x, this.y, this.z];
 			}
 		}
@@ -3625,9 +3629,9 @@ export class Vector {
 	 */
 	setMag(newMag) {
 		this.x = this.x * newMag / this.mag;
-		if(this.dimension > 1) this.y = this.y * newMag / this.mag;
-		if(this.dimension > 2) this.z = this.z * newMag / this.mag;
-		if(this.dimension > 3) this.w = this.w * newMag / this.mag;
+		if (this.dimension > 1) this.y = this.y * newMag / this.mag;
+		if (this.dimension > 2) this.z = this.z * newMag / this.mag;
+		if (this.dimension > 3) this.w = this.w * newMag / this.mag;
 
 		return this;
 	}
@@ -3643,6 +3647,13 @@ export class Vector {
 	}
 
 	/**
+	 * @returns {number} The angle between this vector and the x axis (in degrees)
+	 */
+	heading() {
+		return vectorToAngle(this);
+	}
+
+	/**
 	 * Rotates this vector by a given angle (in degrees) around the origin
 	 * @param {number} angle The angle to rotate by (in degrees)
 	 * @return {Vector} The rotated vector
@@ -3654,18 +3665,18 @@ export class Vector {
 
 		this.x = this.x * cosius - this.y * sinus;
 
-		if(this.dimension > 1) {
+		if (this.dimension > 1) {
 			this.y = this.x * sinus + this.y * cosius;
-			
-			if(this.dimension > 2) {
+
+			if (this.dimension > 2) {
 				this.z = this.z * sinus + this.z * cosius;
 
-				if(this.dimension > 3) {
+				if (this.dimension > 3) {
 					this.w = this.w * sinus + this.w * cosius;
 				}
 			}
 		}
-	
+
 		return this;
 	}
 
@@ -3680,10 +3691,10 @@ export class Vector {
 	toString() {
 		let str = '{';
 
-		if(this.dimension > 0) str += ` x: ${this.x}`;
-		if(this.dimension > 1) str += `, y: ${this.y}`;
-		if(this.dimension > 2) str += `, z: ${this.z}`;
-		if(this.dimension > 3) str += `, w: ${this.w}`;
+		if (this.dimension > 0) str += ` x: ${this.x}`;
+		if (this.dimension > 1) str += `, y: ${this.y}`;
+		if (this.dimension > 2) str += `, z: ${this.z}`;
+		if (this.dimension > 3) str += `, w: ${this.w}`;
 
 		return str + ' }';
 	}
@@ -3697,43 +3708,43 @@ export class Vector {
 	 */
 	array() {
 		const arr = [this.x];
-		if(this.dimension > 1) arr.push(this.y);
-		if(this.dimension > 2) arr.push(this.z);
-		if(this.dimension > 3) arr.push(this.w);
+		if (this.dimension > 1) arr.push(this.y);
+		if (this.dimension > 2) arr.push(this.z);
+		if (this.dimension > 3) arr.push(this.w);
 
 		return arr;
 	}
 
-    /**
-     * Returns the vector's properties as a basic object { x, y, z, w }
-     *
-     * { x } for dimension 1
-     *
-     * { x, y } for dimension 2
-     *
-     * { x, y, z } for dimension 3
+	/**
+	 * Returns the vector's properties as a basic object { x, y, z, w }
+	 *
+	 * { x } for dimension 1
+	 *
+	 * { x, y } for dimension 2
+	 *
+	 * { x, y, z } for dimension 3
 	 * 
-     * { x, y, z, w } for dimension 4
+	 * { x, y, z, w } for dimension 4
 	 * 
-     * @return {object}
-     */
-    object() {
-        const o = { x: this.x };
+	 * @return {object}
+	 */
+	object() {
+		const o = { x: this.x };
 
-        if(this.dimension > 1) {
-            o.y = this.y;
+		if (this.dimension > 1) {
+			o.y = this.y;
 
-            if(this.dimension > 2) {
-                o.z = this.z;
-            }
+			if (this.dimension > 2) {
+				o.z = this.z;
+			}
 
-			if(this.dimension > 3) {
+			if (this.dimension > 3) {
 				o.w = this.w;
 			}
-        }
+		}
 
-        return o;
-    }
+		return o;
+	}
 
 	/**
 	 * Draw the vector on the canvas (1 & 2 dimensions only for now)
@@ -3741,16 +3752,16 @@ export class Vector {
 	 * @param {number} y vector's position on the canvas
 	 * @param {Object (strokeWeight: number, stroke: any)} style bow's fill & stroke style
 	 */
-	bow(x, y, style={}) {
+	bow(x, y, style = {}) {
 		// not implemented for the 3rd and 4th dimension
-		if(this.dimension > 2)
+		if (this.dimension > 2)
 			return;
 
 		// arrow's style
-		if(style.strokeWeight) strokeWeight(style.strokeWeight);
+		if (style.strokeWeight) strokeWeight(style.strokeWeight);
 		else strokeWeight(1);
 
-		if(style.stroke) stroke(style.stroke);
+		if (style.stroke) stroke(style.stroke);
 		else stroke('#fff');
 
 
@@ -3758,25 +3769,25 @@ export class Vector {
 		const rotation = degree(vectorToAngle(this));
 
 		push();
-			// trunk
-			translate(x, y);
-			line(0, 0, this.x, this.y);
-			linecap('round');
+		// trunk
+		translate(x, y);
+		line(0, 0, this.x, this.y);
+		linecap('round');
 
-			// spike
-			push();
-				translate(this.x, this.y);
+		// spike
+		push();
+		translate(this.x, this.y);
 
-				push();
-					// left
-					rotate(rotation + 25);
-					line(0, 0, -min(this.mag / 2.5, 10), 0);
+		push();
+		// left
+		rotate(rotation + 25);
+		line(0, 0, -min(this.mag / 2.5, 10), 0);
 
-					// right
-					rotate(-50);
-					line(0, 0, -min(this.mag / 2.5, 10), 0);
-				pop();
-			pop();
+		// right
+		rotate(-50);
+		line(0, 0, -min(this.mag / 2.5, 10), 0);
+		pop();
+		pop();
 		pop();
 	}
 }
@@ -3833,14 +3844,14 @@ export class Matrix {
 	 * const m2 = new Matrix(m1); // creates a copy of m1
 	 */
 	constructor(...args) {
-		if(args.length > 0) {
-			if(args[0] instanceof Matrix) {
+		if (args.length > 0) {
+			if (args[0] instanceof Matrix) {
 				this.properties.width = args[0].width;
 				this.properties.height = args[0].height;
 
-				for(let i=0; i < args[0].height; i++) {
+				for (let i = 0; i < args[0].height; i++) {
 					const row = [];
-					for(let j=0; j < args[0].width; j++) {
+					for (let j = 0; j < args[0].width; j++) {
 						row.push(args[0].at(j, i));
 					}
 					this.properties.array.push(row);
@@ -3848,22 +3859,22 @@ export class Matrix {
 			}
 
 			// [width, height, fill?]
-			else if(typeof args[0] === 'number') {
+			else if (typeof args[0] === 'number') {
 				let fill = 0;
 				const w = args[0];
 				let h = w;
 
-				if(args.length > 1 && typeof args[1] === 'number') {
+				if (args.length > 1 && typeof args[1] === 'number') {
 					h = args[1];
 
-					if(args.length > 2 && typeof args[2] === 'number') {
+					if (args.length > 2 && typeof args[2] === 'number') {
 						fill = args[2];
 					}
 				} // else square matrix if only 1 number given
 
-				for(let i=0; i < h; i++) {
+				for (let i = 0; i < h; i++) {
 					const row = [];
-					for(let j=0; j < w; j++) {
+					for (let j = 0; j < w; j++) {
 						row.push(fill);
 					}
 					this.properties.array.push(row);
@@ -3874,19 +3885,19 @@ export class Matrix {
 			}
 
 			// argument is an array (of arrays ?)
-			else if(args.length === 1 && Array.isArray(args[0]) && args[0].every(a => Array.isArray(a) && a.length === args[0][0].length && a.every(e => typeof e === 'number'))) {
+			else if (args.length === 1 && Array.isArray(args[0]) && args[0].every(a => Array.isArray(a) && a.length === args[0][0].length && a.every(e => typeof e === 'number'))) {
 				// all elements of parent array are arrays
 				// form of argument :
 				// [[0, 0, 0],[0, 0, 0]] : 2D array
 				this.properties.array = args[0];
-				if(args[0].length > 0) this.properties.width = args[0][0].length;
+				if (args[0].length > 0) this.properties.width = args[0][0].length;
 				this.properties.height = args[0].length;
 			}
 
 			// all elements of parent array are numbers
 			// form of argument :
 			// [0, 0, 0], [0, 0, 0] : multiple arguments which are arrays of numbers
-			else if(args.every(a => Array.isArray(a) && a.length === args[0].length && a.every(e => typeof e === 'number'))) {
+			else if (args.every(a => Array.isArray(a) && a.length === args[0].length && a.every(e => typeof e === 'number'))) {
 				this.properties.array = args;
 				this.properties.width = args[0].length;
 				this.properties.height = args.length;
@@ -3979,7 +3990,7 @@ export class Matrix {
 	 * m1.at(0, 0); // first element of first row - 0
 	 */
 	at(x, y) {
-		if(typeof x === 'number' && typeof y === 'number' && x > -1 && y > -1 && x < this.width && y < this.height) {
+		if (typeof x === 'number' && typeof y === 'number' && x > -1 && y > -1 && x < this.width && y < this.height) {
 			return this.array[y][x];
 		}
 
@@ -3996,7 +4007,7 @@ export class Matrix {
 	 * m1.set(0, 0, 1); // m1[0][0] = 1
 	 */
 	set(x, y, value) {
-		if(this.at(x, y) !== null && typeof value === 'number') {
+		if (this.at(x, y) !== null && typeof value === 'number') {
 			this.array[y][x] = value;
 		}
 	}
@@ -4013,12 +4024,12 @@ export class Matrix {
 	 * m1.equals(m2); // false
 	 */
 	equals(matrix) {
-		if(matrix.width !== this.width || matrix.height !== this.height)
+		if (matrix.width !== this.width || matrix.height !== this.height)
 			return false;
 
-		for(let i=0; i < this.height; i++) {
-			for(let j=0; j < this.width; j++) {
-				if(matrix.at(j, i) !== this.at(j, i))
+		for (let i = 0; i < this.height; i++) {
+			for (let j = 0; j < this.width; j++) {
+				if (matrix.at(j, i) !== this.at(j, i))
 					return false;
 			}
 		}
@@ -4031,9 +4042,9 @@ export class Matrix {
 	 * @returns {boolean} Either the matrix is symmetrical or not
 	 */
 	get isSymmetrical() {
-		for(let i=0; i < this.width; i++) {
-			for(let j=0; j < this.height; j++) {
-				if(this.at(i, j) !== this.at(j, i))
+		for (let i = 0; i < this.width; i++) {
+			for (let j = 0; j < this.height; j++) {
+				if (this.at(i, j) !== this.at(j, i))
 					return false;
 			}
 		}
@@ -4088,13 +4099,13 @@ export class Matrix {
 	 * @returns {boolean} Either the matrix is lower triangular or not
 	 */
 	get isLowerTri() {
-		if(!this.isSquare)
+		if (!this.isSquare)
 			return false;
 
-		for(let i=0; i < this.height; i++) {
-			for(let j=0; j < this.width; j++) {
+		for (let i = 0; i < this.height; i++) {
+			for (let j = 0; j < this.width; j++) {
 				const e = this.at(j, i);
-				if(j >= i && e !== 0)
+				if (j >= i && e !== 0)
 					return false;
 			}
 		}
@@ -4109,13 +4120,13 @@ export class Matrix {
 	 * @returns {boolean} Either the matrix is upper triangular or not
 	 */
 	get isUpperTri() {
-		if(!this.isSquare)
+		if (!this.isSquare)
 			return false;
 
-		for(let i=0; i < this.height; i++) {
-			for(let j=0; j < this.width; j++) {
+		for (let i = 0; i < this.height; i++) {
+			for (let j = 0; j < this.width; j++) {
 				const e = this.at(j, i);
-				if(j <= i && e !== 0)
+				if (j <= i && e !== 0)
 					return false;
 			}
 		}
@@ -4130,7 +4141,7 @@ export class Matrix {
 	 * @returns {number[]} The diagonal values
 	 */
 	get diagonal() {
-		if(this.isSquare)
+		if (this.isSquare)
 			return this.array.map((arr, i) => arr[i]);
 
 		return [];
@@ -4141,22 +4152,22 @@ export class Matrix {
 	 * @returns {number} The determining of the matrix
 	 */
 	get det() {
-		if(!this.isSquare)
+		if (!this.isSquare)
 			return 0;
 
-		if(this.isIdentity)
+		if (this.isIdentity)
 			return 1;
 
-		if(this.isDiagonal || this.isTriangular) {
+		if (this.isDiagonal || this.isTriangular) {
 			const diag = this.diagonal;
 			return diag.reduce((acc, curr) => acc * curr, 1);
 		}
 
-		if(this.width === 2) {
+		if (this.width === 2) {
 			return this.at(0, 0) * this.at(1, 1) - this.at(1, 0) * this.at(0, 1);
 		}
 
-		else if(this.width === 3) {
+		else if (this.width === 3) {
 			const [a, b, c, d, e, f, g, h, i] = this.array1D;
 			return a * e * i + d * h * c + b * f * g - (g * e * c + d * b * i + a * h * f);
 		}
@@ -4184,17 +4195,17 @@ export class Matrix {
 	 * // m4 = m1 = [ [2, 2, 2], [2, 2, 2]]
 	 */
 	add(matrix, onACopy = false) {
-		if(!('op' in this))
+		if (!('op' in this))
 			this.op = (a, b) => a + b;
 
-		if(!(matrix instanceof Matrix) && typeof matrix !== 'number') {
+		if (!(matrix instanceof Matrix) && typeof matrix !== 'number') {
 			console.error(`[Error] Matrix::add : Matrix expected, ${typeof matrix} given`);
 			delete this.op;
 			return this;
 		}
 
-		if(matrix instanceof Matrix) {
-			if(matrix.width !== this.width || matrix.height !== this.height) {
+		if (matrix instanceof Matrix) {
+			if (matrix.width !== this.width || matrix.height !== this.height) {
 				console.error('[Error] Matrix::add : Cannot operate an addition between 2 matrices with different dimensions.');
 				delete this.op;
 				return this;
@@ -4205,8 +4216,8 @@ export class Matrix {
 		const b = matrix instanceof Matrix;
 
 		// operate
-		for(let i=0; i < result.height; i++) {
-			for(let j=0; j < result.width; j++) {
+		for (let i = 0; i < result.height; i++) {
+			for (let j = 0; j < result.width; j++) {
 				result.set(j, i, this.op(result.at(j, i), (b ? matrix.at(j, i) : matrix)));
 			}
 		}
@@ -4244,27 +4255,27 @@ export class Matrix {
 		let result = onACopy ? new Matrix(this) : this;
 
 		// scalar product
-		if(typeof m === 'number') {
-			for(let i=0; i < result.height; i++) {
-				for(let j=0; j < result.width; j++) {
+		if (typeof m === 'number') {
+			for (let i = 0; i < result.height; i++) {
+				for (let j = 0; j < result.width; j++) {
 					result.set(j, i, result.at(j, i) * m);
 				}
 			}
 		}
 
 		// matrices multiplication
-		else if(m instanceof Matrix) {
-			if(m.height !== this.width || m.width !== this.height) {
+		else if (m instanceof Matrix) {
+			if (m.height !== this.width || m.width !== this.height) {
 				console.error('[Error] Matrix::mult : matrices must have same transposed size.');
 			}
 
 			else {
 				result = new Matrix(this.height);
 
-				for(let i=0; i < this.height; i++) {
-					for(let j=0; j < this.height; j++) {
+				for (let i = 0; i < this.height; i++) {
+					for (let j = 0; j < this.height; j++) {
 						let s = 0;
-						for(let k=0; k < this.width; k++) {
+						for (let k = 0; k < this.width; k++) {
 							s += this.at(k, i) * m.at(j, k);
 						}
 						result.set(j, i, s);
@@ -4289,7 +4300,7 @@ export class Matrix {
 		let copy = new Matrix(this);
 		let me = this;
 
-		if(onACopy)
+		if (onACopy)
 			[copy, me] = [me, copy];
 
 		me.properties.size = Object.freeze({
@@ -4299,16 +4310,16 @@ export class Matrix {
 
 		me.properties.array = [];
 
-		for(let i=0; i < copy.width; i++) {
+		for (let i = 0; i < copy.width; i++) {
 			const row = [];
-			for(let j=0; j < copy.height; j++) {
+			for (let j = 0; j < copy.height; j++) {
 				row.push(0);
 			}
 			me.properties.array.push(row);
 		}
 
-		for(let i=0; i < copy.height; i++) {
-			for(let j=0; j < copy.width; j++) {
+		for (let i = 0; i < copy.height; i++) {
+			for (let j = 0; j < copy.width; j++) {
 				me.set(i, j, copy.at(j, i));
 			}
 		}
@@ -4324,11 +4335,11 @@ export class Matrix {
 	 * @returns {number[]} The column
 	 */
 	getColumn(x) {
-		if(x < 0 || x > this.width)
+		if (x < 0 || x > this.width)
 			return [];
 
 		const column = [];
-		for(let i=0; i < this.height; i++)
+		for (let i = 0; i < this.height; i++)
 			column.push(this.at(x, i));
 		return column;
 	}
@@ -4341,7 +4352,7 @@ export class Matrix {
 	 * @returns {number[]} The row
 	 */
 	getRow(y) {
-		if(y < 0 || y > this.height)
+		if (y < 0 || y > this.height)
 			return [];
 
 		return this.properties.array[y];
@@ -4354,13 +4365,13 @@ export class Matrix {
 	 * @returns {Matrix} 'this'
 	 */
 	setColumn(x, column) {
-		if(x < 0 || x > this.width)
+		if (x < 0 || x > this.width)
 			return console.error('[Error] Matrix::setColumn : wrong index given.');
 
-		if(column.length !== this.height)
+		if (column.length !== this.height)
 			return console.error('[Error] Matrix::setColumn : column must have the same length as the matrix\'s height.');
 
-		for(let i=0; i < this.height; i++)
+		for (let i = 0; i < this.height; i++)
 			this.set(x, i, column[i]);
 
 		return this;
@@ -4373,10 +4384,10 @@ export class Matrix {
 	 * @returns {Matrix} 'this'
 	 */
 	setRow(y, row) {
-		if(y < 0 || y > this.height)
+		if (y < 0 || y > this.height)
 			return console.error('[Error] Matrix::setRow : wrong index given.');
 
-		if(row.length !== this.height)
+		if (row.length !== this.height)
 			return console.error('[Error] Matrix::setRow : row must have the same length as the matrix\'s width.');
 
 		this.properties.array[y] = row;
@@ -4388,212 +4399,212 @@ export class Matrix {
 
 
 export class Camera {
-    // CAMERA ANCHOR TYPES. DEFAULT IS TOP-LEFT CORNER
-    static ANCHOR_DEFAULT = 0;
-    static ANCHOR_CENTER = 1;
+	// CAMERA ANCHOR TYPES. DEFAULT IS TOP-LEFT CORNER
+	static ANCHOR_DEFAULT = 0;
+	static ANCHOR_CENTER = 1;
 
-    uuid = generateUUID();
-    position = new Vector(0, 0);
-    anchorType = Camera.ANCHOR_DEFAULT;
-    anchorPoint = new Vector(0, 0);
-    followPoint = null;
+	uuid = generateUUID();
+	position = new Vector(0, 0);
+	anchorType = Camera.ANCHOR_DEFAULT;
+	anchorPoint = new Vector(0, 0);
+	followPoint = null;
 
-    /**
-     * Creates a Camera which can moves in the canvas.
-     *
-     * Default position is (0, 0), and default anchor is top-left corner.
-     *
-     * The camera is by default activated. You can disable and enable it with
-     * `disableCamera()` and `enableCamera()`.
-     *
-     * <b>The Camera is NOT using the `translate()` function.</b>
-     *
-     * You can create your own camera, but never replace the one used by the library.
-     *
-     * Instead, use `camera.set(myCamera)` to copy the position of your camera.
-     *
-     * You can draw static HUD using the `disableCamera()`. It will stay static in your
-     * screen even if you move your camera.
-     * @see {@link disableCamera}
-     * @see {@link enableCamera}
-     * @param {Vector} position position of the Camera at its creation.
-     */
-    constructor(position=null) {
-        if(position instanceof Vector)
-            this.position = position;
-    }
+	/**
+	 * Creates a Camera which can moves in the canvas.
+	 *
+	 * Default position is (0, 0), and default anchor is top-left corner.
+	 *
+	 * The camera is by default activated. You can disable and enable it with
+	 * `disableCamera()` and `enableCamera()`.
+	 *
+	 * <b>The Camera is NOT using the `translate()` function.</b>
+	 *
+	 * You can create your own camera, but never replace the one used by the library.
+	 *
+	 * Instead, use `camera.set(myCamera)` to copy the position of your camera.
+	 *
+	 * You can draw static HUD using the `disableCamera()`. It will stay static in your
+	 * screen even if you move your camera.
+	 * @see {@link disableCamera}
+	 * @see {@link enableCamera}
+	 * @param {Vector} position position of the Camera at its creation.
+	 */
+	constructor(position = null) {
+		if (position instanceof Vector)
+			this.position = position;
+	}
 
-    /**
-     * Returns the in-world anchor X-axis point of the camera.
-     * @return {number}
-     */
-    get x() { return this.position.x - this.anchorPoint.x; }
+	/**
+	 * Returns the in-world anchor X-axis point of the camera.
+	 * @return {number}
+	 */
+	get x() { return this.position.x - this.anchorPoint.x; }
 
-    /**
-     * Returns the in-world anchor Y-axis point of the camera.
-     * @return {number}
-     */
-    get y() { return this.position.y - this.anchorPoint.y; }
+	/**
+	 * Returns the in-world anchor Y-axis point of the camera.
+	 * @return {number}
+	 */
+	get y() { return this.position.y - this.anchorPoint.y; }
 
-    /**
-     * Returns either the camera is following a point or not.
-     * @return {boolean}
-     */
-    get following() { return this.followPoint !== null; }
+	/**
+	 * Returns either the camera is following a point or not.
+	 * @return {boolean}
+	 */
+	get following() { return this.followPoint !== null; }
 
-    /**
-     * Returns either the camera is currently moving or not.
-     * @return {boolean}
-     */
-    get moving() { return NOX_PV.camera.move !== null; }
+	/**
+	 * Returns either the camera is currently moving or not.
+	 * @return {boolean}
+	 */
+	get moving() { return NOX_PV.camera.move !== null; }
 
-    /**
-     * Defines either the anchor of the camera is top-left corner or center.<br>
-     * Default is top-left corner.<br>
-     * The method only accepts `Camera.ANCHOR_DEFAULT` and `Camera.ANCHOR_CENTER`.
-     * @param {Camera.ANCHOR_DEFAULT|Camera.ANCHOR_CENTER} anchor
-     * @return {Camera} this
-     */
-    setAnchor(anchor) {
-        if(anchor === Camera.ANCHOR_DEFAULT) {
-            this.anchorPoint.set(0, 0);
-            this.anchorType = anchor;
-        }
-        else if(anchor === Camera.ANCHOR_CENTER) {
-            this.anchorPoint.set(width/2, height/2);
-            this.anchorType = anchor;
-        }
+	/**
+	 * Defines either the anchor of the camera is top-left corner or center.<br>
+	 * Default is top-left corner.<br>
+	 * The method only accepts `Camera.ANCHOR_DEFAULT` and `Camera.ANCHOR_CENTER`.
+	 * @param {Camera.ANCHOR_DEFAULT|Camera.ANCHOR_CENTER} anchor
+	 * @return {Camera} this
+	 */
+	setAnchor(anchor) {
+		if (anchor === Camera.ANCHOR_DEFAULT) {
+			this.anchorPoint.set(0, 0);
+			this.anchorType = anchor;
+		}
+		else if (anchor === Camera.ANCHOR_CENTER) {
+			this.anchorPoint.set(width / 2, height / 2);
+			this.anchorType = anchor;
+		}
 
-        return this;
-    }
+		return this;
+	}
 
-    /**
-     * Defines the ease movement's type of the camera while its moving.<br>
-     * Default is 'quadInOut'.
-     * @param {'linear'
-     * |'quadIn'|'quadOut'|'quadInOut'
-     * |'sineIn'|'sineOut'|'sineInOut'
-     * |'expoIn'|'expoOut'|'expoInOut'
-     * |'circIn'|'circOut'|'circInOut'
-     * |'cubicIn'|'cubicOut'|'cubicInOut'
-     * |'quartIn'|'quartOut'|'quartInOut'
-     * |'quintIn'|'quintOut'|'quintInOut'
-     * |'backIn'|'backOut'|'backInOut'
-     * |'elasticIn'|'elasticOut'|'elasticInOut'} moveType
-     * @return {Camera} this
-     */
-    setMoveType(moveType) {
-        if(moveType in Object.keys(NOX_PV.easeFuncMap))
-            this.moveType = moveType;
+	/**
+	 * Defines the ease movement's type of the camera while its moving.<br>
+	 * Default is 'quadInOut'.
+	 * @param {'linear'
+	 * |'quadIn'|'quadOut'|'quadInOut'
+	 * |'sineIn'|'sineOut'|'sineInOut'
+	 * |'expoIn'|'expoOut'|'expoInOut'
+	 * |'circIn'|'circOut'|'circInOut'
+	 * |'cubicIn'|'cubicOut'|'cubicInOut'
+	 * |'quartIn'|'quartOut'|'quartInOut'
+	 * |'quintIn'|'quintOut'|'quintInOut'
+	 * |'backIn'|'backOut'|'backInOut'
+	 * |'elasticIn'|'elasticOut'|'elasticInOut'} moveType
+	 * @return {Camera} this
+	 */
+	setMoveType(moveType) {
+		if (moveType in Object.keys(NOX_PV.easeFuncMap))
+			this.moveType = moveType;
 
-        return this;
-    }
+		return this;
+	}
 
-    /**
-     * Tells the camera to follow a point. This must be a Vector.
-     *
-     * If you instead give an object than contains a `position` attribute
-     * which is of type Vector, then it will follow its position.
-     * @param {Vector|{position: Vector}} point The point to follow
-     * @returns {Camera} this
-     */
-    follow(point) {
-        if(point instanceof Vector)
-            this.followPoint = point;
-        else if(typeof point === 'object' && point.position instanceof Vector)
-            this.followPoint = point.position;
-        else
-            console.error('[Error] Camera::follow : parameter should be a Vector.');
+	/**
+	 * Tells the camera to follow a point. This must be a Vector.
+	 *
+	 * If you instead give an object than contains a `position` attribute
+	 * which is of type Vector, then it will follow its position.
+	 * @param {Vector|{position: Vector}} point The point to follow
+	 * @returns {Camera} this
+	 */
+	follow(point) {
+		if (point instanceof Vector)
+			this.followPoint = point;
+		else if (typeof point === 'object' && point.position instanceof Vector)
+			this.followPoint = point.position;
+		else
+			console.error('[Error] Camera::follow : parameter should be a Vector.');
 
-        return this;
-    }
+		return this;
+	}
 
-    /**
-     * Tells the camera to stop follow if it was.
-     * @return {Camera} this
-     */
-    stopFollow() {
-        this.followPoint = null;
-        return this;
-    }
+	/**
+	 * Tells the camera to stop follow if it was.
+	 * @return {Camera} this
+	 */
+	stopFollow() {
+		this.followPoint = null;
+		return this;
+	}
 
-    /**
-     * Moves the camera with the given vector.
-     *
-     * Default duration of the move is 1000 ms.
-     *
-     * You can change the ease animation of the move with `Camera.setMoveType()`
-     * @see {@link Camera.setMoveType}
-     * @param {number|Vector} x A Vector or a X-axis point to move
-     * @param {number} y The Y-axis point to move - or the duration if the first argument is a Vector
-     * @param {number} duration The duration of the move
-     * @return {Camera} this
-     */
-    move(x, y, duration=1000) {
-        if(this.moving)
-            return;
+	/**
+	 * Moves the camera with the given vector.
+	 *
+	 * Default duration of the move is 1000 ms.
+	 *
+	 * You can change the ease animation of the move with `Camera.setMoveType()`
+	 * @see {@link Camera.setMoveType}
+	 * @param {number|Vector} x A Vector or a X-axis point to move
+	 * @param {number} y The Y-axis point to move - or the duration if the first argument is a Vector
+	 * @param {number} duration The duration of the move
+	 * @return {Camera} this
+	 */
+	move(x, y, duration = 1000) {
+		if (this.moving)
+			return;
 
-        if(this.following)
-            this.stopFollow();
+		if (this.following)
+			this.stopFollow();
 
-        const length = new Vector(0, 0);
+		const length = new Vector(0, 0);
 
-        if(x instanceof Vector) {
-            length.set(x);
-            duration = y || 1000;
-        }
-        else
-            length.set(x, y);
+		if (x instanceof Vector) {
+			length.set(x);
+			duration = y || 1000;
+		}
+		else
+			length.set(x, y);
 
-        length.sub(this.anchorPoint);
+		length.sub(this.anchorPoint);
 
-        NOX_PV.camera.move = {
-            from: this.position.copy(),
-            length,
-            duration,
-            start: new Time()
-        };
+		NOX_PV.camera.move = {
+			from: this.position.copy(),
+			length,
+			duration,
+			start: new Time()
+		};
 
-        return this;
-    }
+		return this;
+	}
 
-    /**
-     * Moves the camera to the given point.
-     *
-     * Default duration of the move is 1000 ms.
-     *
-     * You can change the ease animation of the move with `Camera.setMoveType()`
-     * @see {@link Camera.setMoveType}
-     * @param {number|Vector} x A Vector or a X-axis point to move
-     * @param {number} y The Y-axis point to move - or the duration if the first argument is a Vector
-     * @param {number} duration The duration of the move
-     * @return {Camera} this
-     */
-    moveTo(x, y, duration=1000) {
-        const v = new Vector(0, 0);
+	/**
+	 * Moves the camera to the given point.
+	 *
+	 * Default duration of the move is 1000 ms.
+	 *
+	 * You can change the ease animation of the move with `Camera.setMoveType()`
+	 * @see {@link Camera.setMoveType}
+	 * @param {number|Vector} x A Vector or a X-axis point to move
+	 * @param {number} y The Y-axis point to move - or the duration if the first argument is a Vector
+	 * @param {number} duration The duration of the move
+	 * @return {Camera} this
+	 */
+	moveTo(x, y, duration = 1000) {
+		const v = new Vector(0, 0);
 
-        if(x instanceof Vector) {
-            v.set(x.x, x.y);
-            duration = y;
-        }
-        else
-            v.set(x, y);
+		if (x instanceof Vector) {
+			v.set(x.x, x.y);
+			duration = y;
+		}
+		else
+			v.set(x, y);
 
-        v.sub(this.position).add(this.anchorPoint);
+		v.sub(this.position).add(this.anchorPoint);
 
-        this.move(v.x, v.y, duration);
+		this.move(v.x, v.y, duration);
 
-        return this;
-    }
+		return this;
+	}
 
-    /**
-     * Immediatly stops to move the camera.
-     * @returns {Camera} this
-     */
-    stop() {
-        NOX_PV.camera.move = null;
-        return this;
-    }
+	/**
+	 * Immediatly stops to move the camera.
+	 * @returns {Camera} this
+	 */
+	stop() {
+		NOX_PV.camera.move = null;
+		return this;
+	}
 }
 
 
@@ -4610,7 +4621,7 @@ export class Path {
 		this.d = null;
 		this.isClosed = false;
 
-		if(x && y) {
+		if (x && y) {
 			this.MoveTo(x, y);
 		}
 	}
@@ -4626,7 +4637,7 @@ export class Path {
 	 * Draws the path
 	 */
 	draw() {
-		if(this.d !== null) {
+		if (this.d !== null) {
 			path(this.d + (this.isClosed ? ' Z' : ''));
 		}
 
@@ -4641,7 +4652,7 @@ export class Path {
 	 * @param {number} y Y-axis coordinate
 	 */
 	MoveTo(x, y) {
-		if(this.d === null) {
+		if (this.d === null) {
 			this.d = `M ${x} ${y}`;
 		}
 
@@ -4656,7 +4667,7 @@ export class Path {
 	 * @param {number} y Y-axis coordinate
 	 */
 	moveTo(x, y) {
-		if(this.d === null) return console.error('You have to initialize the fist path\'s position');
+		if (this.d === null) return console.error('You have to initialize the fist path\'s position');
 		this.d += ` m ${x} ${y}`;
 	}
 
@@ -4667,7 +4678,7 @@ export class Path {
 	 * @param {number} y y-axis coordinate
 	 */
 	LineTo(x, y) {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if (this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.d += ` L ${x} ${y}`;
 	}
 
@@ -4677,7 +4688,7 @@ export class Path {
 	 * @param {number} y y-axis coordinate
 	 */
 	lineTo(x, y) {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if (this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.d += ` l ${x} ${y}`;
 
 	}
@@ -4688,7 +4699,7 @@ export class Path {
 	 * @param {number} x X-axis coordinate
 	 */
 	Horizontal(x) {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if (this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.d += ` H ${x}`;
 	}
 
@@ -4697,7 +4708,7 @@ export class Path {
 	 * @param {number} x X-axis coordinate
 	 */
 	horizontal(x) {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if (this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.d += ` h ${x}`;
 	}
 
@@ -4707,7 +4718,7 @@ export class Path {
 	 * @param {number} y Y-axis coordinate
 	 */
 	Vertical(y) {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if (this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.d += ` V ${y}`;
 	}
 
@@ -4716,7 +4727,7 @@ export class Path {
 	 * @param {number} y Y-axis coordinate
 	 */
 	vertical(y) {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if (this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.d += ` v ${y}`;
 	}
 
@@ -4731,7 +4742,7 @@ export class Path {
 	 * @param {boolean} antiClockwise either it has to draw it anti-clockwisly or not
 	 */
 	Arc(x, y, r, start, end, antiClockwise = false) {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if (this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.d += ` A ${x} ${y} ${r} ${start} ${end} ${(antiClockwise === true) ? 1 : 0}`;
 	}
 
@@ -4745,7 +4756,7 @@ export class Path {
 	 * @param {boolean} antiClockwise either it has to draw it anti-clockwisly or not
 	 */
 	arc(x, y, r, start, end, antiClockwise = false) {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if (this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.d += ` a ${x} ${y} ${r} ${start} ${end} ${(antiClockwise === true) ? 1 : 0}`;
 	}
 
@@ -4754,7 +4765,7 @@ export class Path {
 	 * Close path
 	 */
 	close() {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if (this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.isClosed = true;
 	}
 
@@ -4762,7 +4773,7 @@ export class Path {
 	 * Removes the instruction that close the path if it was.
 	 */
 	open() {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if (this.d === null) return console.error('You have to initialize the first path\'s position');
 		this.isClosed = false;
 	}
 
@@ -4773,16 +4784,16 @@ export class Path {
 	 */
 	move(x, y = null) {
 		// 1 argument and it's a vector
-		if(y === null && x instanceof Vector) {
+		if (y === null && x instanceof Vector) {
 			[x, y] = [x.x, x.y];
 		}
 
-		if(this.d === null) return;
+		if (this.d === null) return;
 
 		this.d = this.d.replace(/([MLHVA])\s([\d\.]+)(\s([\d\.]+))?/g, (c, p1, p2, p3) => {
-			if(p1 === 'H') return `${p1} ${parseFloat(p2) + x}`;
+			if (p1 === 'H') return `${p1} ${parseFloat(p2) + x}`;
 
-			if(p1 === 'V') return `${p1} ${parseFloat(p2) + y}`;
+			if (p1 === 'V') return `${p1} ${parseFloat(p2) + y}`;
 
 			return `${p1} ${parseFloat(p2) + x} ${parseFloat(p3) + y}`;
 		});
@@ -4799,325 +4810,325 @@ export /**
 * A 4-children based tree that is used to manage world entities relations
 * with better performances.
 */
-class Quadtree {
-   /**
-	* A Quadtree's Point has a position and a pointer to an object
-	*/
-   static Point = class Point {
-	   /**
-		* A Quadtree's Point that has a position and a pointer to an object
-		* @param {number} x Point's X
-		* @param {number} y Point's Y
-		* @param {object} dataPtr Object data
-		*/
-	   constructor(x, y, dataPtr) {
-		   this.x = x;
-		   this.y = y;
-		   this.dataPtr = dataPtr;
-	   }
-   }
+	class Quadtree {
+	/**
+	 * A Quadtree's Point has a position and a pointer to an object
+	 */
+	static Point = class Point {
+		/**
+		 * A Quadtree's Point that has a position and a pointer to an object
+		 * @param {number} x Point's X
+		 * @param {number} y Point's Y
+		 * @param {object} dataPtr Object data
+		 */
+		constructor(x, y, dataPtr) {
+			this.x = x;
+			this.y = y;
+			this.dataPtr = dataPtr;
+		}
+	};
 
-   /**
-	* A Quadtree's Rectangle is a basic rectangle that checks<br>
-	* if it contains a given point or intersects with a given Rectangle
-	*/
-   static Rectangle = class Rectangle {
-	   /**
-		* Creates a Quadtree's Rectangle.
-		* @param {number} x Rectangle top-left corner's X
-		* @param {number} y Rectangle top-left corner's Y
-		* @param {number} w Rectangle's width
-		* @param {number} h Rectangle's height
-		*/
-	   constructor(x, y, w, h) {
-		   this.x = x;
-		   this.y = y;
-		   this.w = w;
-		   this.h = h;
-	   }
+	/**
+	 * A Quadtree's Rectangle is a basic rectangle that checks<br>
+	 * if it contains a given point or intersects with a given Rectangle
+	 */
+	static Rectangle = class Rectangle {
+		/**
+		 * Creates a Quadtree's Rectangle.
+		 * @param {number} x Rectangle top-left corner's X
+		 * @param {number} y Rectangle top-left corner's Y
+		 * @param {number} w Rectangle's width
+		 * @param {number} h Rectangle's height
+		 */
+		constructor(x, y, w, h) {
+			this.x = x;
+			this.y = y;
+			this.w = w;
+			this.h = h;
+		}
 
-	   /**
-		* Checks if a given Quadtree's Point is in the Rectangle or not.
-		* @param {Quadtree.Point} point A Quadtree's Point
-		* @returns boolean - either the point is in the Rectangle or not
-		*/
-	   contains(point) {
-		   return (
-			   this.x <= point.x && point.x <= this.x + this.w &&
-			   this.y <= point.y && point.y <= this.y + this.h
-		   );
-	   }
+		/**
+		 * Checks if a given Quadtree's Point is in the Rectangle or not.
+		 * @param {Quadtree.Point} point A Quadtree's Point
+		 * @returns boolean - either the point is in the Rectangle or not
+		 */
+		contains(point) {
+			return (
+				this.x <= point.x && point.x <= this.x + this.w &&
+				this.y <= point.y && point.y <= this.y + this.h
+			);
+		}
 
-	   /**
-		* Checks if 2 Quadtree's Rectangles are intersecting or not.
-		* @param {QuadTree.Rectangle} rectangle A Quadtree's Rectangle
-		* @returns boolean - either both Rectangles intersect or not
-		*/
-	   intersect(rectangle) {
-		   return !(
-			   rectangle.x > this.x + this.w ||
-			   rectangle.x + rectangle.w < this.x ||
-			   rectangle.y > this.y + this.h ||
-			   rectangle.y + rectangle.h < this.y
-		   );
-	   }
+		/**
+		 * Checks if 2 Quadtree's Rectangles are intersecting or not.
+		 * @param {QuadTree.Rectangle} rectangle A Quadtree's Rectangle
+		 * @returns boolean - either both Rectangles intersect or not
+		 */
+		intersect(rectangle) {
+			return !(
+				rectangle.x > this.x + this.w ||
+				rectangle.x + rectangle.w < this.x ||
+				rectangle.y > this.y + this.h ||
+				rectangle.y + rectangle.h < this.y
+			);
+		}
 
-	   /**
-		* Checks if this Quadtree's Rectangle totally wraps the given Rectangle or not.
-		* @param {Quadtree.Rectangle} rectangle A Quadtree's Rectangle
-		* @returns boolean - either this Rectangle totally wraps the given rectangle or not
-		*/
-	   wrap(rectangle) {
-		   return (
-			   this.x <= rectangle.x && rectangle.x + rectangle.w <= this.x + this.w &&
-			   this.y <= rectangle.y && rectangle.y + rectangle.h <= this.y + this.h
-		   )
-	   }
-   }
+		/**
+		 * Checks if this Quadtree's Rectangle totally wraps the given Rectangle or not.
+		 * @param {Quadtree.Rectangle} rectangle A Quadtree's Rectangle
+		 * @returns boolean - either this Rectangle totally wraps the given rectangle or not
+		 */
+		wrap(rectangle) {
+			return (
+				this.x <= rectangle.x && rectangle.x + rectangle.w <= this.x + this.w &&
+				this.y <= rectangle.y && rectangle.y + rectangle.h <= this.y + this.h
+			);
+		}
+	};
 
-   /**
-	* Creates a new Quadtree.
-	* @param {Quadtree.Rectangle} boundary The region covered by the Quadtree
-	* @param {number} capacity The max capacity of Points that can supports this Quadtree
-	*/
-   constructor(boundary, capacity=5) {
-	   if(!(boundary instanceof Quadtree.Rectangle)) {
-		   throw new Error('[Quadtree::constructor] boundary must be a Quadtree.Rectangle');
-	   }
+	/**
+	 * Creates a new Quadtree.
+	 * @param {Quadtree.Rectangle} boundary The region covered by the Quadtree
+	 * @param {number} capacity The max capacity of Points that can supports this Quadtree
+	 */
+	constructor(boundary, capacity = 5) {
+		if (!(boundary instanceof Quadtree.Rectangle)) {
+			throw new Error('[Quadtree::constructor] boundary must be a Quadtree.Rectangle');
+		}
 
-	   this.boundary = boundary;
-	   this.capacity = capacity;
-	   this.points = [];
-	   this.divided = false;
-   }
+		this.boundary = boundary;
+		this.capacity = capacity;
+		this.points = [];
+		this.divided = false;
+	}
 
-   /**
-	* Returns an array containing the tree's children.
-	* @returns {Quadtree[]} All tree's children
-	*/
-   get children() {
-	   return this.divided
-		   ? [this.northwest, this.northeast, this.southwest, this.southeast]
-		   : [];
-   }
+	/**
+	 * Returns an array containing the tree's children.
+	 * @returns {Quadtree[]} All tree's children
+	 */
+	get children() {
+		return this.divided
+			? [this.northwest, this.northeast, this.southwest, this.southeast]
+			: [];
+	}
 
-   /**
-	* Clears the Quadtree and delete its 4 children if divided.
-	*/
-   clear() {
-	   this.points = [];
-	   this.divided = false;
-	   delete this.northeast;
-	   delete this.northwest;
-	   delete this.southeast;
-	   delete this.southwest;
-   }
+	/**
+	 * Clears the Quadtree and delete its 4 children if divided.
+	 */
+	clear() {
+		this.points = [];
+		this.divided = false;
+		delete this.northeast;
+		delete this.northwest;
+		delete this.southeast;
+		delete this.southwest;
+	}
 
-   /**
-	* Subdivides the Quadtree if it isn't.<br>
-	* Separates itself in 4 regions that fill itself.
-	*/
-   subdivide() {
-	   if(!this.divided) {
-		   const { x, y, w, h } = this.boundary;
+	/**
+	 * Subdivides the Quadtree if it isn't.<br>
+	 * Separates itself in 4 regions that fill itself.
+	 */
+	subdivide() {
+		if (!this.divided) {
+			const { x, y, w, h } = this.boundary;
 
-		   const ne = new Quadtree.Rectangle(x + w/2, y, w/2, h/2);
-		   const nw = new Quadtree.Rectangle(x, y, w/2, h/2);
-		   const se = new Quadtree.Rectangle(x + w/2, y + h/2, w/2, h/2);
-		   const sw = new Quadtree.Rectangle(x, y + h/2, w/2, h/2);
+			const ne = new Quadtree.Rectangle(x + w / 2, y, w / 2, h / 2);
+			const nw = new Quadtree.Rectangle(x, y, w / 2, h / 2);
+			const se = new Quadtree.Rectangle(x + w / 2, y + h / 2, w / 2, h / 2);
+			const sw = new Quadtree.Rectangle(x, y + h / 2, w / 2, h / 2);
 
-		   this.northwest = new Quadtree(nw);
-		   this.northeast = new Quadtree(ne);
-		   this.southwest = new Quadtree(sw);
-		   this.southeast = new Quadtree(se);
+			this.northwest = new Quadtree(nw);
+			this.northeast = new Quadtree(ne);
+			this.southwest = new Quadtree(sw);
+			this.southeast = new Quadtree(se);
 
-		   this.divided = true;
+			this.divided = true;
 
-		   for(const p of this.points) {
-			   this.insert(p);
-		   }
+			for (const p of this.points) {
+				this.insert(p);
+			}
 
-		   this.points = [];
-	   }
-   }
+			this.points = [];
+		}
+	}
 
-   /**
-	* Tries to insert a Quadtree's Point in itself.<br>
-	* If the Point is already present in the Quadtree, does nothing.<br>
-	* Two Points cannot have the same position in it.<br>
-	* If the Quadtree has reach its max capacity, then splits / subdivides
-	* itself and tries to insert the Point in one of its child.
-	* @param {Quadtree.Point[]} points The Points to insert
-	* @returns Either the Point is well inserted or not in the Quadtree
-	*/
-   insert(...points) {
-	   for(const point of points) {
-		   if(!this.boundary.contains(point)) {
-			   return false;
-		   }
+	/**
+* Tries to insert a Quadtree's Point in itself.<br>
+* If the Point is already present in the Quadtree, does nothing.<br>
+* Two Points cannot have the same position in it.<br>
+* If the Quadtree has reach its max capacity, then splits / subdivides
+* itself and tries to insert the Point in one of its child.
+* @param {Quadtree.Point[]} points The Points to insert
+* @returns Either the Point is well inserted or not in the Quadtree
+*/
+	insert(...points) {
+		for (const point of points) {
+			if (!this.boundary.contains(point)) {
+				return false;
+			}
 
-		   if(this.divided) {
-			   return this.northeast.insert(point)
-				   || this.northwest.insert(point)
-				   || this.southeast.insert(point)
-				   || this.southwest.insert(point);
-		   }
-		   else if(this.points.length < this.capacity) {
-			   this.points.push(point);
-			   return true;
-		   }
-		   else {
-			   this.subdivide();
-			   this.insert(point);
-		   }
-	   }
-   }
+			if (this.divided) {
+				return this.northeast.insert(point)
+					|| this.northwest.insert(point)
+					|| this.southeast.insert(point)
+					|| this.southwest.insert(point);
+			}
+			else if (this.points.length < this.capacity) {
+				this.points.push(point);
+				return true;
+			}
+			else {
+				this.subdivide();
+				this.insert(point);
+			}
+		}
+	}
 
-   /**
-	* 
-	* @param {number} x 
-	* @param {number} y 
-	* @returns {Quadtree}
-	*/
-   getRegion(x, y) {
-	   if (!this.subtrees) {
-		   return this;
-		 }
-	 
-		 const index = (x >= this.x + this.width / 2 ? 1 : 0) + (y >= this.y + this.height / 2 ? 2 : 0);
-		 return this.children[index].getRegion(x, y);
-   }
+	/**
+	 * 
+	 * @param {number} x 
+	 * @param {number} y 
+	 * @returns {Quadtree}
+	 */
+	getRegion(x, y) {
+		if (!this.divided) {
+			return this;
+		}
 
-   /**
-	* 
-	* @param {Quadtree} region 
-	* @returns 
-	*/
-   getNeighboringRegions(region) {
-	   if(!(region instanceof Quadtree)) {
-		   throw new Error('[Quadtree::getNeighboringRegions] region must be a Quadtree');
-	   }
+		const index = (x >= this.boundary.x + this.boundary.w / 2 ? 1 : 0) + (y >= this.boundary.y + this.boundary.h / 2 ? 2 : 0);
+		return this.children[index].getRegion(x, y);
+	}
 
-	   const neighbors = [];
-	 
-	   const left = region.x < this.x;
-	   const right = region.x + region.width > this.x + this.width;
-	   const top = region.y < this.y;
-	   const bottom = region.y + region.height > this.y + this.height;
-	 
-	   if (left && top) {
-		 neighbors.push(this.children[0]);
-	   }
+	/**
+* 
+* @param {Quadtree} region 
+* @returns 
+*/
+	getNeighboringRegions(region) {
+		if (!(region instanceof Quadtree)) {
+			throw new Error('[Quadtree::getNeighboringRegions] region must be a Quadtree');
+		}
 
-	   if (right && top) {
-		 neighbors.push(this.children[1]);
-	   }
+		const neighbors = [];
 
-	   if (left && bottom) {
-		 neighbors.push(this.children[2]);
-	   }
+		const left = region.x < this.x;
+		const right = region.x + region.width > this.x + this.width;
+		const top = region.y < this.y;
+		const bottom = region.y + region.height > this.y + this.height;
 
-	   if (right && bottom) {
-		 neighbors.push(this.children[3]);
-	   }
-	 
-	   return neighbors.filter(neighbor => neighbor && neighbor.boundary.intersect(region));
-   }
+		if (left && top) {
+			neighbors.push(this.children[0]);
+		}
 
-   /**
-	* Finds and returns all Quadtree's Points that are in the requested area
-	* @param {Quadtree.Rectangle} range The Rectangle where to find and returns all points
-	* @returns {Quadtree.Point[]} Returns an array of all Points that are in the requested area.
-	*/
-   query(range) {
-	   if(!(range instanceof Quadtree.Rectangle)) {
-		   throw new Error('[Quadtree::query] range must be a Quadtree.Rectangle');
-	   }
+		if (right && top) {
+			neighbors.push(this.children[1]);
+		}
 
-	   // leaf
-	   if(!this.divided) {
-		   if(range.wrap(this.boundary)) {
-			   return this.points;
-		   }
-		   else if(range.intersect(this.boundary)) {
-			   const found = [];
+		if (left && bottom) {
+			neighbors.push(this.children[2]);
+		}
 
-			   for(const p of this.points) {
-				   if(range.contains(p))
-					   found.push(p);
-			   }
+		if (right && bottom) {
+			neighbors.push(this.children[3]);
+		}
 
-			   return found;
-		   }
+		return neighbors.filter(neighbor => neighbor && neighbor.boundary.intersect(region));
+	}
 
-		   return [];
-	   }
+	/**
+* Finds and returns all Quadtree's Points that are in the requested area
+* @param {Quadtree.Rectangle} range The Rectangle where to find and returns all points
+* @returns {Quadtree.Point[]} Returns an array of all Points that are in the requested area.
+*/
+	query(range) {
+		if (!(range instanceof Quadtree.Rectangle)) {
+			throw new Error('[Quadtree::query] range must be a Quadtree.Rectangle');
+		}
 
-	   // node
-	   // totally wraps the boundary : add all leafs
-	   if(range.wrap(this.boundary)) {
-		   return this.getAllPoints();
-	   }
+		// leaf
+		if (!this.divided) {
+			if (range.wrap(this.boundary)) {
+				return this.points;
+			}
+			else if (range.intersect(this.boundary)) {
+				const found = [];
 
-	   // partially or does not collides the range
-	   const found = [];
+				for (const p of this.points) {
+					if (range.contains(p))
+						found.push(p);
+				}
 
-	   found.push(...this.northwest.query(range));
-	   found.push(...this.northeast.query(range));
-	   found.push(...this.southwest.query(range));
-	   found.push(...this.southeast.query(range));
+				return found;
+			}
 
-	   return found;
-   }
+			return [];
+		}
 
-   /**
-	* Delimits the bounds of the Quadtree and recursivly do it for its children
-	* if it is splitted.<br>
-	* Default stroke color is #141414, but you can change it.
-	* @param {any} color The color of the limits. Default is #141414
-	*/
-   show(color=20) {
-	   noFill();
-	   stroke(color);
-	   strokeWeight(1);
-	   strokeRect(this.boundary.x, this.boundary.y, this.boundary.w-1, this.boundary.h-1);
+		// node
+		// totally wraps the boundary : add all leafs
+		if (range.wrap(this.boundary)) {
+			return this.getAllPoints();
+		}
 
-	   if(this.divided) {
-		   this.northeast.show();
-		   this.northwest.show();
-		   this.southeast.show();
-		   this.southwest.show();
-	   }
-   }
+		// partially or does not collides the range
+		const found = [];
 
-   /**
-	* Returns all the children of this tree and its regions.
-	* @returns {Quadtree.Point[]} A list of all children and subchildren of this tree
-	*/
-   getAllPoints() {
-	   if(!this.divided)
-		   return this.points;
+		found.push(...this.northwest.query(range));
+		found.push(...this.northeast.query(range));
+		found.push(...this.southwest.query(range));
+		found.push(...this.southeast.query(range));
 
-	   const points = [];
+		return found;
+	}
 
-	   for(const region of this.children)
-		   points.push(...region.getAllPoints());
+	/**
+	 * Delimits the bounds of the Quadtree and recursivly do it for its children
+	 * if it is splitted.<br>
+	 * Default stroke color is #141414, but you can change it.
+	 * @param {any} color The color of the limits. Default is #141414
+	 */
+	show(color = 20) {
+		noFill();
+		stroke(color);
+		strokeWeight(1);
+		strokeRect(this.boundary.x, this.boundary.y, this.boundary.w - 1, this.boundary.h - 1);
 
-	   return points;
-   }
+		if (this.divided) {
+			this.northeast.show(color);
+			this.northwest.show(color);
+			this.southeast.show(color);
+			this.southwest.show(color);
+		}
+	}
 
-   /**
-	* Returns the total size of the tree, containing its point and the points of its children.
-	* @returns {number} The total size of the tree (number of points contained inside it)
-	*/
-   size() {
-	   let n = this.points.length;
+	/**
+	 * Returns all the children of this tree and its regions.
+	 * @returns {Quadtree.Point[]} A list of all children and subchildren of this tree
+	 */
+	getAllPoints() {
+		if (!this.divided)
+			return this.points;
 
-	   for(const region of this.children)
-		   n += region.size();
+		const points = [];
 
-	   return n;
-   }
+		for (const region of this.children)
+			points.push(...region.getAllPoints());
+
+		return points;
+	}
+
+	/**
+	 * Returns the total size of the tree, containing its point and the points of its children.
+	 * @returns {number} The total size of the tree (number of points contained inside it)
+	 */
+	size() {
+		let n = this.points.length;
+
+		for (const region of this.children)
+			n += region.size();
+
+		return n;
+	}
 }
 
 
@@ -5138,7 +5149,7 @@ export const listen = (event, callback) => {
  * @param {'resize'|'resizeended'|'blur'|'focus'|'online'|'offline'|'keydown'|'keyup'|'keypress'|'mouseup'|'mousemove'|'drag'|'click'|'dblclick'|'mouseenter'|'mouseleave'|'wheel'|'contextmenu'|'swipe'} event - event to stop listen
  */
 export const stopListen = event => {
-	if(event in NOX_PV.callbackListeners) {
+	if (event in NOX_PV.callbackListeners) {
 		delete NOX_PV.callbackListeners[event];
 	}
 };
@@ -5148,11 +5159,11 @@ export const stopListen = event => {
  * @param {function} drawFunction the function that will be execute in loop to draw on the canvas
  */
 export const draw = drawFunction => {
-	if(typeof drawFunction !== 'function') {
+	if (typeof drawFunction !== 'function') {
 		console.error(`The draw function must take an argument as type 'function'.`);
 	}
 
-	else if(NOX_PV.hasDrawFunc) {
+	else if (NOX_PV.hasDrawFunc) {
 		console.warn('You already declared your draw function.');
 	}
 
@@ -5160,7 +5171,7 @@ export const draw = drawFunction => {
 		NOX_PV.hasDrawFunc = true;
 		NOX_PV.drawFunc = drawFunction;
 
-		if(!NOX_PV.hasUpdateFunc)
+		if (!NOX_PV.hasUpdateFunc)
 			drawLoop();
 	}
 };
@@ -5171,11 +5182,11 @@ export const draw = drawFunction => {
  * @param {function} updateFunction the function that will be execute in loop to update on the canvas
  */
 export const update = updateFunction => {
-	if(typeof updateFunction !== 'function') {
+	if (typeof updateFunction !== 'function') {
 		console.error(`The update function must take an argument as type 'function'.`);
 	}
 
-	else if(NOX_PV.hasUpdateFunc) {
+	else if (NOX_PV.hasUpdateFunc) {
 		console.warn('You already declared your update function.');
 	}
 
@@ -5183,7 +5194,7 @@ export const update = updateFunction => {
 		NOX_PV.hasUpdateFunc = true;
 		NOX_PV.updateFunc = updateFunction;
 
-		if(!NOX_PV.hasDrawFunc)
+		if (!NOX_PV.hasDrawFunc)
 			drawLoop();
 	}
 };
@@ -5193,7 +5204,7 @@ export const update = updateFunction => {
 
 export class NoxCanvasModule {
 	constructor() {
-		if(this.constructor === NoxCanvasModule) {
+		if (this.constructor === NoxCanvasModule) {
 			throw new Error("[NoxCanvasModule] Object of Abstract Class cannot be created");
 		}
 	}
@@ -5204,14 +5215,14 @@ export class NoxCanvasModule {
  * @param {NoxCanvasModule} module
  */
 export const addModule = module => {
-	if(!(module instanceof NoxCanvasModule)) {
+	if (!(module instanceof NoxCanvasModule)) {
 		throw new Error("[addModule] given module does not extends NoxCanvasModule.");
 	}
 
-	if(typeof module.update === 'function')
+	if (typeof module.update === 'function')
 		NOX_PV.updateModules.push(module);
 
-	if(typeof module.render === 'function')
+	if (typeof module.render === 'function')
 		NOX_PV.renderingModules.push(module);
 
 	NOX_PV.modules.push(module);
@@ -5236,8 +5247,8 @@ const NOX_PV = {
 	hasUpdateFunc: false,
 	hasDrawFunc: false,
 
-	updateFunc: () => {},
-	drawFunc: () => {},
+	updateFunc: () => { },
+	drawFunc: () => { },
 
 	modules: [],
 	updateModules: [],
@@ -5257,13 +5268,13 @@ const NOX_PV = {
 	 */
 	drawCond: () => true,
 
-    camera: {
-        hud: null,
-        enabled: true,
-        move: null
-    },
+	camera: {
+		hud: null,
+		enabled: true,
+		move: null
+	},
 
-    cam: null,
+	cam: null,
 
 	lut: [],
 
@@ -5306,30 +5317,30 @@ const NOX_PV = {
 		const n = oColor.length;
 		const color0 = oColor[0];
 
-		if(color0 instanceof CanvasGradient || color0 instanceof CanvasPattern)
+		if (color0 instanceof CanvasGradient || color0 instanceof CanvasPattern)
 			return color0;
 
 		// color class instance
-		else if(color0 instanceof HEX || color0 instanceof RGB || color0 instanceof HSL)
+		else if (color0 instanceof HEX || color0 instanceof RGB || color0 instanceof HSL)
 			return color0.toString();
 
 		// rgb[a]
-		else if(n > 0 && n < 5 && oColor.every(c => typeof c === 'number')) {
+		else if (n > 0 && n < 5 && oColor.every(c => typeof c === 'number')) {
 			let p = 'rgb';
 			let g = 0, b = 0, a = 0;
 
-			if(n === 3 || n === 4) {
+			if (n === 3 || n === 4) {
 				g = 1;
 				b = 2;
 			}
-			if(n === 2 || n === 4) {
+			if (n === 2 || n === 4) {
 				p += 'a';
-				a = n-1;
+				a = n - 1;
 			}
 
 			let color = `${p}(${color0}, ${oColor[g]}, ${oColor[b]}`;
 
-			if(a > 0)
+			if (a > 0)
 				color += `, ${oColor[a]}`;
 
 			color += ')';
@@ -5338,7 +5349,7 @@ const NOX_PV = {
 		}
 
 		// hex, hsl[a], rgb[a], color name
-		else if(n === 1 && typeof color0 === 'string') {
+		else if (n === 1 && typeof color0 === 'string') {
 			oColor = color0.replace(/\s/gi, '');
 
 			const reg = {
@@ -5349,8 +5360,8 @@ const NOX_PV = {
 				name: /^\w{3,30}$/
 			};
 
-			for(const regex in reg) {
-				if(reg[regex].test(oColor))
+			for (const regex in reg) {
+				if (reg[regex].test(oColor))
 					return oColor;
 			}
 		}
@@ -5367,7 +5378,7 @@ const NOX_PV = {
 		generateSeed: () => {
 			return Array(255).fill(0).map((i, j) => j).sort(() => Math.random() - 0.5);
 		},
-		get: (x, y, lod=NOX_PV.perlin.lod, seed=NOX_PV.perlin.seed) => {
+		get: (x, y, lod = NOX_PV.perlin.lod, seed = NOX_PV.perlin.seed) => {
 			// adapt the resolution
 			x /= lod;
 			y /= lod;
@@ -5380,11 +5391,11 @@ const NOX_PV = {
 
 			// recover vectors
 			const stuv = [];
-			for(let i=0; i < 4; i++) {
+			for (let i = 0; i < 4; i++) {
 				try {
 					const v = seed[(ii + i % 2 + seed[jj + floor(i / 2)]) % 255] % NOX_PV.perlin.gradient.length;
 					stuv.push(NOX_PV.perlin.gradient[v][0] * (dx - i % 2) + NOX_PV.perlin.gradient[v][1] * (dy - floor(i / 2)));
-				} catch(e) {
+				} catch (e) {
 					stuv.push(0);
 				}
 			}
@@ -5398,29 +5409,29 @@ const NOX_PV = {
 	},
 
 	easeElastic: (type, t, b, c, d) => {
-		if(t === 0) return b;
-		if((t /= d) === 1) return b + c;
+		if (t === 0) return b;
+		if ((t /= d) === 1) return b + c;
 		const p = d * .45;
 		const s = p / ((c < 0) ? 4 : (2 * PI) * 1.57);
 		const x = sin((t * d - s) * (2 * PI) / p);
 		return (
-            // in
-            (type === 'in') ?
-                -(c * pow(2, 10 * --t) * x) + b :
-            // out
-            (type === 'out') ?
-                c * pow(2, -10 * t) * x + c + b :
-            // in-out
-            (t < 1) ?
-                c * pow(2, 10 * --t) * x * -.5 + b :
-                c * pow(2, -10 * --t) * x * .5 + c + b
-        );
+			// in
+			(type === 'in') ?
+				-(c * pow(2, 10 * --t) * x) + b :
+				// out
+				(type === 'out') ?
+					c * pow(2, -10 * t) * x + c + b :
+					// in-out
+					(t < 1) ?
+						c * pow(2, 10 * --t) * x * -.5 + b :
+						c * pow(2, -10 * --t) * x * .5 + c + b
+		);
 	},
 
 	callbackListeners: {},
 
 	callback: (event, e) => {
-		if(event in NOX_PV.callbackListeners) {
+		if (event in NOX_PV.callbackListeners) {
 			NOX_PV.callbackListeners[event](e);
 		}
 	}
@@ -5433,7 +5444,7 @@ NOX_PV.perlin.gradient = [
 	[-NOX_PV.perlin.unit, -NOX_PV.perlin.unit]
 ];
 
-for(let i=0; i < 256; i++) {
+for (let i = 0; i < 256; i++) {
 	NOX_PV.lut[i] = (i < 16 ? '0' : '') + (i).toString(16);
 }
 
@@ -5460,7 +5471,7 @@ const mouseWorldPos = new Vector(0, 0);
 /**
  * Load all events about the canvas
  */
- const initializeAllEventHandlers = () => {
+const initializeAllEventHandlers = () => {
 	const t0 = performance.now();
 
 	/**
@@ -5494,13 +5505,13 @@ const mouseWorldPos = new Vector(0, 0);
 		canvas.addEventListener('pointerup', () => {
 			try {
 				canvas.releasePointerCapture(e.pointerId);
-			} catch(e) {}
+			} catch (e) { }
 
 			dragPoint = null;
 
 			NOX_PV.isMouseDown = false;
 
-			if(typeof mouseUp === 'function')
+			if (typeof mouseUp === 'function')
 				mouseUp(e);
 		}, { once: true });
 	});
@@ -5513,7 +5524,7 @@ const mouseWorldPos = new Vector(0, 0);
 		mouseDirection.x = e.movementX;
 		mouseDirection.y = e.movementY;
 
-		if(NOX_PV.isMouseDown) {
+		if (NOX_PV.isMouseDown) {
 			const xUp = e.clientX;
 			const yUp = e.clientY;
 
@@ -5522,10 +5533,10 @@ const mouseWorldPos = new Vector(0, 0);
 
 			let swipeDir;
 
-			if(abs(xDiff) > abs(yDiff))
-				swipeDir = (xDiff > 0)? 'left' : 'right';
+			if (abs(xDiff) > abs(yDiff))
+				swipeDir = (xDiff > 0) ? 'left' : 'right';
 			else
-				swipeDir = (yDiff > 0)? 'up' : 'down';
+				swipeDir = (yDiff > 0) ? 'up' : 'down';
 
 			NOX_PV.lastSwipe = swipeDir;
 
@@ -5548,7 +5559,7 @@ const mouseWorldPos = new Vector(0, 0);
 
 	// keyboard events
 
-	if(NOX_PV.hasInitGlobalHandlers)
+	if (NOX_PV.hasInitGlobalHandlers)
 		return;
 
 	NOX_PV.hasInitGlobalHandlers = true;
@@ -5586,14 +5597,14 @@ const mouseWorldPos = new Vector(0, 0);
 			MIN_DOC_SIZE = min(newWidth, newHeight);
 			NOX_PV.loop = true;
 
-			if(NOX_PV.autoResize === 2) {
+			if (NOX_PV.autoResize === 2) {
 				setCanvasSize(newWidth, newHeight);
 			}
 
 			NOX_PV.callback('resizeended', { width: newWidth, height: newHeight });
 		}, 100);
 
-		if(NOX_PV.autoResize === 1) {
+		if (NOX_PV.autoResize === 1) {
 			setCanvasSize(newWidth, newHeight);
 		}
 
@@ -5607,7 +5618,7 @@ const mouseWorldPos = new Vector(0, 0);
 
 	const t1 = performance.now();
 
-	if(NOX_PV.logPerfs) {
+	if (NOX_PV.logPerfs) {
 		const perfData = {
 			initHandlers: { ms: (t1 - t0) },
 		};

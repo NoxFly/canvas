@@ -472,6 +472,8 @@ v2.bow(0, 0); // same for the 2D vector
 v2.mag; // the magnitude (length) of the vector
 v1.setMag(10); // change the vector's length without changing its direction
 
+v1.heading(); // get the direction of the vector, as an angle (in degree).
+
 v2.toString(); // "{x: 2, y: 3}"
 v2.array(); // [2, 3]
 v2.object(); // { x: 2, y: 3 }

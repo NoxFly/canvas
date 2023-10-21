@@ -6,7 +6,7 @@
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.6.7}
+ * @version		{1.6.8}
  */
 
 
@@ -109,6 +109,7 @@ const line = (x1, y1, x2, y2) => {
 	beginPath();
 	moveTo(x1 - NOX_PV.offsetLineBlur, y1 - NOX_PV.offsetLineBlur);
 	lineTo(x2 - NOX_PV.offsetLineBlur, y2 - NOX_PV.offsetLineBlur);
+	closePath();
 
 	if(NOX_PV.bStroke)
 		ctx.stroke();
@@ -1171,15 +1172,18 @@ const degree = rad => rad * (180 / PI);
 
 /**
  * Convert an angle to a vector (class instance) (2d vector)
- * @param {number} angle angle in radian
+ * @param {number} angle angle in degree
  * @example
  * const v = angleToVector(45); // Vector{x: 0.52, y: 0.85}
  */
-const angleToVector = angle => new Vector(cos(angle), sin(angle));
+const angleToVector = angle => {
+	const r = radian(angle);
+	return new Vector(cos(r), sin(r));
+};
 
 /**
  * Returns the angle in degree of a given vector from the default vector (1,0)
- * @param {Vector} vector vector to calculate its angle
+ * @param {Vector} vec vector to calculate its angle
  * @example
  * const angle = vectorToAngle(1, 1)
  */
@@ -3648,6 +3652,13 @@ class Vector {
 	}
 
 	/**
+	 * @returns {number} The angle between this vector and the x axis (in degrees)
+	 */
+	heading() {
+		return vectorToAngle(this);
+	}
+
+	/**
 	 * Rotates this vector by a given angle (in degrees) around the origin
 	 * @param {number} angle The angle to rotate by (in degrees)
 	 * @return {Vector} The rotated vector
@@ -4995,12 +5006,12 @@ class Quadtree {
 	 * @returns {Quadtree}
 	 */
 	getRegion(x, y) {
-		if (!this.subtrees) {
+		if (!this.divided) {
 			return this;
-		  }
+		}
 	  
-		  const index = (x >= this.x + this.width / 2 ? 1 : 0) + (y >= this.y + this.height / 2 ? 2 : 0);
-		  return this.children[index].getRegion(x, y);
+		const index = (x >= this.boundary.x + this.boundary.w / 2 ? 1 : 0) + (y >= this.boundary.y + this.boundary.h / 2 ? 2 : 0);
+		return this.children[index].getRegion(x, y);
 	}
 
 	/**
@@ -5098,10 +5109,10 @@ class Quadtree {
         strokeRect(this.boundary.x, this.boundary.y, this.boundary.w-1, this.boundary.h-1);
 
         if(this.divided) {
-            this.northeast.show();
-            this.northwest.show();
-            this.southeast.show();
-            this.southwest.show();
+            this.northeast.show(color);
+            this.northwest.show(color);
+            this.southeast.show(color);
+            this.southwest.show(color);
         }
     }
 
