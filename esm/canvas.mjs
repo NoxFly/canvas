@@ -2964,7 +2964,7 @@ export class PerlinNoise {
 		'rgb': [0, 255],
 		'hsl': [0, 360],
 		'bin': [0, 1]
-	}
+	};
 
 	/**
 	 *
