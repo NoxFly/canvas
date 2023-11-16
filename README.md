@@ -784,6 +784,7 @@ const p = new PerlinNoise(lod=10, x=0, y=0, w=width, h=height, mapNumber="defaul
 p.setLOD(newLOD);
 p.regenerateSeed();
 p.setMapNumber(n);
+p.get(0, 0); // gives the value at these coordinates, starting from p.start.
 p.start = { x, y }; // starting coordinates of the array
 p.size = { width, height }; // size of the array
 p.array = [height][width]; // 2D array of floating points

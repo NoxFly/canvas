@@ -2958,8 +2958,15 @@ class HSL {
 
 
 class PerlinNoise {
-	static mapnumberTypes = ['default', 'rgb', 'hsl'];
+	static mapnumberTypes = ['default', 'rgb', 'hsl', 'bin'];
 	static getMapNumberTypeIndex = typeStr => PerlinNoise.mapnumberTypes.indexOf(typeStr);
+	static bounds = {
+		'default': [-1, 1],
+		'rgb': [0, 255],
+		'hsl': [0, 360],
+		'bin': [0, 1]
+	}
+
 	/**
 	 *
 	 * @param {number} lod level of details
@@ -2967,7 +2974,7 @@ class PerlinNoise {
 	 * @param {number} y start y of the array
 	 * @param {number} w width of the array
 	 * @param {number} h height of the array
-	 * @param {string} mapnumber map values to [auto: (-1,1)], [rgb: (0,255)], [hsl: (0, 360)]
+	 * @param {string} mapnumber map values to [auto: (-1,1)], [rgb: (0,255)], [hsl: (0, 360)], [bin: (0, 1)]
 	 */
 	constructor(lod=10, x=0, y=0, w=width, h=height, mapnumber='default') {
 		this.lod = lod;
@@ -2976,7 +2983,7 @@ class PerlinNoise {
 		this.size = { width: w, height: h };
 		this.array = [];
 		this.numberMapStyle = PerlinNoise.getMapNumberTypeIndex(mapnumber);
-		this.calculate();
+		this.generate();
 	}
 
 	/**
@@ -2993,7 +3000,7 @@ class PerlinNoise {
 		this.lod = lod;
 
 		if(tmp !== lod) {
-			this.calculate();
+			this.generate();
 		}
 	}
 
@@ -3007,7 +3014,7 @@ class PerlinNoise {
 	 */
 	regenerateSeed() {
 		this.seed = NOX_PV.perlin.generateSeed();
-		this.calculate();
+		this.generate();
 	}
 
 	/**
@@ -3015,25 +3022,47 @@ class PerlinNoise {
      *
 	 * Default is [-1,1] (0).
      *
-	 * You can choose [0,255] (1) or [0,360] (2).
-	 * @param {0|1|2} mapnumber map style's index
+	 * You can choose [0,255] (1), [0,360] (2) or [0,1] (3).
+	 * @param {0|1|2|3} mapnumber map style's index
 	 * @example
 	 * const p = new PerlinNoise();
 	 * p.setMapnumber(1); // sets values between 0 and 255.
 	 */
 	setMapNumber(mapnumber) {
 		mapnumber = PerlinNoise.getMapNumberTypeIndex(mapnumber);
-		if(this.numberMapStyle === mapnumber) return;
+		
+		if(this.numberMapStyle === mapnumber) {
+			return;
+		}
 
-		let Lmin = 0, Lmax = NOX_PV.perlin.unit, Rmin = 0, Rmax = NOX_PV.perlin.unit;
-
-		if(this.numberMapStyle > 0) [Lmin, Lmax] = [0, (this.numberMapStyle === 1) ? 255 : 360];
-		this.numberMapStyle = mapnumber;
-		if(this.numberMapStyle > 0) [Rmin, Rmax] = [0, (this.numberMapStyle === 1) ? 255 : 360];
+		const [Lmin, Lmax] = PerlinNoise.bounds[this.numberMapStyle];
+		const [Rmin, Rmax] = PerlinNoise.bounds[mapnumber];
 
 		this.array.forEach((row, i) => {
 			this.array[i] = map(this.array[i], Lmin, Lmax, Rmin, Rmax);
 		});
+	}
+
+	/**
+	 * Returns the value of the noise at the given coordinates.
+	 * 
+	 * @example
+	 * const p = new PerlinNoise();
+	 * console.info(p.get(0, 0)); // value between -1 and 1
+	 * 
+	 * @param {number} x - The x coordinate of the noise
+	 * @param {number} y - The y coordinate of the noise
+	 * @returns {number} - The value of the noise at the given coordinates
+	 */
+	get(x, y) {
+		return this.array[this.start.y + y][this.start.x + x];
+	}
+
+	/**
+	 * @deprecated - Use {@link PerlinNoise.generate} instead
+	 */
+	calculate() {
+		return this.generate();
 	}
 
 	/**
@@ -3044,9 +3073,9 @@ class PerlinNoise {
      * It's automatically called if an option is changed through methods.
 	 * @example
 	 * const p = new PerlinNoise();
-	 * p.calculate();
+	 * p.generate();
 	 */
-	calculate() {
+	generate() {
 		this.array = [];
 
 		for(let y = this.start.y; y < this.start.y + this.size.height; y++) {
@@ -5332,19 +5361,15 @@ const NOX_PV = {
 			// recover vectors
 			const stuv = [];
 			for(let i=0; i < 4; i++) {
-				try {
-					const v = seed[(ii + i % 2 + seed[jj + floor(i / 2)]) % 255] % NOX_PV.perlin.gradient.length;
-					stuv.push(NOX_PV.perlin.gradient[v][0] * (dx - i % 2) + NOX_PV.perlin.gradient[v][1] * (dy - floor(i / 2)));
-				} catch(e) {
-					stuv.push(0);
-				}
+				const v = seed[(ii + i % 2 + seed[jj + floor(i / 2)]) % 255] % NOX_PV.perlin.gradient.length;
+				stuv.push(NOX_PV.perlin.gradient[v][0] * (dx - i % 2) + NOX_PV.perlin.gradient[v][1] * (dy - floor(i / 2)));
 			}
 
 			// smoothing
 			const [Cx, Cy] = [3 * dx * dx - 2 * dx * dx * dx, 3 * dy * dy - 2 * dy * dy * dy];
 			const [Li1, Li2] = [stuv[0] + Cx * (stuv[1] - stuv[0]), stuv[2] + Cx * (stuv[3] - stuv[2])];
 
-			return map(Li1 + Cy * (Li2 - Li1), -NOX_PV.perlin.unit, NOX_PV.perlin.unit, 0, 1);
+			return Li1 + Cy * (Li2 - Li1);
 		}
 	},
 
