@@ -1,6 +1,6 @@
 {
   "name": "@noxfly/canvas",
-  "version": "1.6.3",
+  "version": "1.6.4",
   "description": "Backend canvas's static creation.",
   "type": "commonjs",
   "main": "dist/canvas.js",
