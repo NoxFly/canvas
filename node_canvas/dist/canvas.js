@@ -1810,12 +1810,14 @@ class RGB {
 	 * @param {number} g green value
 	 * @param {number} b blue value
 	 * @param {number} a alpha value (opacity)
+	 * @returns {RGB} Returns itself
 	 */
 	set(r, g, b, a = null) {
 		this.r = r;
 		this.g = g;
 		this.b = b;
 		if (a) this.a = a;
+		return this;
 	}
 
 
@@ -1904,6 +1906,8 @@ class HEX {
 		else {
 			console.error(`Given parameter isn't a recognized hexadecimal number: ${hexaColor}`);
 		}
+
+		return this;
 	}
 
 	// return a class instance of RGB, converting its color
@@ -1962,49 +1966,61 @@ class HSL {
 	/**
 	 * Add hue value to the current value (loop 360->0)
 	 * @param {number} hueToAdd Hue to add to the current one
+	 * @returns {HSL} Returns itself
 	 */
 	add(hueToAdd) {
 		this.h = this.h + hueToAdd;
+		return this;
 	}
 
 	/**
 	 * Substract hue from the current value (loop -1->359)
 	 * @param {number} hueToSub Hue to substract from the current one
+	 * @returns {HSL} Returns itself
 	 */
 	sub(hueToSub) {
 		this.h = this.h - hueToSub;
+		return this;
 	}
 
 	/**
 	 * Add light to the current one
 	 * @param {number} lightToAdd light to add to the current one
+	 * @returns {HSL} Returns itself
 	 */
 	lighten(lightToAdd) {
 		this.l = this.l + lightToAdd;
+		return this;
 	}
 
 	/**
 	 * Substract light from the current one
 	 * @param {number} lightToSub light to substract from the current one
+	 * @returns {HSL} Returns itself
 	 */
 	obscure(lightToSub) {
 		this.l = this.l - lightToSub;
+		return this;
 	}
 
 	/**
 	 * Add saturation to the current one
 	 * @param {number} saturationToAdd saturation to add to the current one
+	 * @returns {HSL} Returns itself
 	 */
 	addSat(saturationToAdd) {
 		this.s = this.s + saturationToAdd;
+		return this;
 	}
 
 	/**
 	 * Substract saturation from the current one
 	 * @param {number} saturationToSub saturation to substract from the current one
+	 * @returns {HSL} Returns itself
 	 */
 	subSat(saturationToSub) {
 		this.s = this.s - saturationToSub;
+		return this;
 	}
 
 	toString() {
@@ -2900,6 +2916,7 @@ class Matrix {
 	 * @param {number} x X-Axis index in the matrix
 	 * @param {number} y Y-Axis index in the matrix
 	 * @param {number} value Value to set at the given indexes in the matrix
+	 * @returns {Matrix} Returns itself
 	 * @example
 	 * const m1 = new Matrix(3);
 	 * m1.set(0, 0, 1); // m1[0][0] = 1
@@ -2908,6 +2925,8 @@ class Matrix {
 		if (this.at(x, y) !== null && typeof value === 'number') {
 			this.array[y][x] = value;
 		}
+
+		return this;
 	}
 
 	/**
