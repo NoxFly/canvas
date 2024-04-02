@@ -2579,6 +2579,7 @@ export class RGB {
 	 * @param {number} g green value
 	 * @param {number} b blue value
 	 * @param {number} a alpha value (opacity)
+	 * @return {RGB} Returns itself
 	 * @example
 	 * const color = new Color(0, 0, 0);
 	 * color.set(10, 20, 30); // now color.r = 10, color.g = 20 and color.b = 30
@@ -2588,6 +2589,7 @@ export class RGB {
 		this.g = g;
 		this.b = b;
 		if (a !== null) this.a = a;
+		return this;
 	}
 
 	/**
@@ -2704,6 +2706,7 @@ export class HEX {
 	/**
 	 * Sets the new value of the color
 	 * @param {string|number} hexaColor A string or a number as hexadecimal form
+	 * @return {HEX} Returns itself
 	 * @example
 	 * const color = new HEX('#fff'); // white
 	 * color.set('#f00'); // red
@@ -2725,6 +2728,8 @@ export class HEX {
 		else {
 			throw new Error(`Given parameter isn't a recognized hexadecimal number: ${hexaColor}`);
 		}
+
+		return this;
 	}
 
 	/**
@@ -2827,67 +2832,79 @@ export class HSL {
 	/**
 	 * Add hue value to the current value (loop 360->0)
 	 * @param {number} hueToAdd Hue to add to the current one
+	 * @returns {HSL} Returns itself
 	 * @example
 	 * const color = new HSL(10);
 	 * color.add(10); // color.h is now 20
 	 */
 	add(hueToAdd) {
 		this.h = this.h + hueToAdd;
+		return this;
 	}
 
 	/**
 	 * Substract hue from the current value (loop -1->359)
 	 * @param {number} hueToSub Hue to substract from the current one
+	 * @returns {HSL} Returns itself
 	 * @example
 	 * const color = new HSL(10);
 	 * color.sub(10); // color.h is now 0
 	 */
 	sub(hueToSub) {
 		this.h = this.h - hueToSub;
+		return this;
 	}
 
 	/**
 	 * Add light to the current one
 	 * @param {number} lightToAdd light to add to the current one
+	 * @returns {HSL} Returns itself
 	 * @example
 	 * const color = new HSL(0);
 	 * color.lighten(0.1); // color.l is now 0.6
 	 */
 	lighten(lightToAdd) {
 		this.l = this.l + lightToAdd;
+		return this;
 	}
 
 	/**
 	 * Substract light from the current one
 	 * @param {number} lightToSub light to substract from the current one
+	 * @returns {HSL} Returns itself
 	 * @example
 	 * const color = new HSL(0);
 	 * color.obscure(0.1); // color.h is now 0.4
 	 */
 	obscure(lightToSub) {
 		this.l = this.l - lightToSub;
+		return this;
 	}
 
 	/**
 	 * Add saturation to the current one
 	 * @param {number} saturationToAdd saturation to add to the current one
+	 * @returns {HSL} Returns itself
 	 * @example
 	 * const color = new HSL(0);
 	 * color.addSat(0.1); // color.h is now 0.6
 	 */
 	addSat(saturationToAdd) {
 		this.s = this.s + saturationToAdd;
+		return this;
 	}
 
 	/**
 	 * Substract saturation from the current one
 	 * @param {number} saturationToSub saturation to substract from the current one
+	 * @returns {HSL} Returns itself
 	 * @example
 	 * const color = new HSL(0);
 	 * color.subSat(0.1); // color.h is now 0.4
 	 */
 	subSat(saturationToSub) {
 		this.s = this.s - saturationToSub;
+		return this;
 	}
 
 	/**
@@ -2992,6 +3009,7 @@ export class PerlinNoise {
 	 *
 	 * If the lod changed, then it re-calculates the array.
 	 * @param {number} lod level of detail
+	 * @returns {PerlinNoise} Returns itself
 	 * @example
 	 * const p = new PerlinNoise();
 	 * p.setLOD(200);
@@ -3003,12 +3021,15 @@ export class PerlinNoise {
 		if (tmp !== lod) {
 			this.generate();
 		}
+
+		return this;
 	}
 
 	/**
 	 * Regenerates the noise's seed.
 	 *
 	 * Then it re-calculates the array.
+	 * @returns {PerlinNoise} Returns itself
 	 * @example
 	 * const p = new PerlinNoise();
 	 * p.regenerateSeed();
@@ -3016,6 +3037,7 @@ export class PerlinNoise {
 	regenerateSeed() {
 		this.seed = NOX_PV.perlin.generateSeed();
 		this.generate();
+		return this;
 	}
 
 	/**
@@ -3025,6 +3047,7 @@ export class PerlinNoise {
 	 *
 	 * You can choose [0,255] (1), [0,360] (2) or [0,1] (3).
 	 * @param {0|1|2|3} mapnumber map style's index
+	 * @returns {PerlinNoise} Returns itself
 	 * @example
 	 * const p = new PerlinNoise();
 	 * p.setMapNumber(1); // sets values between 0 and 255.
@@ -3042,6 +3065,8 @@ export class PerlinNoise {
 		this.array.forEach((row, i) => {
 			this.array[i] = map(this.array[i], Lmin, Lmax, Rmin, Rmax);
 		});
+
+		return this;
 	}
 
 	/**
@@ -3072,6 +3097,7 @@ export class PerlinNoise {
 	 * You normally don't have to call it.
 	 *
 	 * It's automatically called if an option is changed through methods.
+	 * @returns {PerlinNoise} Returns itself
 	 * @example
 	 * const p = new PerlinNoise();
 	 * p.generate();
@@ -3092,6 +3118,8 @@ export class PerlinNoise {
 		if (this.numberMapStyle > 0) {
 			this.setMapNumber(PerlinNoise.mapnumberTypes[this.numberMapStyle]);
 		}
+
+		return this;
 	}
 }
 
@@ -4033,6 +4061,7 @@ export class Matrix {
 	 * @param {number} x X-Axis index in the matrix
 	 * @param {number} y Y-Axis index in the matrix
 	 * @param {number} value Value to set at the given indexes in the matrix
+	 * @returns {Matrix} Returns itself
 	 * @example
 	 * const m1 = new Matrix(3);
 	 * m1.set(0, 0, 1); // m1[0][0] = 1
@@ -4041,6 +4070,8 @@ export class Matrix {
 		if (this.at(x, y) !== null && typeof value === 'number') {
 			this.array[y][x] = value;
 		}
+
+		return this;
 	}
 
 	/**
