@@ -1,12 +1,12 @@
 /**
- * @copyright   Copyright (C) 2019 - 2023 Dorian Thivolle All rights reserved.
+ * @copyright   Copyright (C) 2019 - 2024 Dorian Thivolle All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE.txt
  * @author		Dorian Thivolle
  * @name		canvas
  * @package		NoxFly/canvas
  * @see			https://github.com/NoxFly/canvas
  * @since		30 Dec 2019
- * @version		{1.6.9}
+ * @version		{1.6.10}
  */
 
 
@@ -70,7 +70,7 @@ const mouseDirection = { x: 0, y: 0 };
  * @example
  * moveTo(0, 0)
  */
-const moveTo = (x, y) => ctx.moveTo(x - NOX_PV.cam.x, y - NOX_PV.cam.y);
+const moveTo = (x, y) => ctx.moveTo(x, y);
 
 /**
  * Adds a straight line to the current sub-path by connecting the sub-path's last point to the specified (x, y) coordinates.
@@ -79,7 +79,7 @@ const moveTo = (x, y) => ctx.moveTo(x - NOX_PV.cam.x, y - NOX_PV.cam.y);
  * @example
  * lineTo(10, 50)
  */
-const lineTo = (x, y) => ctx.lineTo(x - NOX_PV.cam.x, y - NOX_PV.cam.y);
+const lineTo = (x, y) => ctx.lineTo(x, y);
 
 /**
  * Adds a circular arc to the current sub-path, using the given control points and radius.
@@ -92,7 +92,7 @@ const lineTo = (x, y) => ctx.lineTo(x - NOX_PV.cam.x, y - NOX_PV.cam.y);
  * @example
  * arcTo(200, 130, 50, 20, 40)
  */
-const arcTo = (x1, y1, x2, y2, r) => ctx.arcTo(x1 - NOX_PV.cam.x , y1 - NOX_PV.cam.y, x2 - NOX_PV.cam.x, y2 - NOX_PV.cam.y, r);
+const arcTo = (x1, y1, x2, y2, r) => ctx.arcTo(x1 , y1, x2, y2, r);
 
 
 
@@ -129,7 +129,7 @@ const line = (x1, y1, x2, y2) => {
 const polyline = (...values) => {
 	// got an odd number of argument
 	if(values.length % 2 !== 0) {
-		return console.error('The function polyline must take an even number of values');
+		throw new Error('The function polyline must take an even number of values');
 	}
 
 	beginPath();
@@ -169,7 +169,7 @@ const polyline = (...values) => {
  */
 const arc = (x, y, r, start, end, antiClockwise=false) => {
 	beginPath();
-	ctx.arc(x - NOX_PV.cam.x, y - NOX_PV.cam.y, r, start, end, antiClockwise);
+	ctx.arc(x, y, r, start, end, antiClockwise);
 	closePath();
 
 	if(NOX_PV.bStroke)
@@ -208,7 +208,7 @@ const circle = (x, y, r) => {
  * fillRect(0, 0, 100, 150)
  */
 const fillRect = (x, y, w, h) => {
-	ctx.fillRect(x - NOX_PV.cam.x, y - NOX_PV.cam.y, w, h);
+	ctx.fillRect(x, y, w, h);
 };
 
 
@@ -226,7 +226,7 @@ const fillRect = (x, y, w, h) => {
  * strokeRect(0, 0, 100, 150)
  */
 const strokeRect = (x, y, w, h) => {
-	ctx.strokeRect(x - NOX_PV.cam.x, y - NOX_PV.cam.y, w, h);
+	ctx.strokeRect(x, y, w, h);
 };
 
 
@@ -242,7 +242,7 @@ const strokeRect = (x, y, w, h) => {
  * rect(0, 0, 100, 150)
  */
 const rect = (x, y, w, h) => {
-	ctx.rect(x - NOX_PV.cam.x, y - NOX_PV.cam.y, w, h);
+	ctx.rect(x, y, w, h);
 
 	if(NOX_PV.bFill)
 		ctx.fill();
@@ -362,7 +362,7 @@ const path = p => {
 
 		A: {
 			n: 6,
-			f: (x, y, r, start, end, antiClockwise) => ctx.arc(x - NOX_PV.cam.x, y - NOX_PV.cam.y, r, radian(start), radian(end), antiClockwise === 1)
+			f: (x, y, r, start, end, antiClockwise) => ctx.arc(x, y, r, radian(start), radian(end), antiClockwise === 1)
 		},
 
 		Z: {
@@ -557,13 +557,13 @@ const text = (txt, x=0, y=0) => {
 		txt = txt.split('\n');
 
 		for(let i=0; i < txt.length; i++) {
-			ctx.fillText(txt[i], x - NOX_PV.cam.x, y - NOX_PV.cam.y + i * size);
+			ctx.fillText(txt[i], x, y + i * size);
 		}
 	}
 
 	// one line
 	else {
-		ctx.fillText(txt, x - NOX_PV.cam.x, y - NOX_PV.cam.y);
+		ctx.fillText(txt, x, y);
 	}
 };
 
@@ -637,7 +637,7 @@ const alignText = alignment => {
  * bezierCurveTo(230, 30, 150, 80, 250, 100)
  */
 const bezierCurveTo = (cp1x, cp1y, cp2x, cp2y, x, y) => {
-	ctx.bezierCurveTo(cp1x - NOX_PV.cam.x, cp1y - NOX_PV.cam.y, cp2x - NOX_PV.cam.x, cp2y - NOX_PV.cam.y, x - NOX_PV.cam.x, y - NOX_PV.cam.y);
+	ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
 };
 
 /**
@@ -653,7 +653,7 @@ const bezierCurveTo = (cp1x, cp1y, cp2x, cp2y, x, y) => {
  * quadraticCurveTo(230, 30, 50, 100)
  */
 const quadraticCurveTo = (cpx, cpy, x, y) => {
-	ctx.quadraticCurveTo(cpx - NOX_PV.cam.x, cpy - NOX_PV.cam.y, x - NOX_PV.cam.x, y - NOX_PV.cam.y);
+	ctx.quadraticCurveTo(cpx, cpy, x, y);
 };
 
 /**
@@ -835,7 +835,7 @@ const createLinearGradient = (x1, y1, x2, y2) => ctx.createLinearGradient(x1, y1
  */
 const makeLinearGradient = (x1, y1, x2, y2, ...params) => {
 	if(params.length % 2 !== 0) {
-		return console.error('you have to tell params by pair (offset, color). Odd number of arguments given.');
+		throw new Error('you have to tell params by pair (offset, color). Odd number of arguments given.');
 	}
 
 	const grad = createLinearGradient(x1, y1, x2, y2);
@@ -860,7 +860,7 @@ const makeLinearGradient = (x1, y1, x2, y2, ...params) => {
  * @example
  * clearRect(0, 0, width, height)
  */
-const clearRect = (x, y, w, h) => ctx.clearRect(x - NOX_PV.cam.x, y - NOX_PV.cam.y, w, h);
+const clearRect = (x, y, w, h) => ctx.clearRect(x, y, w, h);
 
 
 /**
@@ -903,7 +903,7 @@ const drawFocusIfNeeded = (elementOrPath2D, element = null) => {
  */
 const setLineDash = array => {
 	if(!Array.isArray(array)) {
-		return console.error('Array type expected. Got ' + typeof array);
+		throw new Error('Array type expected. Got ' + typeof array);
 	}
 
 	ctx.setLineDash(array);
@@ -1139,11 +1139,11 @@ const getImageData = (sx, sy, sw, sh) => ctx.getImageData(sx, sy, sw, sh);
  */
 const drawImage = (image, sx, sy, sWidth=null, sHeight=null, dx=null, dy=null, dWidth=null, dHeight=null) => {
 	if(sWidth === null) {
-		ctx.drawImage(image, sx - NOX_PV.cam.x, sy - NOX_PV.cam.y);
+		ctx.drawImage(image, sx, sy);
 	} else if(dx === null) {
-		ctx.drawImage(image, sx - NOX_PV.cam.x, sy - NOX_PV.cam.y, sWidth, sHeight);
+		ctx.drawImage(image, sx, sy, sWidth, sHeight);
 	} else {
-		ctx.drawImage(image, sx, sy, sWidth, sHeight, dx - NOX_PV.cam.x, dy - NOX_PV.cam.y, dWidth, dHeight);
+		ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
 	}
 };
 
@@ -1987,8 +1987,7 @@ const setCanvasSize = (newWidth, newHeight) => {
 		width = newWidth;
 		height = newHeight;
 
-        if(camera.anchorType === Camera.ANCHOR_CENTER)
-            camera.anchorPoint.set(width/2, height/2);
+		camera.size.set(width, height);
 	}
 
 	else {
@@ -2032,7 +2031,7 @@ const setAutoResize = (enable, onceDone=true) => {
  */
 const createCanvas = (w=null, h=null, bg='#000', requestPointerLock=false, container=document.body) => {
 	if(!('inSetup' in NOX_PV)) {
-		return console.warn('[Warning] createCanvas : usable only setup() function.');
+		return console.warn('[Warning] createCanvas : usable only inside the setup() function.');
 	}
 
 	if(!container) {
@@ -2077,9 +2076,7 @@ const createCanvas = (w=null, h=null, bg='#000', requestPointerLock=false, conta
 	canvas.id = 'nox-canvas';
 	canvas.style.background = NOX_PV.colorTreatment(bg);
 
-	if(camera.anchorType === Camera.ANCHOR_CENTER) {
-		camera.setAnchor(Camera.ANCHOR_CENTER);
-	}
+	camera.size.set(width, height);
 
 	container.appendChild(canvas);
 
@@ -2154,6 +2151,9 @@ const setDrawCondition = (condition = null) => {
  * Do not Call it.
  */
 const drawLoop = () => {
+	if(NOX_PV.hasErrorThrown)
+		return;
+
 	if(NOX_PV.loop === true)
 		requestAnimationFrame(drawLoop);
 
@@ -2176,10 +2176,16 @@ const drawLoop = () => {
     }
 
     else if(camera.moving) {
+		if(camera.moveType in NOX_PV.easeFuncMap === false) {
+			throw new Error('[ERROR] drawLoop : Invalid easing function for camera move (' + camera.moveType + ')');
+		}
+
         const m = NOX_PV.camera.move;
+		const f = NOX_PV.easeFuncMap[camera.moveType];
+
         const t = m.start.asMilliseconds();
-        const x = easeInOutQuad(t, m.from.x, m.length.x, m.duration);
-        const y = easeInOutQuad(t, m.from.y, m.length.y, m.duration);
+        const x = f(t, m.from.x, m.length.x, m.duration);
+        const y = f(t, m.from.y, m.length.y, m.duration);
 
         if(t >= m.duration) {
             camera.position.set(m.from.x + m.length.x, m.from.y + m.length.y);
@@ -2190,7 +2196,9 @@ const drawLoop = () => {
     }
 	//
 
-	mouseWorldPos.set(mouseX, mouseY).add(camera.x, camera.y);
+	mouseWorldPos
+		.set(mouseX, mouseY)
+		.add(camera.x, camera.y);
 
 	// UPDATE
 	for(const module of NOX_PV.updateModules)
@@ -2224,7 +2232,14 @@ const drawLoop = () => {
 			const t = performance.now();
 
 			push();
-				clearRect(NOX_PV.cam.x, NOX_PV.cam.y, width, height); // clear the canvas
+				clearRect(0, 0, width, height); // clear the canvas
+
+				push();
+
+				translate(camera.size.x/2, camera.size.y/2);
+				rotate(camera.rotation);
+				scale(camera.zoom);
+				translate(-camera.size.x/2 - camera.x, -camera.size.y/2 - camera.y);
 
 				// draw extra before the basic drawing
 				for(const module of NOX_PV.renderingModules) {
@@ -2234,10 +2249,16 @@ const drawLoop = () => {
 				// user draw function
 				NOX_PV.drawFunc();
 
+				pop();
+
+				NOX_PV.drawHUDFunc();
+
+				for(const module of NOX_PV.hudModules)
+					module.hud();
+
 				// if guidelines enabled
 				if(NOX_PV.bGuideLines) {
 					push();
-						disableCamera();
 						fill('#46eaea');
 						stroke('#46eaea');
 						ctx.font = '12px Consolas';
@@ -2253,7 +2274,6 @@ const drawLoop = () => {
 						const textY = (mouseY > height / 2)? mouseY - 20 : mouseY + 25;
 
 						text(sText, textX, textY);
-						enableCamera();
 					pop();
 				}
 			pop();
@@ -2322,23 +2342,6 @@ const enableSmoothing = () => {
 const disableSmoothing = () => {
 	if(ctx) ctx.imageSmoothingEnabled = false;
 }
-
-
-/**
- * Enables the camera.
- */
-const disableCamera = () => {
-    NOX_PV.camera.enabled = false;
-    NOX_PV.cam = NOX_PV.camera.hud;
-};
-
-/**
- * Disables the camera.
- */
-const enableCamera = () => {
-    NOX_PV.camera.enabled = true;
-    NOX_PV.cam = camera;
-};
 
 
 
@@ -2493,8 +2496,7 @@ class RGB {
 	 */
 	valueInInterval(val) {
 		if(val < 0 || val > 255) {
-			console.error(`Color interval [0 - 255] no repespected (${val} given)`);
-			return min(max(val, 0), 255);
+			throw new Error(`Color interval [0 - 255] no repespected (${val} given)`);
 		}
 
 		return val;
@@ -2721,7 +2723,7 @@ class HEX {
 		}
 
 		else {
-			console.error(`Given parameter isn't a recognized hexadecimal number: ${hexaColor}`);
+			throw new Error(`Given parameter isn't a recognized hexadecimal number: ${hexaColor}`);
 		}
 	}
 
@@ -2763,8 +2765,7 @@ class HSL {
 		this.color = { h: 0, s: 0, l: 0 };
 
 		if(typeof hue !== 'number') {
-			console.error(`Hue given parameter isn't a recognized number value: ${hue}`);
-			hue = 0;
+			throw new Error(`Hue given parameter isn't a recognized number value: ${hue}`);
 		}
 
 		this.h = hue;
@@ -3311,7 +3312,7 @@ class Vector {
 		if(this.dimension > 1) {
 			this.coords.y = y;
 		} else {
-			console.error('Cannot modify the Y of a 1D vector');
+			throw new Error('Cannot modify the Y of a 1D vector');
 		}
 	}
 
@@ -3327,7 +3328,7 @@ class Vector {
 		if(this.dimension > 2) {
 			this.coords.z = z;
 		} else {
-			console.error(`Cannot modify the Z of a ${this.dimension}D vector`);
+			throw new Error(`Cannot modify the Z of a ${this.dimension}D vector`);
 		}
 	}
 
@@ -3343,7 +3344,7 @@ class Vector {
 		if(this.dimension > 2) {
 			this.coords.w = w;
 		} else {
-			console.error(`Cannot modify the W of a ${this.dimension}D vector`);
+			throw new Error(`Cannot modify the W of a ${this.dimension}D vector`);
 		}
 	}
 
@@ -3444,21 +3445,21 @@ class Vector {
 		}
 
 		else if(typeof x !== 'number') {
-			return console.error('[Error] Vector::set : x parameter must be a number or a Vector');
+			throw new Error('[Error] Vector::set : x parameter must be a number or a Vector');
 		}
 
 		else {
 			if(this.dimension > 1) {
 				if(y !== null && typeof y !== 'number') {
-					return console.error('[Error] Vector::set : y parameter must be a number');
+					throw new Error('[Error] Vector::set : y parameter must be a number');
 				}
 
 				if(z !== null && this.dimension > 2 && typeof z !== 'number') {
-					return console.error('[Error] Vector::set : z parameter must be a number');
+					throw new Error('[Error] Vector::set : z parameter must be a number');
 				}
 
 				if(w !== null && this.dimension > 3 && typeof w !== 'number') {
-					return console.error('[Error] Vector::set : w parameter must be a number');
+					throw new Error('[Error] Vector::set : w parameter must be a number');
 				}
 			}
 
@@ -3938,7 +3939,7 @@ class Matrix {
 			}
 
 			else {
-				console.error('[Error] Matrix constructor : Unrecognized parameters.');
+				throw new Error('[Error] Matrix constructor : Unrecognized parameters.');
 			}
 		}
 
@@ -4233,16 +4234,14 @@ class Matrix {
 			this.op = (a, b) => a + b;
 
 		if(!(matrix instanceof Matrix) && typeof matrix !== 'number') {
-			console.error(`[Error] Matrix::add : Matrix expected, ${typeof matrix} given`);
 			delete this.op;
-			return this;
+			throw new Error(`[Error] Matrix::add : Matrix expected, ${typeof matrix} given`);
 		}
 
 		if(matrix instanceof Matrix) {
 			if(matrix.width !== this.width || matrix.height !== this.height) {
-				console.error('[Error] Matrix::add : Cannot operate an addition between 2 matrices with different dimensions.');
 				delete this.op;
-				return this;
+				throw new Error('[Error] Matrix::add : Cannot operate an addition between 2 matrices with different dimensions.');
 			}
 		}
 
@@ -4300,7 +4299,7 @@ class Matrix {
 		// matrices multiplication
 		else if(m instanceof Matrix) {
 			if(m.height !== this.width || m.width !== this.height) {
-				console.error('[Error] Matrix::mult : matrices must have same transposed size.');
+				throw new Error('[Error] Matrix::mult : matrices must have same transposed size.');
 			}
 
 			else {
@@ -4319,7 +4318,7 @@ class Matrix {
 		}
 
 		else {
-			console.error(`[Error] Matrix::mult : Matrix or number expected, got ${typeof matrixOrnumber}`);
+			throw new Error(`[Error] Matrix::mult : Matrix or number expected, got ${typeof matrixOrnumber}`);
 		}
 
 		return result;
@@ -4400,10 +4399,10 @@ class Matrix {
 	 */
 	setColumn(x, column) {
 		if(x < 0 || x > this.width)
-			return console.error('[Error] Matrix::setColumn : wrong index given.');
+			throw new Error('[Error] Matrix::setColumn : wrong index given.');
 
 		if(column.length !== this.height)
-			return console.error('[Error] Matrix::setColumn : column must have the same length as the matrix\'s height.');
+			throw new Error('[Error] Matrix::setColumn : column must have the same length as the matrix\'s height.');
 
 		for(let i=0; i < this.height; i++)
 			this.set(x, i, column[i]);
@@ -4419,10 +4418,10 @@ class Matrix {
 	 */
 	setRow(y, row) {
 		if(y < 0 || y > this.height)
-			return console.error('[Error] Matrix::setRow : wrong index given.');
+			throw new Error('[Error] Matrix::setRow : wrong index given.');
 
 		if(row.length !== this.height)
-			return console.error('[Error] Matrix::setRow : row must have the same length as the matrix\'s width.');
+			throw new Error('[Error] Matrix::setRow : row must have the same length as the matrix\'s width.');
 
 		this.properties.array[y] = row;
 
@@ -4433,15 +4432,13 @@ class Matrix {
 
 
 class Camera {
-    // CAMERA ANCHOR TYPES. DEFAULT IS TOP-LEFT CORNER
-    static ANCHOR_DEFAULT = 0;
-    static ANCHOR_CENTER = 1;
-
     uuid = generateUUID();
     position = new Vector(0, 0);
-    anchorType = Camera.ANCHOR_DEFAULT;
-    anchorPoint = new Vector(0, 0);
     followPoint = null;
+	rotation = 0; // in degrees
+	zoom = 1; // factor. 1 is default zoom. 2 is 200% zoom. 0.5 is 50% zoom.
+	size = new Vector(width, height);
+	moveType = 'quadInOut';
 
     /**
      * Creates a Camera which can moves in the canvas.
@@ -4472,13 +4469,13 @@ class Camera {
      * Returns the in-world anchor X-axis point of the camera.
      * @return {number}
      */
-    get x() { return this.position.x - this.anchorPoint.x; }
+    get x() { return this.position.x - this.size.x/2; }
 
     /**
      * Returns the in-world anchor Y-axis point of the camera.
      * @return {number}
      */
-    get y() { return this.position.y - this.anchorPoint.y; }
+    get y() { return this.position.y - this.size.y/2; }
 
     /**
      * Returns either the camera is following a point or not.
@@ -4500,31 +4497,13 @@ class Camera {
 	 * @returns {object} The bounds of the camera (x, y, width, height)
 	 */
 	getBounds() {
-		const x = this.x;
-		const y = this.y;
-
-		return { x, y, width, height };
+		return {
+			x: this.x,
+			y: this.y,
+			width: this.size.x,
+			height: this.size.y
+		};
 	}
-
-    /**
-     * Defines either the anchor of the camera is top-left corner or center.<br>
-     * Default is top-left corner.<br>
-     * The method only accepts `Camera.ANCHOR_DEFAULT` and `Camera.ANCHOR_CENTER`.
-     * @param {Camera.ANCHOR_DEFAULT|Camera.ANCHOR_CENTER} anchor
-     * @return {Camera} this
-     */
-    setAnchor(anchor) {
-        if(anchor === Camera.ANCHOR_DEFAULT) {
-            this.anchorPoint.set(0, 0);
-            this.anchorType = anchor;
-        }
-        else if(anchor === Camera.ANCHOR_CENTER) {
-            this.anchorPoint.set(width/2, height/2);
-            this.anchorType = anchor;
-        }
-
-        return this;
-    }
 
     /**
      * Defines the ease movement's type of the camera while its moving.<br>
@@ -4542,7 +4521,7 @@ class Camera {
      * @return {Camera} this
      */
     setMoveType(moveType) {
-        if(moveType in Object.keys(NOX_PV.easeFuncMap))
+        if(moveType in NOX_PV.easeFuncMap)
             this.moveType = moveType;
 
         return this;
@@ -4562,7 +4541,7 @@ class Camera {
         else if(typeof point === 'object' && point.position instanceof Vector)
             this.followPoint = point.position;
         else
-            console.error('[Error] Camera::follow : parameter should be a Vector.');
+            throw new Error('[Error] Camera::follow : parameter should be a Vector.');
 
         return this;
     }
@@ -4604,8 +4583,6 @@ class Camera {
         else
             length.set(x, y);
 
-        length.sub(this.anchorPoint);
-
         NOX_PV.camera.move = {
             from: this.position.copy(),
             length,
@@ -4638,7 +4615,7 @@ class Camera {
         else
             v.set(x, y);
 
-        v.sub(this.position).add(this.anchorPoint);
+        v.sub(this.position);
 
         this.move(v.x, v.y, duration);
 
@@ -4690,7 +4667,7 @@ class Path {
 		}
 
 		else {
-			console.error('Cannot draw it because you didn\'t make a path');
+			throw new Error('Cannot draw it because you didn\'t make a path');
 		}
 	}
 
@@ -4715,7 +4692,8 @@ class Path {
 	 * @param {number} y Y-axis coordinate
 	 */
 	moveTo(x, y) {
-		if(this.d === null) return console.error('You have to initialize the fist path\'s position');
+		if(this.d === null)
+			throw new Error('You have to initialize the fist path\'s position');
 		this.d += ` m ${x} ${y}`;
 	}
 
@@ -4726,7 +4704,8 @@ class Path {
 	 * @param {number} y y-axis coordinate
 	 */
 	LineTo(x, y) {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if(this.d === null)
+			throw new Error('You have to initialize the first path\'s position');
 		this.d += ` L ${x} ${y}`;
 	}
 
@@ -4736,7 +4715,8 @@ class Path {
 	 * @param {number} y y-axis coordinate
 	 */
 	lineTo(x, y) {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if(this.d === null)
+			throw new Error('You have to initialize the first path\'s position');
 		this.d += ` l ${x} ${y}`;
 
 	}
@@ -4747,7 +4727,8 @@ class Path {
 	 * @param {number} x X-axis coordinate
 	 */
 	Horizontal(x) {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if(this.d === null)
+			throw new Error('You have to initialize the first path\'s position');
 		this.d += ` H ${x}`;
 	}
 
@@ -4756,7 +4737,8 @@ class Path {
 	 * @param {number} x X-axis coordinate
 	 */
 	horizontal(x) {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if(this.d === null)
+			throw new Error('You have to initialize the first path\'s position');
 		this.d += ` h ${x}`;
 	}
 
@@ -4766,7 +4748,8 @@ class Path {
 	 * @param {number} y Y-axis coordinate
 	 */
 	Vertical(y) {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if(this.d === null)
+			throw new Error('You have to initialize the first path\'s position');
 		this.d += ` V ${y}`;
 	}
 
@@ -4775,7 +4758,8 @@ class Path {
 	 * @param {number} y Y-axis coordinate
 	 */
 	vertical(y) {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if(this.d === null)
+			throw new Error('You have to initialize the first path\'s position');
 		this.d += ` v ${y}`;
 	}
 
@@ -4790,7 +4774,8 @@ class Path {
 	 * @param {boolean} antiClockwise either it has to draw it anti-clockwisly or not
 	 */
 	Arc(x, y, r, start, end, antiClockwise = false) {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if(this.d === null)
+			throw new Error('You have to initialize the first path\'s position');
 		this.d += ` A ${x} ${y} ${r} ${start} ${end} ${(antiClockwise === true) ? 1 : 0}`;
 	}
 
@@ -4804,7 +4789,8 @@ class Path {
 	 * @param {boolean} antiClockwise either it has to draw it anti-clockwisly or not
 	 */
 	arc(x, y, r, start, end, antiClockwise = false) {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if(this.d === null)
+			throw new Error('You have to initialize the first path\'s position');
 		this.d += ` a ${x} ${y} ${r} ${start} ${end} ${(antiClockwise === true) ? 1 : 0}`;
 	}
 
@@ -4813,7 +4799,8 @@ class Path {
 	 * Close path
 	 */
 	close() {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if(this.d === null)
+			throw new Error('You have to initialize the first path\'s position');
 		this.isClosed = true;
 	}
 
@@ -4821,7 +4808,8 @@ class Path {
 	 * Removes the instruction that close the path if it was.
 	 */
 	open() {
-		if(this.d === null) return console.error('You have to initialize the first path\'s position');
+		if(this.d === null)
+			throw new Error('You have to initialize the first path\'s position');
 		this.isClosed = false;
 	}
 
@@ -5202,6 +5190,9 @@ const addModule = module => {
 	if(typeof module.render === 'function')
 		NOX_PV.renderingModules.push(module);
 
+	if(typeof module.hud === 'function')
+		NOX_PV.hudModules.push(module);
+
 	NOX_PV.modules.push(module);
 };
 
@@ -5217,10 +5208,14 @@ const logPerformances = () => {
 const NOX_PV = {
 	updateFunc: () => {},
 	drawFunc: () => {},
+	drawHUDFunc: () => {},
+
+	hasErrorThrown: false,
 
 	modules: [],
 	updateModules: [],
 	renderingModules: [],
+	hudModules: [],
 
 	notSetup: true,
 	logPerfs: false,
@@ -5238,7 +5233,6 @@ const NOX_PV = {
 	drawCond: () => true,
 
     camera: {
-        hud: null,
         enabled: true,
         move: null
     },
@@ -5420,7 +5414,6 @@ NOX_PV.easeFuncMap = {
 
 
 const camera = new Camera();
-NOX_PV.camera.hud = new Camera();
 NOX_PV.cam = camera;
 
 const mouseWorldPos = new Vector(0, 0);
@@ -5448,10 +5441,20 @@ const mouseWorldPos = new Vector(0, 0);
 			}
 		}
 
+		window.addEventListener('error', e => {
+			NOX_PV.hasErrorThrown = true;
+			console.warn("An error has been thrown, thus, the renderer has stopped to avoid further issues.");
+			console.error(e);
+		});
+
 		const t1 = performance.now();
 
 		if(typeof draw === 'function') {
 			NOX_PV.drawFunc = draw;
+		}
+
+		if(typeof drawHUD === 'function') {
+			NOX_PV.drawHUDFunc = drawHUD;
 		}
 
 		if(typeof update === 'function') {
@@ -5624,5 +5627,7 @@ const mouseWorldPos = new Vector(0, 0);
 		NOX_PV.timer = new Time();
 
 		drawLoop();
+	}, {
+		once: true
 	});
 })();

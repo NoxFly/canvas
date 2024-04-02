@@ -32,6 +32,10 @@ Canvas.draw(() => {
     // draw stuff here...
 });
 
+Canvas.drawHUD(() => {
+    // hud to draw here...
+});
+
 
 // to listen to events.
 // All events are listed in the default README.

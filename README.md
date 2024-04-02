@@ -75,7 +75,7 @@ There's 2 types of plugins :
 * The update plugin
 * The render plugin
 
-A plugin can be to update, render or both.
+A plugin can be to update, render, draw hud or all of those.
 
 ```js
 class MyPlugin extends NoxCanvasPlugin {
@@ -83,6 +83,8 @@ class MyPlugin extends NoxCanvasPlugin {
     update() {}
     // identify as renderPlugin
     render() {}
+    // identify as hudPlugin
+    hud() {}
 }
 
 const myModule = new MyPlugin();
@@ -96,7 +98,7 @@ You first need to create 2 functions, that are automatically detected by the fra
 
 ```js
 function setup() {
-    // create canvas & setup everything here
+    // create canvas & setup everything here once the document has loaded
 }
 
 function update(ms) {
@@ -107,11 +109,15 @@ function update(ms) {
 function draw() {
     // called in the loop, after the update function if it exists, and after the canvas is cleared
 }
+
+function drawHUD() {
+    // called in the loop, after the draw function if it exists, and is not impacted by camera.
+}
 ```
 
 The `setup` function is called when the window has loaded.
 
-The `update` and `draw` functions are called after the setup function, and are looped every fixed frames (can be changed whenever you want).
+The `update`, `draw` and `drawHUD` functions are called after the setup function, and are looped every fixed frames (can be changed whenever you want).
 
 
 
@@ -220,15 +226,13 @@ Here are the variables declared in the canvas file, that you can use:
 
 **width** and **height**: the size of the canvas
 
-**realWidth** and **realHeight**: the size of the resolution of the canvas
-
 **mouseX** and **mouseY**: the mouse current position on the screen. Can be negative or greater than the canvas' size if the canvas is smaller than the document and center (for example).
 
 **mouseWorldPos**: the mouse current position on the world (depends camera anchor point).
 
 **dragPoint** : the point where the mouse / finger pressed on the canvas. Can be associated with mouseX/Y for some applications
 
-**fps**: the frame per seconds of the draw function (by default 60)
+**fps**: the frame per seconds of the draw function (by default limited to 60)
 
 **mouseDirection**: object containing the x and y mouse's direction movement. The faster the mouse goes, the larger will the number be
 
@@ -332,22 +336,12 @@ generateUUID(); // returns a unique ID
 
 ## Camera
 
-You can at any moment enable or disable it with these two functions :
-```js
-enableCamera();
-disableCamera();
-```
-
-A Camera has 2 anchors : either its top-left corner, or its center. The default is the first one.
-
-The default position of the camera is (0, 0), so you're in a real-default-like canvas.
+A Camera is centered from its position. It means that when the canvas is initialized, the center of it are the coordinates (0, 0).
 
 Here are the Camera's methods :
 ```js
 // constructor
 Camera(vectorPosition=null); // default is (0, 0)
-// defines the anchor's type of the camera
-Camera.setAnchor(Camera.ANCHOR_DEFAULT|Camera.ANCHOR_CENTER);
 // defines the ease function to use when moving the camera
 // see ease functions for it
 // The default is 'quadInOut'
@@ -356,6 +350,8 @@ Camera.setMoveType(moveType);
 // if an object is given, and if this object has the property 'position'
 // which is a vector, then it will follow it
 Camera.follow(vector);
+// or
+Camera.follow(entity); // entity must be a class containing a member variable 'position' of type Vector
 Camera.stopFollow();
 // moves the camera from its position to its position + given x,y
 // default duration of the move is 1s.
@@ -366,6 +362,28 @@ Camera.moveTo(x, y, duration=1000);
 Camera.stop();
 ```
 
+You can modify the camera position as follow, which will not produce any animation :
+```js
+camera.position // Vector class instance
+camera.position.set(x, y);
+camera.position.x = ...;
+camera.position.y = ...;
+```
+
+You can rotate and scale the view :
+
+```js
+camera.zoom = ...;
+camera.rotation = ...;
+```
+
+You also can access its size :
+
+```js
+camera.size // Vector class instance
+```
+
+> Note that for now, the camera size is the canvas size. Maybe in the future, a viewport system will be developped, allowing multiple cameras, if performances for simple 2d canvas allows this.
 
 
 ## Colors
